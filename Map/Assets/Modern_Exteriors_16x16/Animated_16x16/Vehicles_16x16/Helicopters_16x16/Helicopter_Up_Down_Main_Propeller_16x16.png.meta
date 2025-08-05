@@ -1,0 +1,4147 @@
+fileFormatVersion: 2
+guid: bfac620a7d01d9445ba8bf8727c404f7
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -6728558034791168100
+    second: Helicopter_Up_Down_Main_Propeller_16x16_0
+  - first:
+      213: 4282620554103229891
+    second: Helicopter_Up_Down_Main_Propeller_16x16_1
+  - first:
+      213: -5682612873451577519
+    second: Helicopter_Up_Down_Main_Propeller_16x16_2
+  - first:
+      213: -5942851827093454663
+    second: Helicopter_Up_Down_Main_Propeller_16x16_3
+  - first:
+      213: -3552846798084498006
+    second: Helicopter_Up_Down_Main_Propeller_16x16_4
+  - first:
+      213: -4010235763633892546
+    second: Helicopter_Up_Down_Main_Propeller_16x16_5
+  - first:
+      213: -6445992374373897819
+    second: Helicopter_Up_Down_Main_Propeller_16x16_6
+  - first:
+      213: 3625895940221916512
+    second: Helicopter_Up_Down_Main_Propeller_16x16_7
+  - first:
+      213: 751275267715784891
+    second: Helicopter_Up_Down_Main_Propeller_16x16_8
+  - first:
+      213: 3019843204994845370
+    second: Helicopter_Up_Down_Main_Propeller_16x16_9
+  - first:
+      213: -4860536806689066829
+    second: Helicopter_Up_Down_Main_Propeller_16x16_10
+  - first:
+      213: 5810966405987262160
+    second: Helicopter_Up_Down_Main_Propeller_16x16_11
+  - first:
+      213: 2658345092233211666
+    second: Helicopter_Up_Down_Main_Propeller_16x16_12
+  - first:
+      213: 1957732872467631814
+    second: Helicopter_Up_Down_Main_Propeller_16x16_13
+  - first:
+      213: -2672699008539956077
+    second: Helicopter_Up_Down_Main_Propeller_16x16_14
+  - first:
+      213: -3690816493052442416
+    second: Helicopter_Up_Down_Main_Propeller_16x16_15
+  - first:
+      213: -5180151103043528287
+    second: Helicopter_Up_Down_Main_Propeller_16x16_16
+  - first:
+      213: 2048758415656900995
+    second: Helicopter_Up_Down_Main_Propeller_16x16_17
+  - first:
+      213: 3372610913597126670
+    second: Helicopter_Up_Down_Main_Propeller_16x16_18
+  - first:
+      213: -4014429672042544776
+    second: Helicopter_Up_Down_Main_Propeller_16x16_19
+  - first:
+      213: 1822750210811989621
+    second: Helicopter_Up_Down_Main_Propeller_16x16_20
+  - first:
+      213: 4691220777399410104
+    second: Helicopter_Up_Down_Main_Propeller_16x16_21
+  - first:
+      213: -8356217332990088141
+    second: Helicopter_Up_Down_Main_Propeller_16x16_22
+  - first:
+      213: -9031144103835896924
+    second: Helicopter_Up_Down_Main_Propeller_16x16_23
+  - first:
+      213: -3758055071568720644
+    second: Helicopter_Up_Down_Main_Propeller_16x16_24
+  - first:
+      213: -91561878524469469
+    second: Helicopter_Up_Down_Main_Propeller_16x16_25
+  - first:
+      213: 3539671534825746408
+    second: Helicopter_Up_Down_Main_Propeller_16x16_26
+  - first:
+      213: -5994553651121922715
+    second: Helicopter_Up_Down_Main_Propeller_16x16_27
+  - first:
+      213: -800863620682860288
+    second: Helicopter_Up_Down_Main_Propeller_16x16_28
+  - first:
+      213: 7262369792906452238
+    second: Helicopter_Up_Down_Main_Propeller_16x16_29
+  - first:
+      213: -987412702345211844
+    second: Helicopter_Up_Down_Main_Propeller_16x16_30
+  - first:
+      213: -647174649920849808
+    second: Helicopter_Up_Down_Main_Propeller_16x16_31
+  - first:
+      213: 6397066303786934414
+    second: Helicopter_Up_Down_Main_Propeller_16x16_32
+  - first:
+      213: -1751426614277807338
+    second: Helicopter_Up_Down_Main_Propeller_16x16_33
+  - first:
+      213: 7162483678481331238
+    second: Helicopter_Up_Down_Main_Propeller_16x16_34
+  - first:
+      213: 2495289383136326466
+    second: Helicopter_Up_Down_Main_Propeller_16x16_35
+  - first:
+      213: -6093188988291723869
+    second: Helicopter_Up_Down_Main_Propeller_16x16_36
+  - first:
+      213: -7631622364371885641
+    second: Helicopter_Up_Down_Main_Propeller_16x16_37
+  - first:
+      213: -3419446067948411083
+    second: Helicopter_Up_Down_Main_Propeller_16x16_38
+  - first:
+      213: 5872443487632151924
+    second: Helicopter_Up_Down_Main_Propeller_16x16_39
+  - first:
+      213: -6186045735631724937
+    second: Helicopter_Up_Down_Main_Propeller_16x16_40
+  - first:
+      213: 1065786386926048021
+    second: Helicopter_Up_Down_Main_Propeller_16x16_41
+  - first:
+      213: 5903854704447168687
+    second: Helicopter_Up_Down_Main_Propeller_16x16_42
+  - first:
+      213: -4671025877454690151
+    second: Helicopter_Up_Down_Main_Propeller_16x16_43
+  - first:
+      213: -7495258779681179476
+    second: Helicopter_Up_Down_Main_Propeller_16x16_44
+  - first:
+      213: 1009085362528844367
+    second: Helicopter_Up_Down_Main_Propeller_16x16_45
+  - first:
+      213: 2941203184162100300
+    second: Helicopter_Up_Down_Main_Propeller_16x16_46
+  - first:
+      213: 8307861860189421781
+    second: Helicopter_Up_Down_Main_Propeller_16x16_47
+  - first:
+      213: -6090729668276846088
+    second: Helicopter_Up_Down_Main_Propeller_16x16_48
+  - first:
+      213: 1942663549348517133
+    second: Helicopter_Up_Down_Main_Propeller_16x16_49
+  - first:
+      213: 3922264492857650279
+    second: Helicopter_Up_Down_Main_Propeller_16x16_50
+  - first:
+      213: -4552523395781896188
+    second: Helicopter_Up_Down_Main_Propeller_16x16_51
+  - first:
+      213: 898634759287258101
+    second: Helicopter_Up_Down_Main_Propeller_16x16_52
+  - first:
+      213: -990122009143493792
+    second: Helicopter_Up_Down_Main_Propeller_16x16_53
+  - first:
+      213: 1786319191424150982
+    second: Helicopter_Up_Down_Main_Propeller_16x16_54
+  - first:
+      213: -2897976774241480526
+    second: Helicopter_Up_Down_Main_Propeller_16x16_55
+  - first:
+      213: 2299238634911273597
+    second: Helicopter_Up_Down_Main_Propeller_16x16_56
+  - first:
+      213: 6477062126115635030
+    second: Helicopter_Up_Down_Main_Propeller_16x16_57
+  - first:
+      213: -1337566806445920548
+    second: Helicopter_Up_Down_Main_Propeller_16x16_58
+  - first:
+      213: -6779404015408240272
+    second: Helicopter_Up_Down_Main_Propeller_16x16_59
+  - first:
+      213: -4090604373242756190
+    second: Helicopter_Up_Down_Main_Propeller_16x16_60
+  - first:
+      213: -409813891256755570
+    second: Helicopter_Up_Down_Main_Propeller_16x16_61
+  - first:
+      213: 4862365723967801297
+    second: Helicopter_Up_Down_Main_Propeller_16x16_62
+  - first:
+      213: 4913496876762885030
+    second: Helicopter_Up_Down_Main_Propeller_16x16_63
+  - first:
+      213: 9221169471698235761
+    second: Helicopter_Up_Down_Main_Propeller_16x16_64
+  - first:
+      213: 1597511774405207635
+    second: Helicopter_Up_Down_Main_Propeller_16x16_65
+  - first:
+      213: -7670699355555516445
+    second: Helicopter_Up_Down_Main_Propeller_16x16_66
+  - first:
+      213: -1517084087361653692
+    second: Helicopter_Up_Down_Main_Propeller_16x16_67
+  - first:
+      213: 80534604283997620
+    second: Helicopter_Up_Down_Main_Propeller_16x16_68
+  - first:
+      213: -7395733394467270484
+    second: Helicopter_Up_Down_Main_Propeller_16x16_69
+  - first:
+      213: -6156398126891259119
+    second: Helicopter_Up_Down_Main_Propeller_16x16_70
+  - first:
+      213: -8288083665495918804
+    second: Helicopter_Up_Down_Main_Propeller_16x16_71
+  - first:
+      213: -7373641297509584850
+    second: Helicopter_Up_Down_Main_Propeller_16x16_72
+  - first:
+      213: 3056877826540069201
+    second: Helicopter_Up_Down_Main_Propeller_16x16_73
+  - first:
+      213: 2042789458732639260
+    second: Helicopter_Up_Down_Main_Propeller_16x16_74
+  - first:
+      213: 3306143021310404308
+    second: Helicopter_Up_Down_Main_Propeller_16x16_75
+  - first:
+      213: 6432005870125446761
+    second: Helicopter_Up_Down_Main_Propeller_16x16_76
+  - first:
+      213: 662691254471840667
+    second: Helicopter_Up_Down_Main_Propeller_16x16_77
+  - first:
+      213: 254816004668236853
+    second: Helicopter_Up_Down_Main_Propeller_16x16_78
+  - first:
+      213: -33924579882906026
+    second: Helicopter_Up_Down_Main_Propeller_16x16_79
+  - first:
+      213: -6679489411830637911
+    second: Helicopter_Up_Down_Main_Propeller_16x16_80
+  - first:
+      213: -1482970239773811873
+    second: Helicopter_Up_Down_Main_Propeller_16x16_81
+  - first:
+      213: -5806772566385333525
+    second: Helicopter_Up_Down_Main_Propeller_16x16_82
+  - first:
+      213: -1715536049801318511
+    second: Helicopter_Up_Down_Main_Propeller_16x16_83
+  - first:
+      213: -272580220353961473
+    second: Helicopter_Up_Down_Main_Propeller_16x16_84
+  - first:
+      213: 2069487970352804152
+    second: Helicopter_Up_Down_Main_Propeller_16x16_85
+  - first:
+      213: 7129609610890478790
+    second: Helicopter_Up_Down_Main_Propeller_16x16_86
+  - first:
+      213: -4708772501927329356
+    second: Helicopter_Up_Down_Main_Propeller_16x16_87
+  - first:
+      213: -7444711270228418330
+    second: Helicopter_Up_Down_Main_Propeller_16x16_88
+  - first:
+      213: 136046920443077735
+    second: Helicopter_Up_Down_Main_Propeller_16x16_89
+  - first:
+      213: -3975079239518534653
+    second: Helicopter_Up_Down_Main_Propeller_16x16_90
+  - first:
+      213: 2436620918662558758
+    second: Helicopter_Up_Down_Main_Propeller_16x16_91
+  - first:
+      213: -350144588414110378
+    second: Helicopter_Up_Down_Main_Propeller_16x16_92
+  - first:
+      213: 5115322144934074139
+    second: Helicopter_Up_Down_Main_Propeller_16x16_93
+  - first:
+      213: 2319598425699683275
+    second: Helicopter_Up_Down_Main_Propeller_16x16_94
+  - first:
+      213: -4224978528637921088
+    second: Helicopter_Up_Down_Main_Propeller_16x16_95
+  - first:
+      213: -2840740759362770110
+    second: Helicopter_Up_Down_Main_Propeller_16x16_96
+  - first:
+      213: 2700495054772883660
+    second: Helicopter_Up_Down_Main_Propeller_16x16_97
+  - first:
+      213: -2706701490321919354
+    second: Helicopter_Up_Down_Main_Propeller_16x16_98
+  - first:
+      213: -4617875581176063146
+    second: Helicopter_Up_Down_Main_Propeller_16x16_99
+  - first:
+      213: -5763430147035856284
+    second: Helicopter_Up_Down_Main_Propeller_16x16_100
+  - first:
+      213: 951174642420399332
+    second: Helicopter_Up_Down_Main_Propeller_16x16_101
+  - first:
+      213: -5907267612439988432
+    second: Helicopter_Up_Down_Main_Propeller_16x16_102
+  - first:
+      213: -2224358097652461840
+    second: Helicopter_Up_Down_Main_Propeller_16x16_103
+  - first:
+      213: 2709684211764810260
+    second: Helicopter_Up_Down_Main_Propeller_16x16_104
+  - first:
+      213: 9220166372280061961
+    second: Helicopter_Up_Down_Main_Propeller_16x16_105
+  - first:
+      213: 8419604183558323577
+    second: Helicopter_Up_Down_Main_Propeller_16x16_106
+  - first:
+      213: -2453077471727491124
+    second: Helicopter_Up_Down_Main_Propeller_16x16_107
+  - first:
+      213: -2983602924669596719
+    second: Helicopter_Up_Down_Main_Propeller_16x16_108
+  - first:
+      213: -1627363458645850649
+    second: Helicopter_Up_Down_Main_Propeller_16x16_109
+  - first:
+      213: 8662929860044871266
+    second: Helicopter_Up_Down_Main_Propeller_16x16_110
+  - first:
+      213: 3485312442243671919
+    second: Helicopter_Up_Down_Main_Propeller_16x16_111
+  - first:
+      213: -7112553231984920978
+    second: Helicopter_Up_Down_Main_Propeller_16x16_112
+  - first:
+      213: 3085217874446015907
+    second: Helicopter_Up_Down_Main_Propeller_16x16_113
+  - first:
+      213: 876336837324710541
+    second: Helicopter_Up_Down_Main_Propeller_16x16_114
+  - first:
+      213: -2217235977180482311
+    second: Helicopter_Up_Down_Main_Propeller_16x16_115
+  - first:
+      213: 9149205584693900289
+    second: Helicopter_Up_Down_Main_Propeller_16x16_116
+  - first:
+      213: 8697519388977599586
+    second: Helicopter_Up_Down_Main_Propeller_16x16_117
+  - first:
+      213: -1680439028588602387
+    second: Helicopter_Up_Down_Main_Propeller_16x16_118
+  - first:
+      213: -5811283050776110072
+    second: Helicopter_Up_Down_Main_Propeller_16x16_119
+  - first:
+      213: -1511085544795531675
+    second: Helicopter_Up_Down_Main_Propeller_16x16_120
+  - first:
+      213: -4181986645354194058
+    second: Helicopter_Up_Down_Main_Propeller_16x16_121
+  - first:
+      213: -4730103382650824265
+    second: Helicopter_Up_Down_Main_Propeller_16x16_122
+  - first:
+      213: 1419922851384089182
+    second: Helicopter_Up_Down_Main_Propeller_16x16_123
+  - first:
+      213: -5859170833603849339
+    second: Helicopter_Up_Down_Main_Propeller_16x16_124
+  - first:
+      213: 5657880626961610597
+    second: Helicopter_Up_Down_Main_Propeller_16x16_125
+  - first:
+      213: -5649564675022481040
+    second: Helicopter_Up_Down_Main_Propeller_16x16_126
+  - first:
+      213: -4097190459196181354
+    second: Helicopter_Up_Down_Main_Propeller_16x16_127
+  - first:
+      213: 8930130795925702914
+    second: Helicopter_Up_Down_Main_Propeller_16x16_128
+  - first:
+      213: -6209840972003954788
+    second: Helicopter_Up_Down_Main_Propeller_16x16_129
+  - first:
+      213: -8862303880426948053
+    second: Helicopter_Up_Down_Main_Propeller_16x16_130
+  - first:
+      213: 8914963137328532597
+    second: Helicopter_Up_Down_Main_Propeller_16x16_131
+  - first:
+      213: -8181673000081862012
+    second: Helicopter_Up_Down_Main_Propeller_16x16_132
+  - first:
+      213: 1427653339636477150
+    second: Helicopter_Up_Down_Main_Propeller_16x16_133
+  - first:
+      213: 422086337483622229
+    second: Helicopter_Up_Down_Main_Propeller_16x16_134
+  - first:
+      213: -1059372972555319719
+    second: Helicopter_Up_Down_Main_Propeller_16x16_135
+  - first:
+      213: 2882528893409431010
+    second: Helicopter_Up_Down_Main_Propeller_16x16_136
+  - first:
+      213: 5420096076268208110
+    second: Helicopter_Up_Down_Main_Propeller_16x16_137
+  - first:
+      213: 2853565347153452660
+    second: Helicopter_Up_Down_Main_Propeller_16x16_138
+  - first:
+      213: 9207422545029745187
+    second: Helicopter_Up_Down_Main_Propeller_16x16_139
+  - first:
+      213: -1289976427859038572
+    second: Helicopter_Up_Down_Main_Propeller_16x16_140
+  - first:
+      213: 8627092084128546101
+    second: Helicopter_Up_Down_Main_Propeller_16x16_141
+  - first:
+      213: -3320096719297495231
+    second: Helicopter_Up_Down_Main_Propeller_16x16_142
+  - first:
+      213: 1498435639168745224
+    second: Helicopter_Up_Down_Main_Propeller_16x16_143
+  - first:
+      213: -6890267112357409894
+    second: Helicopter_Up_Down_Main_Propeller_16x16_144
+  - first:
+      213: 1136998624103384666
+    second: Helicopter_Up_Down_Main_Propeller_16x16_145
+  - first:
+      213: -5343667636547865542
+    second: Helicopter_Up_Down_Main_Propeller_16x16_146
+  - first:
+      213: 3868594984545808826
+    second: Helicopter_Up_Down_Main_Propeller_16x16_147
+  - first:
+      213: -4832850669139911124
+    second: Helicopter_Up_Down_Main_Propeller_16x16_148
+  - first:
+      213: 839900945099881945
+    second: Helicopter_Up_Down_Main_Propeller_16x16_149
+  - first:
+      213: -9064040259424645727
+    second: Helicopter_Up_Down_Main_Propeller_16x16_150
+  - first:
+      213: 2059995141214748197
+    second: Helicopter_Up_Down_Main_Propeller_16x16_151
+  - first:
+      213: 4617361681977806854
+    second: Helicopter_Up_Down_Main_Propeller_16x16_152
+  - first:
+      213: -4100613447796409484
+    second: Helicopter_Up_Down_Main_Propeller_16x16_153
+  - first:
+      213: -818065232089224927
+    second: Helicopter_Up_Down_Main_Propeller_16x16_154
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_0
+      rect:
+        serializedVersion: 2
+        x: 82
+        y: 831
+        width: 60
+        height: 254
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c970ca5ed1c5f92a0800000000000000
+      internalID: -6728558034791168100
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_1
+      rect:
+        serializedVersion: 2
+        x: 223
+        y: 815
+        width: 9185
+        height: 273
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3cd0c1324bcee6b30800000000000000
+      internalID: 4282620554103229891
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_2
+      rect:
+        serializedVersion: 2
+        x: 109
+        y: 655
+        width: 44
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 15f5bd903bd4321b0800000000000000
+      internalID: -5682612873451577519
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_3
+      rect:
+        serializedVersion: 2
+        x: 336
+        y: 656
+        width: 60
+        height: 69
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b04055ffbfb68da0800000000000000
+      internalID: -5942851827093454663
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_4
+      rect:
+        serializedVersion: 2
+        x: 560
+        y: 654
+        width: 73
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aad1ac239a0c1bec0800000000000000
+      internalID: -3552846798084498006
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_5
+      rect:
+        serializedVersion: 2
+        x: 686
+        y: 632
+        width: 96
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e33d803f1d7c858c0800000000000000
+      internalID: -4010235763633892546
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_6
+      rect:
+        serializedVersion: 2
+        x: 785
+        y: 654
+        width: 90
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a9219c761c3b86a0800000000000000
+      internalID: -6445992374373897819
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_7
+      rect:
+        serializedVersion: 2
+        x: 911
+        y: 654
+        width: 95
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06555759525c15230800000000000000
+      internalID: 3625895940221916512
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_8
+      rect:
+        serializedVersion: 2
+        x: 1008
+        y: 637
+        width: 99
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb06cb420e01d6a00800000000000000
+      internalID: 751275267715784891
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_9
+      rect:
+        serializedVersion: 2
+        x: 1144
+        y: 654
+        width: 87
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aba48172563a8e920800000000000000
+      internalID: 3019843204994845370
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_10
+      rect:
+        serializedVersion: 2
+        x: 1233
+        y: 620
+        width: 95
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3b0369bc687eb8cb0800000000000000
+      internalID: -4860536806689066829
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_11
+      rect:
+        serializedVersion: 2
+        x: 1389
+        y: 657
+        width: 66
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0de599e8823b4a050800000000000000
+      internalID: 5810966405987262160
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_12
+      rect:
+        serializedVersion: 2
+        x: 1639
+        y: 655
+        width: 44
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 21fa6f0e6c654e420800000000000000
+      internalID: 2658345092233211666
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_13
+      rect:
+        serializedVersion: 2
+        x: 1899
+        y: 662
+        width: 10
+        height: 84
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6cec98ccca34b2b10800000000000000
+      internalID: 1957732872467631814
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_14
+      rect:
+        serializedVersion: 2
+        x: 2125
+        y: 655
+        width: 44
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 39cef6c896aa8ead0800000000000000
+      internalID: -2672699008539956077
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_15
+      rect:
+        serializedVersion: 2
+        x: 2352
+        y: 654
+        width: 73
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0d8c47054f597ccc0800000000000000
+      internalID: -3690816493052442416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_16
+      rect:
+        serializedVersion: 2
+        x: 2478
+        y: 632
+        width: 96
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a91e3474086c18b0800000000000000
+      internalID: -5180151103043528287
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_17
+      rect:
+        serializedVersion: 2
+        x: 2577
+        y: 654
+        width: 90
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 38952db9ce6ae6c10800000000000000
+      internalID: 2048758415656900995
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_18
+      rect:
+        serializedVersion: 2
+        x: 2703
+        y: 654
+        width: 95
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e08ff8ec1cbedce20800000000000000
+      internalID: 3372610913597126670
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_19
+      rect:
+        serializedVersion: 2
+        x: 2800
+        y: 637
+        width: 99
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 871cd1e8b71e948c0800000000000000
+      internalID: -4014429672042544776
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_20
+      rect:
+        serializedVersion: 2
+        x: 2957
+        y: 657
+        width: 66
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57e87bdc8a5bb4910800000000000000
+      internalID: 1822750210811989621
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_21
+      rect:
+        serializedVersion: 2
+        x: 3207
+        y: 655
+        width: 44
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8bdd2df11709a1140800000000000000
+      internalID: 4691220777399410104
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_22
+      rect:
+        serializedVersion: 2
+        x: 3469
+        y: 655
+        width: 44
+        height: 85
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 33ce929db90c80c80800000000000000
+      internalID: -8356217332990088141
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_23
+      rect:
+        serializedVersion: 2
+        x: 3694
+        y: 654
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a37f7f594eeaa280800000000000000
+      internalID: -9031144103835896924
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_24
+      rect:
+        serializedVersion: 2
+        x: 3823
+        y: 581
+        width: 95
+        height: 96
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cfc8accc2d4b8dbc0800000000000000
+      internalID: -3758055071568720644
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_25
+      rect:
+        serializedVersion: 2
+        x: 3920
+        y: 637
+        width: 99
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 32fd493e4f4babef0800000000000000
+      internalID: -91561878524469469
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_26
+      rect:
+        serializedVersion: 2
+        x: 4047
+        y: 583
+        width: 96
+        height: 138
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8efa9d6c1807f1130800000000000000
+      internalID: 3539671534825746408
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_27
+      rect:
+        serializedVersion: 2
+        x: 4142
+        y: 586
+        width: 98
+        height: 141
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 56d5bddf6311fcca0800000000000000
+      internalID: -5994553651121922715
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_28
+      rect:
+        serializedVersion: 2
+        x: 4270
+        y: 590
+        width: 139
+        height: 152
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0093aa7b7c2c2e4f0800000000000000
+      internalID: -800863620682860288
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_29
+      rect:
+        serializedVersion: 2
+        x: 4318
+        y: 554
+        width: 147
+        height: 168
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e0d57b559de19c460800000000000000
+      internalID: 7262369792906452238
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_30
+      rect:
+        serializedVersion: 2
+        x: 4493
+        y: 553
+        width: 197
+        height: 188
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c305106f0610c42f0800000000000000
+      internalID: -987412702345211844
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_31
+      rect:
+        serializedVersion: 2
+        x: 4719
+        y: 553
+        width: 196
+        height: 187
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 07874d3b516c407f0800000000000000
+      internalID: -647174649920849808
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_32
+      rect:
+        serializedVersion: 2
+        x: 4942
+        y: 553
+        width: 195
+        height: 187
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e8067d109e1f6c850800000000000000
+      internalID: 6397066303786934414
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_33
+      rect:
+        serializedVersion: 2
+        x: 5166
+        y: 554
+        width: 195
+        height: 188
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6136ec516cea1b7e0800000000000000
+      internalID: -1751426614277807338
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_34
+      rect:
+        serializedVersion: 2
+        x: 5391
+        y: 554
+        width: 194
+        height: 187
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 624b96505f0466360800000000000000
+      internalID: 7162483678481331238
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_35
+      rect:
+        serializedVersion: 2
+        x: 5614
+        y: 553
+        width: 196
+        height: 187
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 243f4ad297c01a220800000000000000
+      internalID: 2495289383136326466
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_36
+      rect:
+        serializedVersion: 2
+        x: 5838
+        y: 554
+        width: 195
+        height: 188
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3adcc83f5e4a07ba0800000000000000
+      internalID: -6093188988291723869
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_37
+      rect:
+        serializedVersion: 2
+        x: 6062
+        y: 553
+        width: 196
+        height: 188
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b1efa7c4e7071690800000000000000
+      internalID: -7631622364371885641
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_38
+      rect:
+        serializedVersion: 2
+        x: 6287
+        y: 553
+        width: 169
+        height: 124
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 537245f0befab80d0800000000000000
+      internalID: -3419446067948411083
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_39
+      rect:
+        serializedVersion: 2
+        x: 6333
+        y: 637
+        width: 150
+        height: 103
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 475dedb0d3c1f7150800000000000000
+      internalID: 5872443487632151924
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_40
+      rect:
+        serializedVersion: 2
+        x: 6510
+        y: 590
+        width: 100
+        height: 146
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77ed953bd20c62aa0800000000000000
+      internalID: -6186045735631724937
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_41
+      rect:
+        serializedVersion: 2
+        x: 6605
+        y: 564
+        width: 100
+        height: 129
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5139c27721f6ace00800000000000000
+      internalID: 1065786386926048021
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_42
+      rect:
+        serializedVersion: 2
+        x: 6779
+        y: 655
+        width: 94
+        height: 87
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa0a710e294bee150800000000000000
+      internalID: 5903854704447168687
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_43
+      rect:
+        serializedVersion: 2
+        x: 7045
+        y: 654
+        width: 84
+        height: 87
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 998e7ad66be2d2fb0800000000000000
+      internalID: -4671025877454690151
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_44
+      rect:
+        serializedVersion: 2
+        x: 7183
+        y: 612
+        width: 95
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca8b979f9dd7bf790800000000000000
+      internalID: -7495258779681179476
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_45
+      rect:
+        serializedVersion: 2
+        x: 7280
+        y: 637
+        width: 99
+        height: 57
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f4af3957acdf00e00800000000000000
+      internalID: 1009085362528844367
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_46
+      rect:
+        serializedVersion: 2
+        x: 7422
+        y: 649
+        width: 81
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c44da3c76b041d820800000000000000
+      internalID: 2941203184162100300
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_47
+      rect:
+        serializedVersion: 2
+        x: 7671
+        y: 655
+        width: 59
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d04b9b48547b4370800000000000000
+      internalID: 8307861860189421781
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_48
+      rect:
+        serializedVersion: 2
+        x: 7949
+        y: 655
+        width: 44
+        height: 84
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f10d6303a1697ba0800000000000000
+      internalID: -6090729668276846088
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_49
+      rect:
+        serializedVersion: 2
+        x: 8176
+        y: 654
+        width: 73
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d059409943ab5fa10800000000000000
+      internalID: 1942663549348517133
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_50
+      rect:
+        serializedVersion: 2
+        x: 8302
+        y: 621
+        width: 96
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 76c68e376ceae6630800000000000000
+      internalID: 3922264492857650279
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_51
+      rect:
+        serializedVersion: 2
+        x: 8401
+        y: 654
+        width: 90
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 408d3c2871032d0c0800000000000000
+      internalID: -4552523395781896188
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_52
+      rect:
+        serializedVersion: 2
+        x: 8527
+        y: 654
+        width: 95
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5fbb22a6d87987c00800000000000000
+      internalID: 898634759287258101
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_53
+      rect:
+        serializedVersion: 2
+        x: 8624
+        y: 637
+        width: 99
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06bb4b057416242f0800000000000000
+      internalID: -990122009143493792
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_54
+      rect:
+        serializedVersion: 2
+        x: 8781
+        y: 657
+        width: 66
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6cdac4c17d74ac810800000000000000
+      internalID: 1786319191424150982
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_55
+      rect:
+        serializedVersion: 2
+        x: 9030
+        y: 655
+        width: 44
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b0110c5a7158c7d0800000000000000
+      internalID: -2897976774241480526
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_56
+      rect:
+        serializedVersion: 2
+        x: 9291
+        y: 662
+        width: 10
+        height: 84
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d729db74b5988ef10800000000000000
+      internalID: 2299238634911273597
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_57
+      rect:
+        serializedVersion: 2
+        x: 62
+        y: 564
+        width: 52
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 65f324fcfa523e950800000000000000
+      internalID: 6477062126115635030
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_58
+      rect:
+        serializedVersion: 2
+        x: 266
+        y: 578
+        width: 71
+        height: 79
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cdeef668312007de0800000000000000
+      internalID: -1337566806445920548
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_59
+      rect:
+        serializedVersion: 2
+        x: 474
+        y: 597
+        width: 85
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0792cb087f7bae1a0800000000000000
+      internalID: -6779404015408240272
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_60
+      rect:
+        serializedVersion: 2
+        x: 1454
+        y: 586
+        width: 78
+        height: 73
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a3c438def04b37c0800000000000000
+      internalID: -4090604373242756190
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_61
+      rect:
+        serializedVersion: 2
+        x: 1678
+        y: 564
+        width: 52
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e8ade9bef6c005af0800000000000000
+      internalID: -409813891256755570
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_62
+      rect:
+        serializedVersion: 2
+        x: 1898
+        y: 555
+        width: 10
+        height: 103
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d7c2213dd79a7340800000000000000
+      internalID: 4862365723967801297
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_63
+      rect:
+        serializedVersion: 2
+        x: 2078
+        y: 564
+        width: 52
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ab6178606f303440800000000000000
+      internalID: 4913496876762885030
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_64
+      rect:
+        serializedVersion: 2
+        x: 2266
+        y: 597
+        width: 85
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 171ff3657cc28ff70800000000000000
+      internalID: 9221169471698235761
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_65
+      rect:
+        serializedVersion: 2
+        x: 3022
+        y: 586
+        width: 78
+        height: 73
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3562dedae708b2610800000000000000
+      internalID: 1597511774405207635
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_66
+      rect:
+        serializedVersion: 2
+        x: 3246
+        y: 564
+        width: 52
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3efab45c3933c8590800000000000000
+      internalID: -7670699355555516445
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_67
+      rect:
+        serializedVersion: 2
+        x: 3422
+        y: 557
+        width: 52
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 44439667f0c32fae0800000000000000
+      internalID: -1517084087361653692
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_68
+      rect:
+        serializedVersion: 2
+        x: 3610
+        y: 571
+        width: 85
+        height: 88
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4bd6970cbcd1e1100800000000000000
+      internalID: 80534604283997620
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_69
+      rect:
+        serializedVersion: 2
+        x: 6782
+        y: 554
+        width: 99
+        height: 103
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca0d84979a31d5990800000000000000
+      internalID: -7395733394467270484
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_70
+      rect:
+        serializedVersion: 2
+        x: 6970
+        y: 564
+        width: 85
+        height: 95
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 11b24c68584109aa0800000000000000
+      internalID: -6156398126891259119
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_71
+      rect:
+        serializedVersion: 2
+        x: 7502
+        y: 586
+        width: 89
+        height: 73
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c27f56181dfcafc80800000000000000
+      internalID: -8288083665495918804
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_72
+      rect:
+        serializedVersion: 2
+        x: 7725
+        y: 564
+        width: 70
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e207ac0ae409ba990800000000000000
+      internalID: -7373641297509584850
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_73
+      rect:
+        serializedVersion: 2
+        x: 7902
+        y: 555
+        width: 52
+        height: 102
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 15160bcef263c6a20800000000000000
+      internalID: 3056877826540069201
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_74
+      rect:
+        serializedVersion: 2
+        x: 8090
+        y: 583
+        width: 85
+        height: 76
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c14eba68032795c10800000000000000
+      internalID: 2042789458732639260
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_75
+      rect:
+        serializedVersion: 2
+        x: 8846
+        y: 586
+        width: 78
+        height: 73
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d6e7d9af87c1ed20800000000000000
+      internalID: 3306143021310404308
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_76
+      rect:
+        serializedVersion: 2
+        x: 9069
+        y: 564
+        width: 52
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 966fd0ab243134950800000000000000
+      internalID: 6432005870125446761
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_77
+      rect:
+        serializedVersion: 2
+        x: 9290
+        y: 555
+        width: 10
+        height: 103
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b935d825f2a523900800000000000000
+      internalID: 662691254471840667
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_78
+      rect:
+        serializedVersion: 2
+        x: 82
+        y: 287
+        width: 60
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 534a5516ec9498300800000000000000
+      internalID: 254816004668236853
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_79
+      rect:
+        serializedVersion: 2
+        x: 109
+        y: 183
+        width: 44
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 65eccea36c9778ff0800000000000000
+      internalID: -33924579882906026
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_80
+      rect:
+        serializedVersion: 2
+        x: 336
+        y: 184
+        width: 60
+        height: 69
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9aa1ad6f4cfad43a0800000000000000
+      internalID: -6679489411830637911
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_81
+      rect:
+        serializedVersion: 2
+        x: 560
+        y: 182
+        width: 73
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5b5ecd8c6e6b6be0800000000000000
+      internalID: -1482970239773811873
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_82
+      rect:
+        serializedVersion: 2
+        x: 686
+        y: 160
+        width: 96
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bea6e11dd133a6fa0800000000000000
+      internalID: -5806772566385333525
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_83
+      rect:
+        serializedVersion: 2
+        x: 785
+        y: 182
+        width: 90
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 19f27305d013138e0800000000000000
+      internalID: -1715536049801318511
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_84
+      rect:
+        serializedVersion: 2
+        x: 911
+        y: 182
+        width: 95
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff12109dbb9973cf0800000000000000
+      internalID: -272580220353961473
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_85
+      rect:
+        serializedVersion: 2
+        x: 1008
+        y: 165
+        width: 99
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 831b2db285c48bc10800000000000000
+      internalID: 2069487970352804152
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_86
+      rect:
+        serializedVersion: 2
+        x: 1144
+        y: 182
+        width: 87
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c48654ba2671f260800000000000000
+      internalID: 7129609610890478790
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_87
+      rect:
+        serializedVersion: 2
+        x: 1233
+        y: 148
+        width: 95
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4b18e7e8b5417aeb0800000000000000
+      internalID: -4708772501927329356
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_88
+      rect:
+        serializedVersion: 2
+        x: 1389
+        y: 185
+        width: 66
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e020b22b821fa890800000000000000
+      internalID: -7444711270228418330
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_89
+      rect:
+        serializedVersion: 2
+        x: 1639
+        y: 183
+        width: 44
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 764abcd04f553e100800000000000000
+      internalID: 136046920443077735
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_90
+      rect:
+        serializedVersion: 2
+        x: 1899
+        y: 190
+        width: 10
+        height: 83
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 304c7761e7ea5d8c0800000000000000
+      internalID: -3975079239518534653
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_91
+      rect:
+        serializedVersion: 2
+        x: 2125
+        y: 183
+        width: 44
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 624fa25d0dd90d120800000000000000
+      internalID: 2436620918662558758
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_92
+      rect:
+        serializedVersion: 2
+        x: 2352
+        y: 182
+        width: 73
+        height: 56
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6553d8b1a59042bf0800000000000000
+      internalID: -350144588414110378
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_93
+      rect:
+        serializedVersion: 2
+        x: 2478
+        y: 160
+        width: 96
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b171c7083664df640800000000000000
+      internalID: 5115322144934074139
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_94
+      rect:
+        serializedVersion: 2
+        x: 2577
+        y: 182
+        width: 90
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bcb82697a7ed03020800000000000000
+      internalID: 2319598425699683275
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_95
+      rect:
+        serializedVersion: 2
+        x: 2703
+        y: 182
+        width: 95
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0c852e0c96cdd55c0800000000000000
+      internalID: -4224978528637921088
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_96
+      rect:
+        serializedVersion: 2
+        x: 2800
+        y: 165
+        width: 99
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 24b653b8459a398d0800000000000000
+      internalID: -2840740759362770110
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_97
+      rect:
+        serializedVersion: 2
+        x: 2957
+        y: 185
+        width: 66
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cc0df69c1f51a7520800000000000000
+      internalID: 2700495054772883660
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_98
+      rect:
+        serializedVersion: 2
+        x: 3207
+        y: 183
+        width: 44
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6827754d55ddf6ad0800000000000000
+      internalID: -2706701490321919354
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_99
+      rect:
+        serializedVersion: 2
+        x: 3469
+        y: 183
+        width: 44
+        height: 85
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 65bdc0f10a20aefb0800000000000000
+      internalID: -4617875581176063146
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_100
+      rect:
+        serializedVersion: 2
+        x: 3694
+        y: 182
+        width: 75
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 462862631de2400b0800000000000000
+      internalID: -5763430147035856284
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_101
+      rect:
+        serializedVersion: 2
+        x: 3823
+        y: 109
+        width: 95
+        height: 96
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ecb3d83c40433d00800000000000000
+      internalID: 951174642420399332
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_102
+      rect:
+        serializedVersion: 2
+        x: 3920
+        y: 165
+        width: 99
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 037385f876b250ea0800000000000000
+      internalID: -5907267612439988432
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_103
+      rect:
+        serializedVersion: 2
+        x: 4047
+        y: 111
+        width: 96
+        height: 138
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0fe4928681e7121e0800000000000000
+      internalID: -2224358097652461840
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_104
+      rect:
+        serializedVersion: 2
+        x: 4142
+        y: 114
+        width: 98
+        height: 141
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 412d9bf1f6bba9520800000000000000
+      internalID: 2709684211764810260
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_105
+      rect:
+        serializedVersion: 2
+        x: 4270
+        y: 118
+        width: 139
+        height: 152
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 90051cd077c94ff70800000000000000
+      internalID: 9220166372280061961
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_106
+      rect:
+        serializedVersion: 2
+        x: 4318
+        y: 82
+        width: 147
+        height: 168
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 97df26e556178d470800000000000000
+      internalID: 8419604183558323577
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_107
+      rect:
+        serializedVersion: 2
+        x: 4493
+        y: 81
+        width: 197
+        height: 188
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cc76b23590be4fdd0800000000000000
+      internalID: -2453077471727491124
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_108
+      rect:
+        serializedVersion: 2
+        x: 4719
+        y: 81
+        width: 196
+        height: 187
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1db8044a2fc1896d0800000000000000
+      internalID: -2983602924669596719
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_109
+      rect:
+        serializedVersion: 2
+        x: 4942
+        y: 81
+        width: 195
+        height: 187
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e586f67e817a69e0800000000000000
+      internalID: -1627363458645850649
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_110
+      rect:
+        serializedVersion: 2
+        x: 5166
+        y: 82
+        width: 195
+        height: 188
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 266591e3fc8e83870800000000000000
+      internalID: 8662929860044871266
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_111
+      rect:
+        serializedVersion: 2
+        x: 5391
+        y: 82
+        width: 194
+        height: 187
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f67ee2343315e5030800000000000000
+      internalID: 3485312442243671919
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_112
+      rect:
+        serializedVersion: 2
+        x: 5614
+        y: 81
+        width: 196
+        height: 187
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e667b79f4822b4d90800000000000000
+      internalID: -7112553231984920978
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_113
+      rect:
+        serializedVersion: 2
+        x: 5838
+        y: 82
+        width: 195
+        height: 188
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3ad5a058f45e0da20800000000000000
+      internalID: 3085217874446015907
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_114
+      rect:
+        serializedVersion: 2
+        x: 6062
+        y: 81
+        width: 196
+        height: 188
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d822454e5bf592c00800000000000000
+      internalID: 876336837324710541
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_115
+      rect:
+        serializedVersion: 2
+        x: 6287
+        y: 81
+        width: 169
+        height: 124
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f4f0fc40abca31e0800000000000000
+      internalID: -2217235977180482311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_116
+      rect:
+        serializedVersion: 2
+        x: 6333
+        y: 165
+        width: 150
+        height: 103
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10433b4310288fe70800000000000000
+      internalID: 9149205584693900289
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_117
+      rect:
+        serializedVersion: 2
+        x: 6510
+        y: 118
+        width: 100
+        height: 146
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 26415178dcbc3b870800000000000000
+      internalID: 8697519388977599586
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_118
+      rect:
+        serializedVersion: 2
+        x: 6605
+        y: 92
+        width: 100
+        height: 129
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: deb164a5b91eda8e0800000000000000
+      internalID: -1680439028588602387
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_119
+      rect:
+        serializedVersion: 2
+        x: 6779
+        y: 183
+        width: 94
+        height: 87
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 80cdd35dadc2a5fa0800000000000000
+      internalID: -5811283050776110072
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_120
+      rect:
+        serializedVersion: 2
+        x: 7045
+        y: 182
+        width: 84
+        height: 87
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5661c3df3bb870be0800000000000000
+      internalID: -1511085544795531675
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_121
+      rect:
+        serializedVersion: 2
+        x: 7183
+        y: 140
+        width: 95
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 67b5c3c9d4996f5c0800000000000000
+      internalID: -4181986645354194058
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_122
+      rect:
+        serializedVersion: 2
+        x: 7280
+        y: 165
+        width: 99
+        height: 57
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b9593ed80c4b5eb0800000000000000
+      internalID: -4730103382650824265
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_123
+      rect:
+        serializedVersion: 2
+        x: 7422
+        y: 177
+        width: 81
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5a553d6f4494b310800000000000000
+      internalID: 1419922851384089182
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_124
+      rect:
+        serializedVersion: 2
+        x: 7671
+        y: 183
+        width: 59
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 58396b88b2b00bea0800000000000000
+      internalID: -5859170833603849339
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_125
+      rect:
+        serializedVersion: 2
+        x: 7949
+        y: 183
+        width: 44
+        height: 84
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5677c971474d48e40800000000000000
+      internalID: 5657880626961610597
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_126
+      rect:
+        serializedVersion: 2
+        x: 8176
+        y: 182
+        width: 73
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 07990b95cd6b891b0800000000000000
+      internalID: -5649564675022481040
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_127
+      rect:
+        serializedVersion: 2
+        x: 8302
+        y: 149
+        width: 96
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 694fd763cfad327c0800000000000000
+      internalID: -4097190459196181354
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_128
+      rect:
+        serializedVersion: 2
+        x: 8401
+        y: 182
+        width: 90
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2098de025a23eeb70800000000000000
+      internalID: 8930130795925702914
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_129
+      rect:
+        serializedVersion: 2
+        x: 8527
+        y: 182
+        width: 95
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c9fa900898632d9a0800000000000000
+      internalID: -6209840972003954788
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_130
+      rect:
+        serializedVersion: 2
+        x: 8624
+        y: 165
+        width: 99
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b2af5934395c20580800000000000000
+      internalID: -8862303880426948053
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_131
+      rect:
+        serializedVersion: 2
+        x: 8781
+        y: 185
+        width: 66
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57c4b2a6dbf48bb70800000000000000
+      internalID: 8914963137328532597
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_132
+      rect:
+        serializedVersion: 2
+        x: 9030
+        y: 183
+        width: 44
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 48257b931cbd47e80800000000000000
+      internalID: -8181673000081862012
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_133
+      rect:
+        serializedVersion: 2
+        x: 9291
+        y: 190
+        width: 10
+        height: 83
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: edcae6bf52b00d310800000000000000
+      internalID: 1427653339636477150
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_134
+      rect:
+        serializedVersion: 2
+        x: 62
+        y: 92
+        width: 52
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 557c142a94d8bd500800000000000000
+      internalID: 422086337483622229
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_135
+      rect:
+        serializedVersion: 2
+        x: 266
+        y: 106
+        width: 71
+        height: 79
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 956c03ee4e95c41f0800000000000000
+      internalID: -1059372972555319719
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_136
+      rect:
+        serializedVersion: 2
+        x: 474
+        y: 125
+        width: 85
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ed087a91ccc00820800000000000000
+      internalID: 2882528893409431010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_137
+      rect:
+        serializedVersion: 2
+        x: 1454
+        y: 114
+        width: 78
+        height: 73
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eef747a1aac083b40800000000000000
+      internalID: 5420096076268208110
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_138
+      rect:
+        serializedVersion: 2
+        x: 1678
+        y: 92
+        width: 52
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 47e127c7096e99720800000000000000
+      internalID: 2853565347153452660
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_139
+      rect:
+        serializedVersion: 2
+        x: 1898
+        y: 83
+        width: 10
+        height: 103
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 32acb6d850657cf70800000000000000
+      internalID: 9207422545029745187
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_140
+      rect:
+        serializedVersion: 2
+        x: 2078
+        y: 92
+        width: 52
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 49ea5d00645191ee0800000000000000
+      internalID: -1289976427859038572
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_141
+      rect:
+        serializedVersion: 2
+        x: 2266
+        y: 125
+        width: 85
+        height: 62
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 53df01fca8699b770800000000000000
+      internalID: 8627092084128546101
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_142
+      rect:
+        serializedVersion: 2
+        x: 3022
+        y: 114
+        width: 78
+        height: 73
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14f355adf95ace1d0800000000000000
+      internalID: -3320096719297495231
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_143
+      rect:
+        serializedVersion: 2
+        x: 3246
+        y: 92
+        width: 52
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 80f307756438bc410800000000000000
+      internalID: 1498435639168745224
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_144
+      rect:
+        serializedVersion: 2
+        x: 3422
+        y: 85
+        width: 52
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a9b4168419ad060a0800000000000000
+      internalID: -6890267112357409894
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_145
+      rect:
+        serializedVersion: 2
+        x: 3610
+        y: 99
+        width: 85
+        height: 88
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a564acb793e67cf00800000000000000
+      internalID: 1136998624103384666
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_146
+      rect:
+        serializedVersion: 2
+        x: 6782
+        y: 82
+        width: 99
+        height: 103
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a3430d5b89a77d5b0800000000000000
+      internalID: -5343667636547865542
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_147
+      rect:
+        serializedVersion: 2
+        x: 6970
+        y: 92
+        width: 85
+        height: 95
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ab1f5b944a200b530800000000000000
+      internalID: 3868594984545808826
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_148
+      rect:
+        serializedVersion: 2
+        x: 7502
+        y: 114
+        width: 89
+        height: 73
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c2e18650ce34eecb0800000000000000
+      internalID: -4832850669139911124
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_149
+      rect:
+        serializedVersion: 2
+        x: 7725
+        y: 92
+        width: 70
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9dd7137a57de7ab00800000000000000
+      internalID: 839900945099881945
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_150
+      rect:
+        serializedVersion: 2
+        x: 7902
+        y: 83
+        width: 52
+        height: 102
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ad872b486f063280800000000000000
+      internalID: -9064040259424645727
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_151
+      rect:
+        serializedVersion: 2
+        x: 8090
+        y: 111
+        width: 85
+        height: 76
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 52eb227aaa2969c10800000000000000
+      internalID: 2059995141214748197
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_152
+      rect:
+        serializedVersion: 2
+        x: 8846
+        y: 114
+        width: 78
+        height: 73
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 60099c56cf9241040800000000000000
+      internalID: 4617361681977806854
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_153
+      rect:
+        serializedVersion: 2
+        x: 9069
+        y: 92
+        width: 52
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 47bb7e29bc1b717c0800000000000000
+      internalID: -4100613447796409484
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Up_Down_Main_Propeller_16x16_154
+      rect:
+        serializedVersion: 2
+        x: 9290
+        y: 83
+        width: 10
+        height: 103
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 12969367106a5a4f0800000000000000
+      internalID: -818065232089224927
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Helicopter_Up_Down_Main_Propeller_16x16_0: -6728558034791168100
+      Helicopter_Up_Down_Main_Propeller_16x16_1: 4282620554103229891
+      Helicopter_Up_Down_Main_Propeller_16x16_10: -4860536806689066829
+      Helicopter_Up_Down_Main_Propeller_16x16_100: -5763430147035856284
+      Helicopter_Up_Down_Main_Propeller_16x16_101: 951174642420399332
+      Helicopter_Up_Down_Main_Propeller_16x16_102: -5907267612439988432
+      Helicopter_Up_Down_Main_Propeller_16x16_103: -2224358097652461840
+      Helicopter_Up_Down_Main_Propeller_16x16_104: 2709684211764810260
+      Helicopter_Up_Down_Main_Propeller_16x16_105: 9220166372280061961
+      Helicopter_Up_Down_Main_Propeller_16x16_106: 8419604183558323577
+      Helicopter_Up_Down_Main_Propeller_16x16_107: -2453077471727491124
+      Helicopter_Up_Down_Main_Propeller_16x16_108: -2983602924669596719
+      Helicopter_Up_Down_Main_Propeller_16x16_109: -1627363458645850649
+      Helicopter_Up_Down_Main_Propeller_16x16_11: 5810966405987262160
+      Helicopter_Up_Down_Main_Propeller_16x16_110: 8662929860044871266
+      Helicopter_Up_Down_Main_Propeller_16x16_111: 3485312442243671919
+      Helicopter_Up_Down_Main_Propeller_16x16_112: -7112553231984920978
+      Helicopter_Up_Down_Main_Propeller_16x16_113: 3085217874446015907
+      Helicopter_Up_Down_Main_Propeller_16x16_114: 876336837324710541
+      Helicopter_Up_Down_Main_Propeller_16x16_115: -2217235977180482311
+      Helicopter_Up_Down_Main_Propeller_16x16_116: 9149205584693900289
+      Helicopter_Up_Down_Main_Propeller_16x16_117: 8697519388977599586
+      Helicopter_Up_Down_Main_Propeller_16x16_118: -1680439028588602387
+      Helicopter_Up_Down_Main_Propeller_16x16_119: -5811283050776110072
+      Helicopter_Up_Down_Main_Propeller_16x16_12: 2658345092233211666
+      Helicopter_Up_Down_Main_Propeller_16x16_120: -1511085544795531675
+      Helicopter_Up_Down_Main_Propeller_16x16_121: -4181986645354194058
+      Helicopter_Up_Down_Main_Propeller_16x16_122: -4730103382650824265
+      Helicopter_Up_Down_Main_Propeller_16x16_123: 1419922851384089182
+      Helicopter_Up_Down_Main_Propeller_16x16_124: -5859170833603849339
+      Helicopter_Up_Down_Main_Propeller_16x16_125: 5657880626961610597
+      Helicopter_Up_Down_Main_Propeller_16x16_126: -5649564675022481040
+      Helicopter_Up_Down_Main_Propeller_16x16_127: -4097190459196181354
+      Helicopter_Up_Down_Main_Propeller_16x16_128: 8930130795925702914
+      Helicopter_Up_Down_Main_Propeller_16x16_129: -6209840972003954788
+      Helicopter_Up_Down_Main_Propeller_16x16_13: 1957732872467631814
+      Helicopter_Up_Down_Main_Propeller_16x16_130: -8862303880426948053
+      Helicopter_Up_Down_Main_Propeller_16x16_131: 8914963137328532597
+      Helicopter_Up_Down_Main_Propeller_16x16_132: -8181673000081862012
+      Helicopter_Up_Down_Main_Propeller_16x16_133: 1427653339636477150
+      Helicopter_Up_Down_Main_Propeller_16x16_134: 422086337483622229
+      Helicopter_Up_Down_Main_Propeller_16x16_135: -1059372972555319719
+      Helicopter_Up_Down_Main_Propeller_16x16_136: 2882528893409431010
+      Helicopter_Up_Down_Main_Propeller_16x16_137: 5420096076268208110
+      Helicopter_Up_Down_Main_Propeller_16x16_138: 2853565347153452660
+      Helicopter_Up_Down_Main_Propeller_16x16_139: 9207422545029745187
+      Helicopter_Up_Down_Main_Propeller_16x16_14: -2672699008539956077
+      Helicopter_Up_Down_Main_Propeller_16x16_140: -1289976427859038572
+      Helicopter_Up_Down_Main_Propeller_16x16_141: 8627092084128546101
+      Helicopter_Up_Down_Main_Propeller_16x16_142: -3320096719297495231
+      Helicopter_Up_Down_Main_Propeller_16x16_143: 1498435639168745224
+      Helicopter_Up_Down_Main_Propeller_16x16_144: -6890267112357409894
+      Helicopter_Up_Down_Main_Propeller_16x16_145: 1136998624103384666
+      Helicopter_Up_Down_Main_Propeller_16x16_146: -5343667636547865542
+      Helicopter_Up_Down_Main_Propeller_16x16_147: 3868594984545808826
+      Helicopter_Up_Down_Main_Propeller_16x16_148: -4832850669139911124
+      Helicopter_Up_Down_Main_Propeller_16x16_149: 839900945099881945
+      Helicopter_Up_Down_Main_Propeller_16x16_15: -3690816493052442416
+      Helicopter_Up_Down_Main_Propeller_16x16_150: -9064040259424645727
+      Helicopter_Up_Down_Main_Propeller_16x16_151: 2059995141214748197
+      Helicopter_Up_Down_Main_Propeller_16x16_152: 4617361681977806854
+      Helicopter_Up_Down_Main_Propeller_16x16_153: -4100613447796409484
+      Helicopter_Up_Down_Main_Propeller_16x16_154: -818065232089224927
+      Helicopter_Up_Down_Main_Propeller_16x16_16: -5180151103043528287
+      Helicopter_Up_Down_Main_Propeller_16x16_17: 2048758415656900995
+      Helicopter_Up_Down_Main_Propeller_16x16_18: 3372610913597126670
+      Helicopter_Up_Down_Main_Propeller_16x16_19: -4014429672042544776
+      Helicopter_Up_Down_Main_Propeller_16x16_2: -5682612873451577519
+      Helicopter_Up_Down_Main_Propeller_16x16_20: 1822750210811989621
+      Helicopter_Up_Down_Main_Propeller_16x16_21: 4691220777399410104
+      Helicopter_Up_Down_Main_Propeller_16x16_22: -8356217332990088141
+      Helicopter_Up_Down_Main_Propeller_16x16_23: -9031144103835896924
+      Helicopter_Up_Down_Main_Propeller_16x16_24: -3758055071568720644
+      Helicopter_Up_Down_Main_Propeller_16x16_25: -91561878524469469
+      Helicopter_Up_Down_Main_Propeller_16x16_26: 3539671534825746408
+      Helicopter_Up_Down_Main_Propeller_16x16_27: -5994553651121922715
+      Helicopter_Up_Down_Main_Propeller_16x16_28: -800863620682860288
+      Helicopter_Up_Down_Main_Propeller_16x16_29: 7262369792906452238
+      Helicopter_Up_Down_Main_Propeller_16x16_3: -5942851827093454663
+      Helicopter_Up_Down_Main_Propeller_16x16_30: -987412702345211844
+      Helicopter_Up_Down_Main_Propeller_16x16_31: -647174649920849808
+      Helicopter_Up_Down_Main_Propeller_16x16_32: 6397066303786934414
+      Helicopter_Up_Down_Main_Propeller_16x16_33: -1751426614277807338
+      Helicopter_Up_Down_Main_Propeller_16x16_34: 7162483678481331238
+      Helicopter_Up_Down_Main_Propeller_16x16_35: 2495289383136326466
+      Helicopter_Up_Down_Main_Propeller_16x16_36: -6093188988291723869
+      Helicopter_Up_Down_Main_Propeller_16x16_37: -7631622364371885641
+      Helicopter_Up_Down_Main_Propeller_16x16_38: -3419446067948411083
+      Helicopter_Up_Down_Main_Propeller_16x16_39: 5872443487632151924
+      Helicopter_Up_Down_Main_Propeller_16x16_4: -3552846798084498006
+      Helicopter_Up_Down_Main_Propeller_16x16_40: -6186045735631724937
+      Helicopter_Up_Down_Main_Propeller_16x16_41: 1065786386926048021
+      Helicopter_Up_Down_Main_Propeller_16x16_42: 5903854704447168687
+      Helicopter_Up_Down_Main_Propeller_16x16_43: -4671025877454690151
+      Helicopter_Up_Down_Main_Propeller_16x16_44: -7495258779681179476
+      Helicopter_Up_Down_Main_Propeller_16x16_45: 1009085362528844367
+      Helicopter_Up_Down_Main_Propeller_16x16_46: 2941203184162100300
+      Helicopter_Up_Down_Main_Propeller_16x16_47: 8307861860189421781
+      Helicopter_Up_Down_Main_Propeller_16x16_48: -6090729668276846088
+      Helicopter_Up_Down_Main_Propeller_16x16_49: 1942663549348517133
+      Helicopter_Up_Down_Main_Propeller_16x16_5: -4010235763633892546
+      Helicopter_Up_Down_Main_Propeller_16x16_50: 3922264492857650279
+      Helicopter_Up_Down_Main_Propeller_16x16_51: -4552523395781896188
+      Helicopter_Up_Down_Main_Propeller_16x16_52: 898634759287258101
+      Helicopter_Up_Down_Main_Propeller_16x16_53: -990122009143493792
+      Helicopter_Up_Down_Main_Propeller_16x16_54: 1786319191424150982
+      Helicopter_Up_Down_Main_Propeller_16x16_55: -2897976774241480526
+      Helicopter_Up_Down_Main_Propeller_16x16_56: 2299238634911273597
+      Helicopter_Up_Down_Main_Propeller_16x16_57: 6477062126115635030
+      Helicopter_Up_Down_Main_Propeller_16x16_58: -1337566806445920548
+      Helicopter_Up_Down_Main_Propeller_16x16_59: -6779404015408240272
+      Helicopter_Up_Down_Main_Propeller_16x16_6: -6445992374373897819
+      Helicopter_Up_Down_Main_Propeller_16x16_60: -4090604373242756190
+      Helicopter_Up_Down_Main_Propeller_16x16_61: -409813891256755570
+      Helicopter_Up_Down_Main_Propeller_16x16_62: 4862365723967801297
+      Helicopter_Up_Down_Main_Propeller_16x16_63: 4913496876762885030
+      Helicopter_Up_Down_Main_Propeller_16x16_64: 9221169471698235761
+      Helicopter_Up_Down_Main_Propeller_16x16_65: 1597511774405207635
+      Helicopter_Up_Down_Main_Propeller_16x16_66: -7670699355555516445
+      Helicopter_Up_Down_Main_Propeller_16x16_67: -1517084087361653692
+      Helicopter_Up_Down_Main_Propeller_16x16_68: 80534604283997620
+      Helicopter_Up_Down_Main_Propeller_16x16_69: -7395733394467270484
+      Helicopter_Up_Down_Main_Propeller_16x16_7: 3625895940221916512
+      Helicopter_Up_Down_Main_Propeller_16x16_70: -6156398126891259119
+      Helicopter_Up_Down_Main_Propeller_16x16_71: -8288083665495918804
+      Helicopter_Up_Down_Main_Propeller_16x16_72: -7373641297509584850
+      Helicopter_Up_Down_Main_Propeller_16x16_73: 3056877826540069201
+      Helicopter_Up_Down_Main_Propeller_16x16_74: 2042789458732639260
+      Helicopter_Up_Down_Main_Propeller_16x16_75: 3306143021310404308
+      Helicopter_Up_Down_Main_Propeller_16x16_76: 6432005870125446761
+      Helicopter_Up_Down_Main_Propeller_16x16_77: 662691254471840667
+      Helicopter_Up_Down_Main_Propeller_16x16_78: 254816004668236853
+      Helicopter_Up_Down_Main_Propeller_16x16_79: -33924579882906026
+      Helicopter_Up_Down_Main_Propeller_16x16_8: 751275267715784891
+      Helicopter_Up_Down_Main_Propeller_16x16_80: -6679489411830637911
+      Helicopter_Up_Down_Main_Propeller_16x16_81: -1482970239773811873
+      Helicopter_Up_Down_Main_Propeller_16x16_82: -5806772566385333525
+      Helicopter_Up_Down_Main_Propeller_16x16_83: -1715536049801318511
+      Helicopter_Up_Down_Main_Propeller_16x16_84: -272580220353961473
+      Helicopter_Up_Down_Main_Propeller_16x16_85: 2069487970352804152
+      Helicopter_Up_Down_Main_Propeller_16x16_86: 7129609610890478790
+      Helicopter_Up_Down_Main_Propeller_16x16_87: -4708772501927329356
+      Helicopter_Up_Down_Main_Propeller_16x16_88: -7444711270228418330
+      Helicopter_Up_Down_Main_Propeller_16x16_89: 136046920443077735
+      Helicopter_Up_Down_Main_Propeller_16x16_9: 3019843204994845370
+      Helicopter_Up_Down_Main_Propeller_16x16_90: -3975079239518534653
+      Helicopter_Up_Down_Main_Propeller_16x16_91: 2436620918662558758
+      Helicopter_Up_Down_Main_Propeller_16x16_92: -350144588414110378
+      Helicopter_Up_Down_Main_Propeller_16x16_93: 5115322144934074139
+      Helicopter_Up_Down_Main_Propeller_16x16_94: 2319598425699683275
+      Helicopter_Up_Down_Main_Propeller_16x16_95: -4224978528637921088
+      Helicopter_Up_Down_Main_Propeller_16x16_96: -2840740759362770110
+      Helicopter_Up_Down_Main_Propeller_16x16_97: 2700495054772883660
+      Helicopter_Up_Down_Main_Propeller_16x16_98: -2706701490321919354
+      Helicopter_Up_Down_Main_Propeller_16x16_99: -4617875581176063146
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

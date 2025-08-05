@@ -1,0 +1,3967 @@
+fileFormatVersion: 2
+guid: 7b4119ae0498cc94d80272597aa6ef5b
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7631890999847669592
+    second: Helicopter_Tail_Propeller_16x16_0
+  - first:
+      213: 6615195686417816933
+    second: Helicopter_Tail_Propeller_16x16_1
+  - first:
+      213: 3619948137902023017
+    second: Helicopter_Tail_Propeller_16x16_2
+  - first:
+      213: -231872572956961302
+    second: Helicopter_Tail_Propeller_16x16_3
+  - first:
+      213: 7950765294765574674
+    second: Helicopter_Tail_Propeller_16x16_4
+  - first:
+      213: 1131282538511581278
+    second: Helicopter_Tail_Propeller_16x16_5
+  - first:
+      213: 1039206665395122043
+    second: Helicopter_Tail_Propeller_16x16_6
+  - first:
+      213: -5208862422562479435
+    second: Helicopter_Tail_Propeller_16x16_7
+  - first:
+      213: -2546714375334163638
+    second: Helicopter_Tail_Propeller_16x16_8
+  - first:
+      213: 2240278748899012848
+    second: Helicopter_Tail_Propeller_16x16_9
+  - first:
+      213: 5502690314828088169
+    second: Helicopter_Tail_Propeller_16x16_10
+  - first:
+      213: -7812836789949057193
+    second: Helicopter_Tail_Propeller_16x16_11
+  - first:
+      213: 4613916091511003851
+    second: Helicopter_Tail_Propeller_16x16_12
+  - first:
+      213: -4157814246807395072
+    second: Helicopter_Tail_Propeller_16x16_13
+  - first:
+      213: 2122067913201309030
+    second: Helicopter_Tail_Propeller_16x16_14
+  - first:
+      213: 1598840666831896951
+    second: Helicopter_Tail_Propeller_16x16_15
+  - first:
+      213: -8667840547686718792
+    second: Helicopter_Tail_Propeller_16x16_16
+  - first:
+      213: 7096606840127209959
+    second: Helicopter_Tail_Propeller_16x16_17
+  - first:
+      213: -63796541844514393
+    second: Helicopter_Tail_Propeller_16x16_18
+  - first:
+      213: 999346124842516042
+    second: Helicopter_Tail_Propeller_16x16_19
+  - first:
+      213: -5646816187909642251
+    second: Helicopter_Tail_Propeller_16x16_20
+  - first:
+      213: 3933549060719260505
+    second: Helicopter_Tail_Propeller_16x16_21
+  - first:
+      213: 1061722412535163846
+    second: Helicopter_Tail_Propeller_16x16_22
+  - first:
+      213: 7433396587746037388
+    second: Helicopter_Tail_Propeller_16x16_23
+  - first:
+      213: 3141653737597202934
+    second: Helicopter_Tail_Propeller_16x16_24
+  - first:
+      213: -8181921945381866343
+    second: Helicopter_Tail_Propeller_16x16_25
+  - first:
+      213: -7331374638021650997
+    second: Helicopter_Tail_Propeller_16x16_26
+  - first:
+      213: -5678340894502915189
+    second: Helicopter_Tail_Propeller_16x16_27
+  - first:
+      213: 5589607204064257213
+    second: Helicopter_Tail_Propeller_16x16_28
+  - first:
+      213: 2377306309571966386
+    second: Helicopter_Tail_Propeller_16x16_29
+  - first:
+      213: 8906671165697258127
+    second: Helicopter_Tail_Propeller_16x16_30
+  - first:
+      213: -8376152510862117636
+    second: Helicopter_Tail_Propeller_16x16_31
+  - first:
+      213: -1819662366576993494
+    second: Helicopter_Tail_Propeller_16x16_32
+  - first:
+      213: 7801694727072094474
+    second: Helicopter_Tail_Propeller_16x16_33
+  - first:
+      213: -3882125744123374506
+    second: Helicopter_Tail_Propeller_16x16_34
+  - first:
+      213: -2978517438073819476
+    second: Helicopter_Tail_Propeller_16x16_35
+  - first:
+      213: -5045518433537633359
+    second: Helicopter_Tail_Propeller_16x16_36
+  - first:
+      213: -2603804881747415212
+    second: Helicopter_Tail_Propeller_16x16_37
+  - first:
+      213: -8320967206942311333
+    second: Helicopter_Tail_Propeller_16x16_38
+  - first:
+      213: 1319354545360492751
+    second: Helicopter_Tail_Propeller_16x16_39
+  - first:
+      213: -6805961225483090000
+    second: Helicopter_Tail_Propeller_16x16_40
+  - first:
+      213: -360576005500350724
+    second: Helicopter_Tail_Propeller_16x16_41
+  - first:
+      213: -8993541019733156970
+    second: Helicopter_Tail_Propeller_16x16_42
+  - first:
+      213: -2212616676034776839
+    second: Helicopter_Tail_Propeller_16x16_43
+  - first:
+      213: -4172897536645140140
+    second: Helicopter_Tail_Propeller_16x16_44
+  - first:
+      213: -1913323569211979576
+    second: Helicopter_Tail_Propeller_16x16_45
+  - first:
+      213: -8507747694217646541
+    second: Helicopter_Tail_Propeller_16x16_46
+  - first:
+      213: -4516865187655405801
+    second: Helicopter_Tail_Propeller_16x16_47
+  - first:
+      213: 153324041760188102
+    second: Helicopter_Tail_Propeller_16x16_48
+  - first:
+      213: 2406579826650485211
+    second: Helicopter_Tail_Propeller_16x16_49
+  - first:
+      213: -4887968001286549385
+    second: Helicopter_Tail_Propeller_16x16_50
+  - first:
+      213: -3083272493914884423
+    second: Helicopter_Tail_Propeller_16x16_51
+  - first:
+      213: -214802018601893679
+    second: Helicopter_Tail_Propeller_16x16_52
+  - first:
+      213: -8334585043824717592
+    second: Helicopter_Tail_Propeller_16x16_53
+  - first:
+      213: -1195685844879700018
+    second: Helicopter_Tail_Propeller_16x16_54
+  - first:
+      213: 3988904869189077487
+    second: Helicopter_Tail_Propeller_16x16_55
+  - first:
+      213: 6091977621598813111
+    second: Helicopter_Tail_Propeller_16x16_56
+  - first:
+      213: 2446402425697944645
+    second: Helicopter_Tail_Propeller_16x16_57
+  - first:
+      213: 3024197666912881256
+    second: Helicopter_Tail_Propeller_16x16_58
+  - first:
+      213: -4796142373412568993
+    second: Helicopter_Tail_Propeller_16x16_59
+  - first:
+      213: -3467924128662497049
+    second: Helicopter_Tail_Propeller_16x16_60
+  - first:
+      213: 611589677507561136
+    second: Helicopter_Tail_Propeller_16x16_61
+  - first:
+      213: 4586640579392555093
+    second: Helicopter_Tail_Propeller_16x16_62
+  - first:
+      213: 2378134195245488827
+    second: Helicopter_Tail_Propeller_16x16_63
+  - first:
+      213: -8509140417755357130
+    second: Helicopter_Tail_Propeller_16x16_64
+  - first:
+      213: -7909040795309308415
+    second: Helicopter_Tail_Propeller_16x16_65
+  - first:
+      213: 8200902325208930733
+    second: Helicopter_Tail_Propeller_16x16_66
+  - first:
+      213: -8148868018669575645
+    second: Helicopter_Tail_Propeller_16x16_67
+  - first:
+      213: 6404051300948213769
+    second: Helicopter_Tail_Propeller_16x16_68
+  - first:
+      213: 7607787060872286569
+    second: Helicopter_Tail_Propeller_16x16_69
+  - first:
+      213: -4935844651563062942
+    second: Helicopter_Tail_Propeller_16x16_70
+  - first:
+      213: -5276777472252073669
+    second: Helicopter_Tail_Propeller_16x16_71
+  - first:
+      213: 1239277864627842480
+    second: Helicopter_Tail_Propeller_16x16_72
+  - first:
+      213: 4109333721912253525
+    second: Helicopter_Tail_Propeller_16x16_73
+  - first:
+      213: -9170211733057933870
+    second: Helicopter_Tail_Propeller_16x16_74
+  - first:
+      213: -6879075483986055069
+    second: Helicopter_Tail_Propeller_16x16_75
+  - first:
+      213: 4568429091021364281
+    second: Helicopter_Tail_Propeller_16x16_76
+  - first:
+      213: 3243236763309947503
+    second: Helicopter_Tail_Propeller_16x16_77
+  - first:
+      213: 8615645660725634459
+    second: Helicopter_Tail_Propeller_16x16_78
+  - first:
+      213: 823422404458655737
+    second: Helicopter_Tail_Propeller_16x16_79
+  - first:
+      213: 7532522006329063759
+    second: Helicopter_Tail_Propeller_16x16_80
+  - first:
+      213: 3135195947085081940
+    second: Helicopter_Tail_Propeller_16x16_81
+  - first:
+      213: -4454676722939421244
+    second: Helicopter_Tail_Propeller_16x16_82
+  - first:
+      213: 6593030411479603431
+    second: Helicopter_Tail_Propeller_16x16_83
+  - first:
+      213: 4924074403003286127
+    second: Helicopter_Tail_Propeller_16x16_84
+  - first:
+      213: 8764584826866254918
+    second: Helicopter_Tail_Propeller_16x16_85
+  - first:
+      213: -3621236693143435499
+    second: Helicopter_Tail_Propeller_16x16_86
+  - first:
+      213: 1018022480797458307
+    second: Helicopter_Tail_Propeller_16x16_87
+  - first:
+      213: 1822170314920192431
+    second: Helicopter_Tail_Propeller_16x16_88
+  - first:
+      213: 7310564002965208278
+    second: Helicopter_Tail_Propeller_16x16_89
+  - first:
+      213: 175695245109975161
+    second: Helicopter_Tail_Propeller_16x16_90
+  - first:
+      213: -7497251435390490237
+    second: Helicopter_Tail_Propeller_16x16_91
+  - first:
+      213: -9047567046548608674
+    second: Helicopter_Tail_Propeller_16x16_92
+  - first:
+      213: -3581492077800230644
+    second: Helicopter_Tail_Propeller_16x16_93
+  - first:
+      213: -7979503272084275200
+    second: Helicopter_Tail_Propeller_16x16_94
+  - first:
+      213: 584364370463512851
+    second: Helicopter_Tail_Propeller_16x16_95
+  - first:
+      213: 2066304070914302578
+    second: Helicopter_Tail_Propeller_16x16_96
+  - first:
+      213: 3354458861543825776
+    second: Helicopter_Tail_Propeller_16x16_97
+  - first:
+      213: -6704683238445423617
+    second: Helicopter_Tail_Propeller_16x16_98
+  - first:
+      213: -3933229936873560841
+    second: Helicopter_Tail_Propeller_16x16_99
+  - first:
+      213: -8957950040994114587
+    second: Helicopter_Tail_Propeller_16x16_100
+  - first:
+      213: -5241065083863375568
+    second: Helicopter_Tail_Propeller_16x16_101
+  - first:
+      213: 6738811942073387421
+    second: Helicopter_Tail_Propeller_16x16_102
+  - first:
+      213: -2973805073091425722
+    second: Helicopter_Tail_Propeller_16x16_103
+  - first:
+      213: 3032689246019434799
+    second: Helicopter_Tail_Propeller_16x16_104
+  - first:
+      213: 2183475474761873060
+    second: Helicopter_Tail_Propeller_16x16_105
+  - first:
+      213: 2128735842661063436
+    second: Helicopter_Tail_Propeller_16x16_106
+  - first:
+      213: -5612765520079187145
+    second: Helicopter_Tail_Propeller_16x16_107
+  - first:
+      213: -543528590742622061
+    second: Helicopter_Tail_Propeller_16x16_108
+  - first:
+      213: 6270299764035139887
+    second: Helicopter_Tail_Propeller_16x16_109
+  - first:
+      213: -3972224995458379651
+    second: Helicopter_Tail_Propeller_16x16_110
+  - first:
+      213: -3175042230067236252
+    second: Helicopter_Tail_Propeller_16x16_111
+  - first:
+      213: -6374118185142976111
+    second: Helicopter_Tail_Propeller_16x16_112
+  - first:
+      213: -3877980510347569191
+    second: Helicopter_Tail_Propeller_16x16_113
+  - first:
+      213: -3372349997414106339
+    second: Helicopter_Tail_Propeller_16x16_114
+  - first:
+      213: -8467008959987696210
+    second: Helicopter_Tail_Propeller_16x16_115
+  - first:
+      213: 7286754638290068008
+    second: Helicopter_Tail_Propeller_16x16_116
+  - first:
+      213: 8815904304003068861
+    second: Helicopter_Tail_Propeller_16x16_117
+  - first:
+      213: 7277105531066785509
+    second: Helicopter_Tail_Propeller_16x16_118
+  - first:
+      213: -5439033339010882710
+    second: Helicopter_Tail_Propeller_16x16_119
+  - first:
+      213: 1683722134151496501
+    second: Helicopter_Tail_Propeller_16x16_120
+  - first:
+      213: -6864057900851858082
+    second: Helicopter_Tail_Propeller_16x16_121
+  - first:
+      213: 3580932900189720437
+    second: Helicopter_Tail_Propeller_16x16_122
+  - first:
+      213: 6686343300053817724
+    second: Helicopter_Tail_Propeller_16x16_123
+  - first:
+      213: 4277049416340322697
+    second: Helicopter_Tail_Propeller_16x16_124
+  - first:
+      213: 5569362482252447471
+    second: Helicopter_Tail_Propeller_16x16_125
+  - first:
+      213: 3018039251076227992
+    second: Helicopter_Tail_Propeller_16x16_126
+  - first:
+      213: 2268365066273962915
+    second: Helicopter_Tail_Propeller_16x16_127
+  - first:
+      213: 4578904843649064805
+    second: Helicopter_Tail_Propeller_16x16_128
+  - first:
+      213: 7565744866072646343
+    second: Helicopter_Tail_Propeller_16x16_129
+  - first:
+      213: 7946615131750747809
+    second: Helicopter_Tail_Propeller_16x16_130
+  - first:
+      213: 5366367496480051167
+    second: Helicopter_Tail_Propeller_16x16_131
+  - first:
+      213: 7876088953294055502
+    second: Helicopter_Tail_Propeller_16x16_132
+  - first:
+      213: -763453040900850254
+    second: Helicopter_Tail_Propeller_16x16_133
+  - first:
+      213: 1255721768669048730
+    second: Helicopter_Tail_Propeller_16x16_134
+  - first:
+      213: 2332121069745880828
+    second: Helicopter_Tail_Propeller_16x16_135
+  - first:
+      213: -8337174204314726206
+    second: Helicopter_Tail_Propeller_16x16_136
+  - first:
+      213: 1043934660841030237
+    second: Helicopter_Tail_Propeller_16x16_137
+  - first:
+      213: 8726230729496709354
+    second: Helicopter_Tail_Propeller_16x16_138
+  - first:
+      213: -296781961996134656
+    second: Helicopter_Tail_Propeller_16x16_139
+  - first:
+      213: -2905165474536844315
+    second: Helicopter_Tail_Propeller_16x16_140
+  - first:
+      213: 6227633841232725103
+    second: Helicopter_Tail_Propeller_16x16_141
+  - first:
+      213: 9085890910523002980
+    second: Helicopter_Tail_Propeller_16x16_142
+  - first:
+      213: -5602247281223073898
+    second: Helicopter_Tail_Propeller_16x16_143
+  - first:
+      213: -3506343446589253736
+    second: Helicopter_Tail_Propeller_16x16_144
+  - first:
+      213: -6004286525364356243
+    second: Helicopter_Tail_Propeller_16x16_145
+  - first:
+      213: -7735305909757479647
+    second: Helicopter_Tail_Propeller_16x16_146
+  - first:
+      213: 7251826796764763938
+    second: Helicopter_Tail_Propeller_16x16_147
+  - first:
+      213: 2581248746924304778
+    second: Helicopter_Tail_Propeller_16x16_148
+  - first:
+      213: -6700659747552233675
+    second: Helicopter_Tail_Propeller_16x16_149
+  - first:
+      213: 5922986960996034270
+    second: Helicopter_Tail_Propeller_16x16_150
+  - first:
+      213: -193091782763491312
+    second: Helicopter_Tail_Propeller_16x16_151
+  - first:
+      213: 1747928693843681827
+    second: Helicopter_Tail_Propeller_16x16_152
+  - first:
+      213: 7000785383878544162
+    second: Helicopter_Tail_Propeller_16x16_153
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 159
+        width: 1344
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 85fcb6acd6ce9e960800000000000000
+      internalID: 7631890999847669592
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_1
+      rect:
+        serializedVersion: 2
+        x: 8
+        y: 134
+        width: 15
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 56d51a09d65edcb50800000000000000
+      internalID: 6615195686417816933
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_2
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 137
+        width: 13
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 961acf0f6a3ac3230800000000000000
+      internalID: 3619948137902023017
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_3
+      rect:
+        serializedVersion: 2
+        x: 45
+        y: 145
+        width: 12
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae59eb79f1938ccf0800000000000000
+      internalID: -231872572956961302
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_4
+      rect:
+        serializedVersion: 2
+        x: 67
+        y: 140
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 21a810f19eac65e60800000000000000
+      internalID: 7950765294765574674
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_5
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 144
+        width: 13
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e50c598997f13bf00800000000000000
+      internalID: 1131282538511581278
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_6
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 143
+        width: 12
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7f281bc4f00c6e00800000000000000
+      internalID: 1039206665395122043
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_7
+      rect:
+        serializedVersion: 2
+        x: 111
+        y: 143
+        width: 12
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b26843793766b7b0800000000000000
+      internalID: -5208862422562479435
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_8
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 143
+        width: 12
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a4b83d9c4c048acd0800000000000000
+      internalID: -2546714375334163638
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_9
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 139
+        width: 11
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0f07bf117a1171f10800000000000000
+      internalID: 2240278748899012848
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_10
+      rect:
+        serializedVersion: 2
+        x: 166
+        y: 136
+        width: 18
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9638f44dfab7d5c40800000000000000
+      internalID: 5502690314828088169
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_11
+      rect:
+        serializedVersion: 2
+        x: 200
+        y: 145
+        width: 9
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 757bbfe655a339390800000000000000
+      internalID: -7812836789949057193
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_12
+      rect:
+        serializedVersion: 2
+        x: 204
+        y: 135
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bcad8f95d3ce70040800000000000000
+      internalID: 4613916091511003851
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_13
+      rect:
+        serializedVersion: 2
+        x: 236
+        y: 145
+        width: 6
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 005acf8b8f97c46c0800000000000000
+      internalID: -4157814246807395072
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_14
+      rect:
+        serializedVersion: 2
+        x: 236
+        y: 134
+        width: 6
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6655e9b1689137d10800000000000000
+      internalID: 2122067913201309030
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_15
+      rect:
+        serializedVersion: 2
+        x: 265
+        y: 134
+        width: 8
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 771c6fe8d19303610800000000000000
+      internalID: 1598840666831896951
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_16
+      rect:
+        serializedVersion: 2
+        x: 269
+        y: 145
+        width: 7
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8b2e76132f4a5b780800000000000000
+      internalID: -8667840547686718792
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_17
+      rect:
+        serializedVersion: 2
+        x: 296
+        y: 134
+        width: 15
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e1c36852563c7260800000000000000
+      internalID: 7096606840127209959
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_18
+      rect:
+        serializedVersion: 2
+        x: 325
+        y: 137
+        width: 13
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7a9957912695d1ff0800000000000000
+      internalID: -63796541844514393
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_19
+      rect:
+        serializedVersion: 2
+        x: 333
+        y: 145
+        width: 12
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a4eb6ea71046edd00800000000000000
+      internalID: 999346124842516042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_20
+      rect:
+        serializedVersion: 2
+        x: 355
+        y: 143
+        width: 12
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5f768bf589a72a1b0800000000000000
+      internalID: -5646816187909642251
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_21
+      rect:
+        serializedVersion: 2
+        x: 367
+        y: 143
+        width: 12
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9533eb6a706c69630800000000000000
+      internalID: 3933549060719260505
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_22
+      rect:
+        serializedVersion: 2
+        x: 390
+        y: 136
+        width: 18
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6cbaa31b8eefbbe00800000000000000
+      internalID: 1061722412535163846
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_23
+      rect:
+        serializedVersion: 2
+        x: 428
+        y: 145
+        width: 6
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c8e043f00dab82760800000000000000
+      internalID: 7433396587746037388
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_24
+      rect:
+        serializedVersion: 2
+        x: 428
+        y: 134
+        width: 6
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6f172ccdd65699b20800000000000000
+      internalID: 3141653737597202934
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_25
+      rect:
+        serializedVersion: 2
+        x: 457
+        y: 134
+        width: 8
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9947a812759f37e80800000000000000
+      internalID: -8181921945381866343
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_26
+      rect:
+        serializedVersion: 2
+        x: 461
+        y: 145
+        width: 7
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bc559692c99b14a90800000000000000
+      internalID: -7331374638021650997
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_27
+      rect:
+        serializedVersion: 2
+        x: 485
+        y: 135
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b837495aa0b7231b0800000000000000
+      internalID: -5678340894502915189
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_28
+      rect:
+        serializedVersion: 2
+        x: 493
+        y: 145
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: db4e6381326429d40800000000000000
+      internalID: 5589607204064257213
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_29
+      rect:
+        serializedVersion: 2
+        x: 515
+        y: 139
+        width: 12
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b5f4583e73edf020800000000000000
+      internalID: 2377306309571966386
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_30
+      rect:
+        serializedVersion: 2
+        x: 527
+        y: 143
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f8279925c3ada9b70800000000000000
+      internalID: 8906671165697258127
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_31
+      rect:
+        serializedVersion: 2
+        x: 547
+        y: 136
+        width: 25
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf4319d8bade1cb80800000000000000
+      internalID: -8376152510862117636
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_32
+      rect:
+        serializedVersion: 2
+        x: 579
+        y: 142
+        width: 17
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a2b1805f7b24fb6e0800000000000000
+      internalID: -1819662366576993494
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_33
+      rect:
+        serializedVersion: 2
+        x: 585
+        y: 134
+        width: 19
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a099b25e400354c60800000000000000
+      internalID: 7801694727072094474
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_34
+      rect:
+        serializedVersion: 2
+        x: 611
+        y: 141
+        width: 22
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6549020443bef1ac0800000000000000
+      internalID: -3882125744123374506
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_35
+      rect:
+        serializedVersion: 2
+        x: 613
+        y: 134
+        width: 23
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: caead42cb2e2aa6d0800000000000000
+      internalID: -2978517438073819476
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_36
+      rect:
+        serializedVersion: 2
+        x: 643
+        y: 134
+        width: 24
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b3dd4d87b7baf9b0800000000000000
+      internalID: -5045518433537633359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_37
+      rect:
+        serializedVersion: 2
+        x: 675
+        y: 134
+        width: 25
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 45f640f614d6ddbd0800000000000000
+      internalID: -2603804881747415212
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_38
+      rect:
+        serializedVersion: 2
+        x: 707
+        y: 134
+        width: 25
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b5c7782696cf58c80800000000000000
+      internalID: -8320967206942311333
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_39
+      rect:
+        serializedVersion: 2
+        x: 739
+        y: 134
+        width: 25
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc8520108f94f4210800000000000000
+      internalID: 1319354545360492751
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_40
+      rect:
+        serializedVersion: 2
+        x: 771
+        y: 134
+        width: 25
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b78fff235e5c81a0800000000000000
+      internalID: -6805961225483090000
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_41
+      rect:
+        serializedVersion: 2
+        x: 803
+        y: 134
+        width: 25
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cfe4f9d880afefaf0800000000000000
+      internalID: -360576005500350724
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_42
+      rect:
+        serializedVersion: 2
+        x: 835
+        y: 134
+        width: 25
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69b96e5a716803380800000000000000
+      internalID: -8993541019733156970
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_43
+      rect:
+        serializedVersion: 2
+        x: 867
+        y: 134
+        width: 25
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f077d82bd43b41e0800000000000000
+      internalID: -2212616676034776839
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_44
+      rect:
+        serializedVersion: 2
+        x: 899
+        y: 134
+        width: 25
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 451f924acc3e616c0800000000000000
+      internalID: -4172897536645140140
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_45
+      rect:
+        serializedVersion: 2
+        x: 931
+        y: 141
+        width: 17
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c8ccbcd9528275e0800000000000000
+      internalID: -1913323569211979576
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_46
+      rect:
+        serializedVersion: 2
+        x: 937
+        y: 134
+        width: 19
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 33e228f4c886ee980800000000000000
+      internalID: -8507747694217646541
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_47
+      rect:
+        serializedVersion: 2
+        x: 965
+        y: 134
+        width: 20
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 71fa87f0b0fd051c0800000000000000
+      internalID: -4516865187655405801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_48
+      rect:
+        serializedVersion: 2
+        x: 966
+        y: 145
+        width: 19
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c6a4a45767b02200800000000000000
+      internalID: 153324041760188102
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_49
+      rect:
+        serializedVersion: 2
+        x: 995
+        y: 134
+        width: 12
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd19f1b0a93e56120800000000000000
+      internalID: 2406579826650485211
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_50
+      rect:
+        serializedVersion: 2
+        x: 1007
+        y: 143
+        width: 13
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 770d6d910037a2cb0800000000000000
+      internalID: -4887968001286549385
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_51
+      rect:
+        serializedVersion: 2
+        x: 1027
+        y: 136
+        width: 25
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b6787ea0040635d0800000000000000
+      internalID: -3083272493914884423
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_52
+      rect:
+        serializedVersion: 2
+        x: 1065
+        y: 134
+        width: 11
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1d08230c3bed40df0800000000000000
+      internalID: -214802018601893679
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_53
+      rect:
+        serializedVersion: 2
+        x: 1067
+        y: 145
+        width: 9
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e05b88af0b955c80800000000000000
+      internalID: -8334585043824717592
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_54
+      rect:
+        serializedVersion: 2
+        x: 1093
+        y: 135
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ecf8bf02f02186fe0800000000000000
+      internalID: -1195685844879700018
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_55
+      rect:
+        serializedVersion: 2
+        x: 1101
+        y: 145
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe947da28df6b5730800000000000000
+      internalID: 3988904869189077487
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_56
+      rect:
+        serializedVersion: 2
+        x: 1123
+        y: 141
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7bbb603ce5d0b8450800000000000000
+      internalID: 6091977621598813111
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_57
+      rect:
+        serializedVersion: 2
+        x: 1135
+        y: 143
+        width: 12
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54441696b0e53f120800000000000000
+      internalID: 2446402425697944645
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_58
+      rect:
+        serializedVersion: 2
+        x: 1156
+        y: 143
+        width: 12
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 86a48e251cb18f920800000000000000
+      internalID: 3024197666912881256
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_59
+      rect:
+        serializedVersion: 2
+        x: 1167
+        y: 139
+        width: 11
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f508b842ceda07db0800000000000000
+      internalID: -4796142373412568993
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_60
+      rect:
+        serializedVersion: 2
+        x: 1190
+        y: 136
+        width: 18
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e8d01bf0657fdfc0800000000000000
+      internalID: -3467924128662497049
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_61
+      rect:
+        serializedVersion: 2
+        x: 1224
+        y: 145
+        width: 9
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b64224429dcc7800800000000000000
+      internalID: 611589677507561136
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_62
+      rect:
+        serializedVersion: 2
+        x: 1228
+        y: 135
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 558c51f4e4507af30800000000000000
+      internalID: 4586640579392555093
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_63
+      rect:
+        serializedVersion: 2
+        x: 1260
+        y: 145
+        width: 6
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bba11df5374d00120800000000000000
+      internalID: 2378134195245488827
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_64
+      rect:
+        serializedVersion: 2
+        x: 1260
+        y: 134
+        width: 6
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 630e5c79fd579e980800000000000000
+      internalID: -8509140417755357130
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_65
+      rect:
+        serializedVersion: 2
+        x: 1289
+        y: 134
+        width: 8
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1060481fc417d3290800000000000000
+      internalID: -7909040795309308415
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_66
+      rect:
+        serializedVersion: 2
+        x: 1293
+        y: 145
+        width: 7
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da9d0cbe6357fc170800000000000000
+      internalID: 8200902325208930733
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_67
+      rect:
+        serializedVersion: 2
+        x: 1320
+        y: 134
+        width: 15
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 322a8a926b769ee80800000000000000
+      internalID: -8148868018669575645
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_68
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 95
+        width: 97
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 90085646ab2cfd850800000000000000
+      internalID: 6404051300948213769
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_69
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 72
+        width: 6
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9611b1a260a449960800000000000000
+      internalID: 7607787060872286569
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_70
+      rect:
+        serializedVersion: 2
+        x: 45
+        y: 73
+        width: 6
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 269621dc07b508bb0800000000000000
+      internalID: -4935844651563062942
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_71
+      rect:
+        serializedVersion: 2
+        x: 77
+        y: 75
+        width: 6
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b39a1a7b8de15c6b0800000000000000
+      internalID: -5276777472252073669
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_72
+      rect:
+        serializedVersion: 2
+        x: 109
+        y: 77
+        width: 6
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0bda523e6acc23110800000000000000
+      internalID: 1239277864627842480
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_73
+      rect:
+        serializedVersion: 2
+        x: 141
+        y: 77
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 55c1d167f39470930800000000000000
+      internalID: 4109333721912253525
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_74
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 75
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2dd66ffb30ddcb080800000000000000
+      internalID: -9170211733057933870
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_75
+      rect:
+        serializedVersion: 2
+        x: 205
+        y: 74
+        width: 6
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 360b9e15b4d9880a0800000000000000
+      internalID: -6879075483986055069
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_76
+      rect:
+        serializedVersion: 2
+        x: 237
+        y: 74
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 93c93efbd02566f30800000000000000
+      internalID: 4568429091021364281
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_77
+      rect:
+        serializedVersion: 2
+        x: 269
+        y: 73
+        width: 6
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f6ab39f17aa420d20800000000000000
+      internalID: 3243236763309947503
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_78
+      rect:
+        serializedVersion: 2
+        x: 301
+        y: 72
+        width: 6
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b95ef2ea41ce09770800000000000000
+      internalID: 8615645660725634459
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_79
+      rect:
+        serializedVersion: 2
+        x: 333
+        y: 73
+        width: 6
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ff2bdd60526d6b00800000000000000
+      internalID: 823422404458655737
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_80
+      rect:
+        serializedVersion: 2
+        x: 365
+        y: 77
+        width: 6
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f497e021bd4e88860800000000000000
+      internalID: 7532522006329063759
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_81
+      rect:
+        serializedVersion: 2
+        x: 397
+        y: 75
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 45d20475a14728b20800000000000000
+      internalID: 3135195947085081940
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_82
+      rect:
+        serializedVersion: 2
+        x: 429
+        y: 74
+        width: 6
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4cd9ef35f1fcd22c0800000000000000
+      internalID: -4454676722939421244
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_83
+      rect:
+        serializedVersion: 2
+        x: 461
+        y: 74
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e8d6955a362f7b50800000000000000
+      internalID: 6593030411479603431
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_84
+      rect:
+        serializedVersion: 2
+        x: 493
+        y: 72
+        width: 6
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f62ca96a493d55440800000000000000
+      internalID: 4924074403003286127
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_85
+      rect:
+        serializedVersion: 2
+        x: 525
+        y: 73
+        width: 6
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6444429967f02a970800000000000000
+      internalID: 8764584826866254918
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_86
+      rect:
+        serializedVersion: 2
+        x: 557
+        y: 74
+        width: 6
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5174399e968cebdc0800000000000000
+      internalID: -3621236693143435499
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_87
+      rect:
+        serializedVersion: 2
+        x: 589
+        y: 74
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 38f5b457d0eb02e00800000000000000
+      internalID: 1018022480797458307
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_88
+      rect:
+        serializedVersion: 2
+        x: 621
+        y: 72
+        width: 6
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa964154f36a94910800000000000000
+      internalID: 1822170314920192431
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_89
+      rect:
+        serializedVersion: 2
+        x: 653
+        y: 73
+        width: 6
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6dcbf784a37547560800000000000000
+      internalID: 7310564002965208278
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_90
+      rect:
+        serializedVersion: 2
+        x: 685
+        y: 74
+        width: 6
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 978518105e1307200800000000000000
+      internalID: 175695245109975161
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_91
+      rect:
+        serializedVersion: 2
+        x: 717
+        y: 74
+        width: 6
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 38923c9aa8964f790800000000000000
+      internalID: -7497251435390490237
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_92
+      rect:
+        serializedVersion: 2
+        x: 749
+        y: 74
+        width: 6
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e59a0fc05b5907280800000000000000
+      internalID: -9047567046548608674
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_93
+      rect:
+        serializedVersion: 2
+        x: 781
+        y: 74
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c0177d84eebfb4ec0800000000000000
+      internalID: -3581492077800230644
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_94
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 75
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 000895f1d0c134190800000000000000
+      internalID: -7979503272084275200
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_95
+      rect:
+        serializedVersion: 2
+        x: 845
+        y: 72
+        width: 6
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3195fd08c441c1800800000000000000
+      internalID: 584364370463512851
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_96
+      rect:
+        serializedVersion: 2
+        x: 877
+        y: 73
+        width: 6
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2726ac0da9cfcac10800000000000000
+      internalID: 2066304070914302578
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_97
+      rect:
+        serializedVersion: 2
+        x: 909
+        y: 73
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0712bf7df8e6d8e20800000000000000
+      internalID: 3354458861543825776
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_98
+      rect:
+        serializedVersion: 2
+        x: 941
+        y: 74
+        width: 6
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff3e1f81e1e24f2a0800000000000000
+      internalID: -6704683238445423617
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_99
+      rect:
+        serializedVersion: 2
+        x: 973
+        y: 72
+        width: 6
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7f428b8263c5a69c0800000000000000
+      internalID: -3933229936873560841
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_100
+      rect:
+        serializedVersion: 2
+        x: 1005
+        y: 74
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5e399d226e7fea380800000000000000
+      internalID: -8957950040994114587
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_101
+      rect:
+        serializedVersion: 2
+        x: 1037
+        y: 74
+        width: 6
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 031ee97131ff347b0800000000000000
+      internalID: -5241065083863375568
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_102
+      rect:
+        serializedVersion: 2
+        x: 1069
+        y: 74
+        width: 6
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d99c17fe1c1158d50800000000000000
+      internalID: 6738811942073387421
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_103
+      rect:
+        serializedVersion: 2
+        x: 1101
+        y: 72
+        width: 6
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 64a812bba0ceab6d0800000000000000
+      internalID: -2973805073091425722
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_104
+      rect:
+        serializedVersion: 2
+        x: 1133
+        y: 72
+        width: 6
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f29b2272dc6461a20800000000000000
+      internalID: 3032689246019434799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_105
+      rect:
+        serializedVersion: 2
+        x: 1165
+        y: 73
+        width: 6
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a675f030634d4e10800000000000000
+      internalID: 2183475474761873060
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_106
+      rect:
+        serializedVersion: 2
+        x: 1197
+        y: 77
+        width: 6
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c0b547a68f9ca8d10800000000000000
+      internalID: 2128735842661063436
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_107
+      rect:
+        serializedVersion: 2
+        x: 1229
+        y: 75
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7339e184f737b12b0800000000000000
+      internalID: -5612765520079187145
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_108
+      rect:
+        serializedVersion: 2
+        x: 1261
+        y: 74
+        width: 6
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 390748f50aff478f0800000000000000
+      internalID: -543528590742622061
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_109
+      rect:
+        serializedVersion: 2
+        x: 1293
+        y: 74
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f29b786f964940750800000000000000
+      internalID: 6270299764035139887
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_110
+      rect:
+        serializedVersion: 2
+        x: 1325
+        y: 73
+        width: 6
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d7096c19962dfd8c0800000000000000
+      internalID: -3972224995458379651
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_111
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 31
+        width: 97
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4627af1f9ebffe3d0800000000000000
+      internalID: -3175042230067236252
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_112
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 8
+        width: 6
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 191023a38459a87a0800000000000000
+      internalID: -6374118185142976111
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_113
+      rect:
+        serializedVersion: 2
+        x: 45
+        y: 9
+        width: 6
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9d758d2b545ae2ac0800000000000000
+      internalID: -3877980510347569191
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_114
+      rect:
+        serializedVersion: 2
+        x: 77
+        y: 11
+        width: 6
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1bb7d97b810331d0800000000000000
+      internalID: -3372349997414106339
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_115
+      rect:
+        serializedVersion: 2
+        x: 109
+        y: 13
+        width: 6
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ead32e506342f7a80800000000000000
+      internalID: -8467008959987696210
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_116
+      rect:
+        serializedVersion: 2
+        x: 141
+        y: 13
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 822a5b49cb0cf1560800000000000000
+      internalID: 7286754638290068008
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_117
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 11
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: db3b0fd7142685a70800000000000000
+      internalID: 8815904304003068861
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_118
+      rect:
+        serializedVersion: 2
+        x: 205
+        y: 10
+        width: 6
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5ee144cbce87df460800000000000000
+      internalID: 7277105531066785509
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_119
+      rect:
+        serializedVersion: 2
+        x: 237
+        y: 10
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a63efb2defba484b0800000000000000
+      internalID: -5439033339010882710
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_120
+      rect:
+        serializedVersion: 2
+        x: 269
+        y: 9
+        width: 6
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 533009a3c58cd5710800000000000000
+      internalID: 1683722134151496501
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_121
+      rect:
+        serializedVersion: 2
+        x: 301
+        y: 8
+        width: 6
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e55f20ed4b7fdb0a0800000000000000
+      internalID: -6864057900851858082
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_122
+      rect:
+        serializedVersion: 2
+        x: 333
+        y: 9
+        width: 6
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 57f4158008702b130800000000000000
+      internalID: 3580932900189720437
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_123
+      rect:
+        serializedVersion: 2
+        x: 365
+        y: 13
+        width: 6
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c79550e3ec9aacc50800000000000000
+      internalID: 6686343300053817724
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_124
+      rect:
+        serializedVersion: 2
+        x: 397
+        y: 11
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 989b1cb88c12b5b30800000000000000
+      internalID: 4277049416340322697
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_125
+      rect:
+        serializedVersion: 2
+        x: 429
+        y: 10
+        width: 6
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fee7b0c7ba95a4d40800000000000000
+      internalID: 5569362482252447471
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_126
+      rect:
+        serializedVersion: 2
+        x: 461
+        y: 10
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 893a59665ba32e920800000000000000
+      internalID: 3018039251076227992
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_127
+      rect:
+        serializedVersion: 2
+        x: 493
+        y: 8
+        width: 6
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3ab3a2c620ada7f10800000000000000
+      internalID: 2268365066273962915
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_128
+      rect:
+        serializedVersion: 2
+        x: 525
+        y: 9
+        width: 6
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 56f940af1b98b8f30800000000000000
+      internalID: 4578904843649064805
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_129
+      rect:
+        serializedVersion: 2
+        x: 557
+        y: 10
+        width: 6
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c2de73eedceef860800000000000000
+      internalID: 7565744866072646343
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_130
+      rect:
+        serializedVersion: 2
+        x: 589
+        y: 10
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ae4fbefb5c084e60800000000000000
+      internalID: 7946615131750747809
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_131
+      rect:
+        serializedVersion: 2
+        x: 621
+        y: 8
+        width: 6
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fdf45e94eca297a40800000000000000
+      internalID: 5366367496480051167
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_132
+      rect:
+        serializedVersion: 2
+        x: 653
+        y: 9
+        width: 6
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4868787c2d7d4d60800000000000000
+      internalID: 7876088953294055502
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_133
+      rect:
+        serializedVersion: 2
+        x: 685
+        y: 10
+        width: 6
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2bdb966118ba765f0800000000000000
+      internalID: -763453040900850254
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_134
+      rect:
+        serializedVersion: 2
+        x: 717
+        y: 10
+        width: 6
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a9f6e36ab483d6110800000000000000
+      internalID: 1255721768669048730
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_135
+      rect:
+        serializedVersion: 2
+        x: 749
+        y: 10
+        width: 6
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cfe386fb1cb5d5020800000000000000
+      internalID: 2332121069745880828
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_136
+      rect:
+        serializedVersion: 2
+        x: 781
+        y: 10
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2c05541cb386c4c80800000000000000
+      internalID: -8337174204314726206
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_137
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 11
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d52c5240b0dcc7e00800000000000000
+      internalID: 1043934660841030237
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_138
+      rect:
+        serializedVersion: 2
+        x: 845
+        y: 8
+        width: 6
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae8cfbb6d9cc91970800000000000000
+      internalID: 8726230729496709354
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_139
+      rect:
+        serializedVersion: 2
+        x: 877
+        y: 9
+        width: 6
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0071a73c06e91ebf0800000000000000
+      internalID: -296781961996134656
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_140
+      rect:
+        serializedVersion: 2
+        x: 909
+        y: 9
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5e39084a467cea7d0800000000000000
+      internalID: -2905165474536844315
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_141
+      rect:
+        serializedVersion: 2
+        x: 941
+        y: 10
+        width: 6
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f64c0e1bbfffc6650800000000000000
+      internalID: 6227633841232725103
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_142
+      rect:
+        serializedVersion: 2
+        x: 973
+        y: 8
+        width: 6
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4609cadd4a1971e70800000000000000
+      internalID: 9085890910523002980
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_143
+      rect:
+        serializedVersion: 2
+        x: 1005
+        y: 10
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69ffcca97c1d042b0800000000000000
+      internalID: -5602247281223073898
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_144
+      rect:
+        serializedVersion: 2
+        x: 1037
+        y: 10
+        width: 6
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 89757857637f65fc0800000000000000
+      internalID: -3506343446589253736
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_145
+      rect:
+        serializedVersion: 2
+        x: 1069
+        y: 10
+        width: 6
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d6b3efd973d7caca0800000000000000
+      internalID: -6004286525364356243
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_146
+      rect:
+        serializedVersion: 2
+        x: 1101
+        y: 8
+        width: 6
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 125fceb224ca6a490800000000000000
+      internalID: -7735305909757479647
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_147
+      rect:
+        serializedVersion: 2
+        x: 1133
+        y: 8
+        width: 6
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 22792d1cc0aa3a460800000000000000
+      internalID: 7251826796764763938
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_148
+      rect:
+        serializedVersion: 2
+        x: 1165
+        y: 9
+        width: 6
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a89685d2f0072d320800000000000000
+      internalID: 2581248746924304778
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_149
+      rect:
+        serializedVersion: 2
+        x: 1197
+        y: 13
+        width: 6
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 537f36216797203a0800000000000000
+      internalID: -6700659747552233675
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_150
+      rect:
+        serializedVersion: 2
+        x: 1229
+        y: 11
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed6607b724da23250800000000000000
+      internalID: 5922986960996034270
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_151
+      rect:
+        serializedVersion: 2
+        x: 1261
+        y: 10
+        width: 6
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 010d55feb00025df0800000000000000
+      internalID: -193091782763491312
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_152
+      rect:
+        serializedVersion: 2
+        x: 1293
+        y: 10
+        width: 6
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 322e349d2e3e14810800000000000000
+      internalID: 1747928693843681827
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_Tail_Propeller_16x16_153
+      rect:
+        serializedVersion: 2
+        x: 1325
+        y: 9
+        width: 6
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 22bc3d20739c72160800000000000000
+      internalID: 7000785383878544162
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable: {}
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
