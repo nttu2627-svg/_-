@@ -28,10 +28,9 @@ public class UnityMainThreadDispatcher : MonoBehaviour
             DontDestroyOnLoad(this.gameObject);
         }
         else if (_instance != this)
-        {
-            // 如果场景中已存在实例，则销毁这个重复的
-            Destroy(gameObject);
-        }
+            // 如果场景中已存在实例，则移除这个重复组件，避免影响拥有者
+            // 不调用 Destroy(gameObject)，以免误删如 SimulationManager 的主要逻辑对象
+            Destroy(this);
     }
 
     public void Enqueue(Action action)
