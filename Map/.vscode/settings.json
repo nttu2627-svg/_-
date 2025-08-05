@@ -56,5 +56,7 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "Map.sln"
+    "dotnet.defaultSolution": "Map.sln",
+    "dotnet.preferCSharpExtension": true,
+    "git.ignoreLimitWarning": true
 }
