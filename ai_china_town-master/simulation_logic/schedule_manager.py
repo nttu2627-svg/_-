@@ -19,7 +19,7 @@
 """
 
 import json
-import datetime
+from datetime import datetime
 from typing import List, Optional
 
 # 行程项目的资料结构 (与 agent_memory.py 中的类似，但可以独立)
