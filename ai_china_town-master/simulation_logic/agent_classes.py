@@ -1,4 +1,4 @@
-# simulation_logic/agent_classes.py (依赖注入最终版)
+# simulation_logic/agent_classes.py (傳送邏輯重構最終版)
 
 import random
 import os
@@ -9,11 +9,56 @@ from tools.LLM import run_gpt_prompt as llm
 from .agent_memory import update_agent_schedule
 from .schedule_manager import 從檔案載入行程表 # 导入新的预设行程载入函数
 
-from .agent_memory import update_agent_schedule
+# --- 核心修改：定義場景中的傳送門連接關係 ---
+# 這是整個傳送系統的核心規則。
+# 鍵(Key): 代理人當前所在的傳送點 GameObject 名稱。
+# 值(Value): 代理人穿過該傳送點後，應該出現的目標傳送點 GameObject 名稱。
+# 對於一對多的出口（如地鐵），值可以是一個列表，系統會隨機選擇一個。
+PORTAL_CONNECTIONS = {
+    # --- 公寓出入口 (雙向) ---
+    "公寓大門_室內": "公寓大門_室外",
+    "公寓大門_室外": "公寓大門_室內",
+    "公寓側門_室內": "公寓側門_室外",
+    "公寓側門_室外": "公寓側門_室內",
+    "公寓頂樓_室內": "公寓頂樓_室外",
+    "公寓頂樓_室外": "公寓頂樓_室內",
 
-# --- 動態載入代理人設定 ---
+    # --- 公寓樓層間 (雙向) ---
+    "公寓一樓_室內": "公寓二樓_室內",
+    "公寓二樓_室內": "公寓一樓_室內", # 假設可以從二樓走回一樓
+    "公寓二樓_室內_上": "公寓頂樓_室內", # 假設有明確的上下樓物件
+    "公寓頂樓_室內_下": "公寓二樓_室內",
+
+    # --- 超市出入口 (雙向) ---
+    "超市側門_室內": "超市側門_室外",
+    "超市側門_室外": "超市側門_室內",
+    "超市左門_室內": "超市左門_室外",
+    "超市左門_室外": "超市左門_室內",
+    "超市右門_室內": "超市右門_室外",
+    "超市右門_室外": "超市右門_室內",
+    
+    # --- 地鐵出入口 (複雜關係，雙向) ---
+    # 從室內出去 (一對多，隨機選一個出口)
+    "地鐵左樓梯_室內": ["地鐵左入口_室外", "地鐵上入口_室外"],
+    "地鐵右樓梯_室內": ["地鐵右入口_室外", "地鐵下入口_室外"],
+    # 從室外進來 (多對一)
+    "地鐵左入口_室外": "地鐵左樓梯_室內",
+    "地鐵上入口_室外": "地鐵左樓梯_室內",
+    "地鐵右入口_室外": "地鐵右樓梯_室內",
+    "地鐵下入口_室外": "地鐵右樓梯_室內",
+
+    # --- 其他單一出入口建築 (雙向) ---
+    "學校門口_室內": "學校門口_室外",
+    "學校門口_室外": "學校門口_室內",
+    "健身房_室內": "健身房_室外",
+    "健身房_室外": "健身房_室內",
+    "餐廳_室內": "餐廳_室外",
+    "餐廳_室外": "餐廳_室內",
+}
+
+# --- 動態載入代理人設定 (此部分與您提供的程式碼相同) ---
 BASE_DIR = './agents/'
-
+# ... (此處省略您檔案中從 25 行到 63 行完全相同的程式碼)
 def read_file(file_path):
     try:
         with open(file_path, "r", encoding="utf-8") as file: return file.read()
@@ -49,7 +94,9 @@ def load_mbti_profiles_from_files(base_dir):
 MBTI_PROFILES = load_mbti_profiles_from_files(BASE_DIR)
 DEFAULT_MBTI_TYPES = list(MBTI_PROFILES.keys())
 
+
 class Building:
+    # ... (Building 類別與您提供的程式碼相同)
     def __init__(self, bld_id, position, integrity=100.0):
         self.id = bld_id; self.position = position; self.integrity = float(integrity)
     def apply_damage(self, intensity):
@@ -58,8 +105,10 @@ class Building:
         self.integrity = max(0, self.integrity - max(0, damage))
         return damage
 
+
 class TownAgent:
     def __init__(self, agent_id_mbti, initial_home_name, available_locations):
+        # ... (初始化前半部分與您提供的程式碼相同)
         self.id = agent_id_mbti.upper(); self.name = agent_id_mbti.upper(); self.MBTI = agent_id_mbti.upper()
         self.available_locations = available_locations 
         self.home = initial_home_name
@@ -79,27 +128,97 @@ class TownAgent:
         self.disaster_experience_log = []
 
     def is_location_outdoors(self, location_name):
-        outdoor_keywords = ["Park", "街道", "海邊", "綠道", "城鎮", "斑馬線"]
-        return any(keyword in str(location_name) for keyword in outdoor_keywords)
+        # 判斷一個地點是否在室外
+        # 注意：我們現在用 "_室外" 後綴來做更精確的判斷
+        return "_室外" in str(location_name)
 
     def find_path(self, destination):
+        """
+        [重構後] 根據當前位置和最終目的地，決定下一步要移動到的具體地點(GameObject)。
+        如果需要跨區（室內/室外），它會返回通往該區域的入口/出口名稱。
+        """
+        # 檢查目的地是否有效
+        if not destination or destination == self.curr_place:
+            return self.curr_place
+        
         is_current_outdoors = self.is_location_outdoors(self.curr_place)
         is_destination_outdoors = self.is_location_outdoors(destination)
 
+        # 如果起點和終點在同一區域 (都在室內或都在室外)，直接前往目的地。
         if is_current_outdoors == is_destination_outdoors:
             return destination
+        
+        # 如果需要從室外進入室內
         elif is_current_outdoors and not is_destination_outdoors:
-            return f"城鎮_{destination}_門口"
-        else:
-            base_location = str(self.curr_place).split('_')[0]
-            return f"{base_location}_門口"
+            # 例如：從 "公園" 到 "公寓"，需要先去 "公寓大門_室外"
+            # 這部分邏輯可以再細化，但目前先假設入口名稱與目標建築名相關
+            # 這裡我們假設入口的命名規則是 '建築名_..._室外'
+            # 這裡的邏輯需要一個從 "公寓" -> "公寓大門_室外" 的映射，暫時簡化
+            return f"{destination}_門口_室外" # 假設有這樣的命名規則，例如 "學校_門口_室外"
             
-    def teleport(self, new_location):
-        self.curr_place = new_location
-        current_step_destination = self.find_path(self.target_place)
-        self.curr_place = current_step_destination
-        self.current_thought = f"好了，現在去{self.target_place}。"
+        # 如果需要從室內出去到室外
+        else: # not is_current_outdoors and is_destination_outdoors
+            # 從當前位置找到對應的出口
+            # 例如：從 "公寓" 到 "公園"，需要先去 "公寓大門_室內"
+            if self.curr_place in PORTAL_CONNECTIONS:
+                return self.curr_place # 如果當前就在門口，就待在原地等待觸發
+            
+            # 簡化邏輯：假設建築物的主出口就是 "建築名_大門_室內"
+            building_name = self.curr_place.split('_')[0]
+            main_exit = f"{building_name}大門_室內"
+            if main_exit in PORTAL_CONNECTIONS:
+                return main_exit
+            # 如果沒有大門，則返回第一個找到的相關出口
+            for portal in PORTAL_CONNECTIONS.keys():
+                if portal.startswith(building_name) and "_室內" in portal:
+                    return portal
+        
+        return destination # 如果找不到路徑，則待在原地
 
+
+    def teleport(self, target_portal_name: str):
+        """
+        [重構後] 由 WebSocket 服務器調用，處理代理人的傳送。
+        這個函式現在直接使用 PORTAL_CONNECTIONS 字典來更新代理人的位置。
+        """
+        destination = PORTAL_CONNECTIONS.get(target_portal_name)
+        
+        if not destination:
+            print(f"⚠️ [傳送警告] 在 PORTAL_CONNECTIONS 中找不到 '{target_portal_name}' 的對應目標。")
+            self.current_thought = f"嗯？這扇門好像是壞的... ({target_portal_name})"
+            return
+
+        # 如果目標是一個列表（例如地鐵出口），隨機選一個
+        if isinstance(destination, list):
+            self.curr_place = random.choice(destination)
+        else:
+            self.curr_place = destination
+            
+        self.current_thought = f"好了，我到 '{self.curr_place}' 了。"
+        print(f"✅ [傳送成功] {self.name} 從 '{target_portal_name}' 傳送到 '{self.curr_place}'")
+
+
+    async def set_new_action(self, new_action, destination):
+        """
+        [重構後] 更新代理人的當前行動，並使用新的 find_path 邏輯來決定移動目標。
+        """
+        self.curr_action = new_action
+        self.target_place = destination # 這是最終要去的大地點，例如 "學校"
+
+        # 使用 find_path 計算出為了到達 destination，下一步應該移動到的具體 GameObject 名稱
+        next_step_location = self.find_path(destination)
+        self.curr_place = next_step_location
+
+        # 每次切換行動時重置當前想法
+        self.current_thought = ""
+        try:
+            # 更新狀態對應的表情符號
+            self.curr_action_pronunciatio = await llm.run_gpt_prompt_pronunciatio(new_action)
+        except Exception:
+            self.curr_action_pronunciatio = "❓"
+            
+    # --- 後續所有函式 (is_asleep, react_to_earthquake 等) 均與您提供的程式碼相同 ---
+    # ... (此處省略您檔案中從 118 行到結尾完全相同的程式碼)
     def is_asleep(self, current_time_hm_str):
         try:
             wake_t = datetime.strptime(self.wake_time, '%H-%M')
