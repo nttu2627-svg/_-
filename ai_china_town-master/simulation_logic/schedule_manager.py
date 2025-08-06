@@ -1,12 +1,26 @@
 # schedule_manager.py (功能简化版)
 
 """
-此模組提供从 JSON 档案载入预设行程表的功能。
+此模組提供從 JSON 檔案載入預設行程表的功能。
+目前使用的 schedules.json 結構如下::
+
+    {
+        "MBTI": {
+            "weeklySchedule": { ... },
+            "dailySchedule": [
+                {"time": "06:30", "action": "起床", "target": "公寓"},
+                ...
+            ]
+        }
+    }
+
+函式會讀取 `dailySchedule` 並轉換為後端所需的
+`[['行動', '開始時間']]` 格式。
 """
 
 import json
 import datetime
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 # 行程项目的资料结构 (与 agent_memory.py 中的类似，但可以独立)
 class 行程項目:
@@ -24,29 +38,27 @@ def 格式化時間(time_str: str) -> str:
 
 def 從檔案載入行程表(agent_id: str, 檔案路徑: str) -> Optional[List[List[str]]]:
     """
-    为指定代理人从 JSON 档案载入行程表，并转换为后端所需的格式。
-    返回格式: [['行动', '开始时间 HH-MM'], ...]
+    為指定代理人從 JSON 檔案載入行程表，並轉換為後端所需的格式。
+    返回格式: [['行動', '開始時間 HH-MM'], ...]
     """
     try:
         with open(檔案路徑, "r", encoding="utf-8") as f:
             all_schedules = json.load(f)
         
         agent_schedule_data = all_schedules.get(agent_id)
-        if not agent_schedule_data or "行程清單" not in agent_schedule_data:
-            return None
+        if not agent_schedule_data or "dailySchedule" not in agent_schedule_data:
+             return None
 
-        # 转换为后端使用的 [行动, 开始时间] 格式
-        formatted_schedule = []
-        for item in agent_schedule_data["行程清單"]:
-            start_time = item.get("開始時間")
-            action = item.get("行動")
+        formatted_schedule: List[List[str]] = []
+        for item in agent_schedule_data["dailySchedule"]:
+            start_time = item.get("time")
+            action = item.get("action")
             if start_time and action:
                 formatted_schedule.append([action, 格式化時間(start_time)])
         
-        # 按照开始时间排序
-        formatted_schedule.sort(key=lambda x: datetime.strptime(x[1], '%H-%M'))
+        formatted_schedule.sort(key=lambda x: datetime.strptime(x[1], "%H-%M"))
         return formatted_schedule
         
     except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
-        print(f"❌ [行程管理器] 载入或解析档案 '{檔案路徑}' 失败: {e}")
+        print(f"❌ [行程管理器] 載入或解析檔案 '{檔案路徑}' 失敗: {e}")
         return None

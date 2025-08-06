@@ -2,12 +2,13 @@
 
 import random
 import os
+import json
 from datetime import datetime, timedelta
 import sys
 # 从我们重构后的模组中导入
 from tools.LLM import run_gpt_prompt as llm
 from .agent_memory import update_agent_schedule
-from .schedule_manager import 從檔案載入行程表 # 导入新的预设行程载入函数
+from .schedule_manager import 從檔案載入行程表  # 导入新的预设行程载入函数
 
 # --- 核心修改：定義場景中的傳送門連接關係 ---
 # 這是整個傳送系統的核心規則。
@@ -199,26 +200,33 @@ class TownAgent:
 
 
     async def set_new_action(self, new_action, destination):
-        """
-        [重構後] 更新代理人的當前行動，並使用新的 find_path 邏輯來決定移動目標。
-        """
+        """設定代理人新的行動與目的地並更新相關狀態。"""
+        # 紀錄被中斷的行動
+        self.interrupt_action()
+
+        # 更新行動與位置
         self.curr_action = new_action
-        self.target_place = destination # 這是最終要去的大地點，例如 "學校"
+        self.target_place = destination
+        self.curr_place = self.find_path(destination)
 
-        # 使用 find_path 計算出為了到達 destination，下一步應該移動到的具體 GameObject 名稱
-        next_step_location = self.find_path(destination)
-        self.curr_place = next_step_location
-
-        # 每次切換行動時重置當前想法
-        self.current_thought = ""
+        # 產生內心想法與行動圖示
         try:
-            # 更新狀態對應的表情符號
-            self.curr_action_pronunciatio = await llm.run_gpt_prompt_pronunciatio(new_action)
+            if new_action == "醒來":
+                self.current_thought = "新的一天開始了！"
+            else:
+                self.current_thought = await llm.generate_action_thought(
+                    self.persona_summary, self.curr_place, new_action
+                )
         except Exception:
-            self.curr_action_pronunciatio = "❓"
-            
-    # --- 後續所有函式 (is_asleep, react_to_earthquake 等) 均與您提供的程式碼相同 ---
-    # ... (此處省略您檔案中從 118 行到結尾完全相同的程式碼)
+            self.current_thought = ""
+
+        try:
+            self.curr_action_pronunciatio = await llm.run_gpt_prompt_pronunciatio(
+                self.curr_action
+            )
+        except Exception:
+            self.curr_action_pronunciatio = ""
+
     def is_asleep(self, current_time_hm_str):
         try:
             wake_t = datetime.strptime(self.wake_time, '%H-%M')
@@ -278,19 +286,35 @@ class TownAgent:
         """
         根据指定的模式初始化代理人。
         schedule_mode: 'llm' 或 'preset'
-        schedule_file_path: 预设行程档案的路径
+        schedule_file_path: 預設行程檔案的路徑
         """
         # 记忆和周计划总是由 LLM 生成，以保证角色的独特性
-        memory, mem_success = await llm.run_gpt_prompt_generate_initial_memory(self.name, self.MBTI, self.persona_summary, self.home)
-        if not mem_success: return False
+        memory, mem_success = await llm.run_gpt_prompt_generate_initial_memory(
+            self.name, self.MBTI, self.persona_summary, self.home
+        )
+        if not mem_success:
+            return False
         self.memory = memory
         
+        if schedule_mode == "preset":
+            try:
+                with open(schedule_file_path, "r", encoding="utf-8") as f:
+                    all_schedules = json.load(f)
+                agent_data = all_schedules.get(self.name)
+                if not agent_data:
+                    return False
+                self.weekly_schedule = agent_data.get("weeklySchedule", {})
+            except Exception:
+                return False
+            return await self.update_daily_schedule(current_date, "preset", schedule_file_path)
+
+        # schedule_mode == 'llm'
         schedule, sched_success = await llm.run_gpt_prompt_generate_weekly_schedule(self.persona_summary)
-        if not sched_success: return False
+        if not sched_success:
+            return False
         self.weekly_schedule = schedule
 
-        # 根据模式选择如何生成每日行程
-        return await self.update_daily_schedule(current_date, schedule_mode, schedule_file_path)
+        return await self.update_daily_schedule(current_date, "llm", schedule_file_path)
 
     # ### 核心修改：每日更新流程也接受 schedule_mode ###
     async def update_daily_schedule(self, current_date, schedule_mode: str, schedule_file_path: str):

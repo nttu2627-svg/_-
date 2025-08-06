@@ -41,7 +41,7 @@ except ImportError as e:
 
 # --- 全局配置 ---
 DEFAULT_HOME_LOCATION = "公寓"
-SCHEDULE_FILE_PATH = "data/schedules.json" # 预设行程档案路径
+SCHEDULE_FILE_PATH = os.path.join(src_dir, "data", "schedules.json")  # 預設行程檔案路徑
 simulation_agents = []
 
 # --- 异步模拟核心逻辑 (异步生成器) ---
@@ -49,7 +49,7 @@ async def initialize_and_simulate(params):
     global simulation_agents
     
     total_sim_duration_minutes = params.get('duration', 2400)
-    schedule_mode = params.get('scheduleMode', 'llm')
+    schedule_mode = params.get('scheduleMode', 'preset')
     min_per_step_normal_ui = params.get('step', 30)
     start_time_dt = datetime(params.get('year', 2024), params.get('month', 11), params.get('day', 18), params.get('hour', 3), params.get('minute', 0))
     selected_mbti_list = params.get('mbti', [])
