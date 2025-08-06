@@ -17,7 +17,7 @@ def find_chat_groups(agents_list):
         groups_by_location[location].append(agent)
     return {loc: group for loc, group in groups_by_location.items() if len(group) > 1}
 
-async def handle_social_interactions(active_agents, llm_context, llm_functions):
+async def handle_social_interactions(active_agents, llm_context, llm_functions=None):
     """
     异步处理社交互动，LLM 函数通过依赖注入传入。
     """
