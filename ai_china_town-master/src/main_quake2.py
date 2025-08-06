@@ -139,7 +139,7 @@ async def initialize_and_simulate(params):
             await asyncio.gather(*update_tasks)
 
             if len(active_agents) > 1:
-                await handle_social_interactions(active_agents, llm_context, llm_functions)
+                await handle_social_interactions(active_agents, llm_context, LLM_FUNCTIONS)
         
         current_log = format_log(current_time_dt, sim_state['phase'], all_asleep)
         _history_log_buffer.append(current_log)
