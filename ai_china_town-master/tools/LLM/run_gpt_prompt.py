@@ -14,7 +14,7 @@ from opencc import OpenCC
 # --- 全局配置与日志 ---
 try:
     cc = OpenCC('s2twp')
-    print("✅ [SUCCESS] OpenCC 简繁转换器初始化成功。")
+    print("✅ [SUCCESS] OpenCC 繁簡轉換器初始化成功。")
 except Exception as e:
     print(f"❌ [CRITICAL_ERROR] 初始化 OpenCC 失败: {e}", file=sys.stderr)
     class MockCC:
@@ -65,7 +65,7 @@ async def initialize_llm():
     return True
 
 async def close_llm_session():
-    if ollama_agent: await ollama_agent.close_session(); print("OllamaAgent 会话已关闭。")
+    if ollama_agent: await ollama_agent.close_session(); print("OllamaAgent 對話已關閉。")
 
 def _json_output_regex(text: str, default: any):
     if not isinstance(text, str): return default
