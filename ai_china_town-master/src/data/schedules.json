@@ -1,0 +1,258 @@
+{
+  "ISTJ": {
+    "weeklySchedule": {
+      "Monday": "完成工作报告", "Tuesday": "整理家中物品", "Wednesday": "去超市采购一周所需",
+      "Thursday": "健身房例行锻炼", "Friday": "完成本周工作并规划下周",
+      "Saturday": "在家休息阅读", "Sunday": "拜访家人或处理杂事"
+    },
+    "dailySchedule": [
+      {"time": "06:30", "action": "起床并晨跑", "target": "Park"},
+      {"time": "08:00", "action": "开始工作", "target": "办公室"},
+      {"time": "12:00", "action": "午餐", "target": "餐廳"},
+      {"time": "13:00", "action": "继续工作", "target": "办公室"},
+      {"time": "18:00", "action": "下班并去健身房", "target": "健身房"},
+      {"time": "20:00", "action": "晚餐并回家", "target": "公寓"},
+      {"time": "22:30", "action": "准备睡觉", "target": "公寓"}
+    ]
+  },
+  "ISFJ": {
+    "weeklySchedule": {
+      "Monday": "照顾办公室的植物", "Tuesday": "为朋友准备小礼物", "Wednesday": "去医院做志工",
+      "Thursday": "整理照片与回忆", "Friday": "和亲密的朋友小聚",
+      "Saturday": "打扫公寓", "Sunday": "准备一周的便当"
+    },
+    "dailySchedule": [
+      {"time": "07:00", "action": "起床准备早餐", "target": "公寓"},
+      {"time": "09:00", "action": "上班", "target": "办公室"},
+      {"time": "12:30", "action": "与同事共进午餐", "target": "餐廳"},
+      {"time": "13:30", "action": "下午的工作", "target": "办公室"},
+      {"time": "18:30", "action": "去超市购物", "target": "超市"},
+      {"time": "20:00", "action": "回家做饭并看剧", "target": "公寓"},
+      {"time": "23:00", "action": "睡觉", "target": "公寓"}
+    ]
+  },
+  "INFJ": {
+    "weeklySchedule": {
+      "Monday": "构思新的慈善计画", "Tuesday": "与挚友深入交谈", "Wednesday": "阅读心理学书籍",
+      "Thursday": "写日记进行自我反思", "Friday": "参加一个有意义的讲座",
+      "Saturday": "独自去公园散步思考", "Sunday": "规划如何帮助他人"
+    },
+    "dailySchedule": [
+      {"time": "07:30", "action": "起床冥想", "target": "公寓"},
+      {"time": "09:30", "action": "在咖啡店进行写作", "target": "咖啡店"},
+      {"time": "13:00", "action": "简单的午餐", "target": "咖啡店"},
+      {"time": "14:00", "action": "去图书馆查资料", "target": "图书馆"},
+      {"time": "18:00", "action": "回家准备晚餐", "target": "公寓"},
+      {"time": "21:00", "action": "与朋友线上聊天", "target": "公寓"},
+      {"time": "23:30", "action": "睡觉", "target": "公寓"}
+    ]
+  },
+  "INTJ": {
+    "weeklySchedule": {
+      "Monday": "优化长期战略计画", "Tuesday": "研究新的技术领域", "Wednesday": "独立解决一个复杂问题",
+      "Thursday": "整理知识体系", "Friday": "评估本周计画的执行效率",
+      "Saturday": "进行一项个人研究项目", "Sunday": "阅读并规划未来"
+    },
+    "dailySchedule": [
+      {"time": "08:00", "action": "起床并规划一天", "target": "公寓"},
+      {"time": "09:00", "action": "在办公室进行深度工作", "target": "办公室"},
+      {"time": "13:00", "action": "独自快速午餐", "target": "办公室"},
+      {"time": "13:30", "action": "继续解决核心问题", "target": "办公室"},
+      {"time": "19:00", "action": "去健身房锻炼大脑", "target": "健身房"},
+      {"time": "21:00", "action": "回家进行晚间阅读", "target": "公寓"},
+      {"time": "00:00", "action": "睡觉", "target": "公寓"}
+    ]
+  },
+  "ISTP": {
+    "weeklySchedule": {
+      "Monday": "修理家里的电器", "Tuesday": "尝试一个新的运动", "Wednesday": "研究机械原理",
+      "Thursday": "去地铁站观察列车", "Friday": "即兴城市探险",
+      "Saturday": "组装模型或做手工", "Sunday": "开车去郊外"
+    },
+    "dailySchedule": [
+      {"time": "09:00", "action": "起床", "target": "公寓"},
+      {"time": "10:00", "action": "在车库或工作室忙活", "target": "车库"},
+      {"time": "14:00", "action": "出门解决午餐", "target": "餐廳"},
+      {"time": "15:00", "action": "去健身房活动筋骨", "target": "健身房"},
+      {"time": "18:00", "action": "骑车在城市穿梭", "target": "街道"},
+      {"time": "20:00", "action": "回家玩游戏或看电影", "target": "公寓"},
+      {"time": "01:00", "action": "睡觉", "target": "公寓"}
+    ]
+  },
+  "ISFP": {
+    "weeklySchedule": {
+      "Monday": "画一幅画或创作音乐", "Tuesday": "照顾宠物或植物", "Wednesday": "逛美术馆",
+      "Thursday": "在公园写生", "Friday": "和少数好友安静地待在一起",
+      "Saturday": "探索城市里的小巷", "Sunday": "享受一个悠闲的下午茶"
+    },
+    "dailySchedule": [
+      {"time": "09:30", "action": "自然醒", "target": "公寓"},
+      {"time": "10:30", "action": "进行艺术创作", "target": "公寓"},
+      {"time": "13:00", "action": "午餐", "target": "公寓"},
+      {"time": "14:30", "action": "带宠物去公园散步", "target": "Park"},
+      {"time": "17:00", "action": "去咖啡店喝东西", "target": "咖啡店"},
+      {"time": "19:00", "action": "回家准备晚餐", "target": "公寓"},
+      {"time": "23:00", "action": "睡觉", "target": "公寓"}
+    ]
+  },
+  "INFP": {
+    "weeklySchedule": {
+      "Monday": "写诗或故事", "Tuesday": "探索自己的价值观", "Wednesday": "看一部感人的电影",
+      "Thursday": "为理想主义事业做贡献", "Friday": "与能理解自己的人交流",
+      "Saturday": "沉浸在幻想的世界", "Sunday": "听音乐并放松"
+    },
+    "dailySchedule": [
+      {"time": "10:00", "action": "起床并写晨间日记", "target": "公寓"},
+      {"time": "11:00", "action": "阅读或写作", "target": "公寓"},
+      {"time": "13:30", "action": "午餐", "target": "公寓"},
+      {"time": "15:00", "action": "去咖啡店寻找灵感", "target": "咖啡店"},
+      {"time": "18:00", "action": "去公园的长椅上发呆", "target": "Park"},
+      {"time": "20:00", "action": "回家看电影", "target": "公寓"},
+      {"time": "00:30", "action": "睡觉", "target": "公寓"}
+    ]
+  },
+  "INTP": {
+    "weeklySchedule": {
+      "Monday": "钻研一个复杂的理论", "Tuesday": "编程解决一个难题", "Wednesday": "阅读科学或哲学文章",
+      "Thursday": "分析一个系统或模式", "Friday": "与少数聪明人辩论",
+      "Saturday": "沉迷于个人兴趣", "Sunday": "构思一个疯狂的发明"
+    },
+    "dailySchedule": [
+      {"time": "11:00", "action": "起床", "target": "公寓"},
+      {"time": "12:00", "action": "线上浏览技术论坛", "target": "公寓"},
+      {"time": "14:00", "action": "叫外卖当午餐", "target": "公寓"},
+      {"time": "15:00", "action": "进行个人项目研究", "target": "公寓"},
+      {"time": "20:00", "action": "玩策略游戏", "target": "公寓"},
+      {"time": "02:00", "action": "在深夜继续思考", "target": "公寓"},
+      {"time": "03:00", "action": "睡觉", "target": "公寓"}
+    ]
+  },
+  "ESTP": {
+    "weeklySchedule": {
+      "Monday": "参加竞技性运动", "Tuesday": "认识新朋友", "Wednesday": "处理紧急事务",
+      "Thursday": "去健身房挑战极限", "Friday": "参加派对或社交活动",
+      "Saturday": "一场说走就走的旅行", "Sunday": "尝试刺激的活动"
+    },
+    "dailySchedule": [
+      {"time": "08:00", "action": "起床去健身房", "target": "健身房"},
+      {"time": "10:00", "action": "处理一些机动的工作", "target": "办公室"},
+      {"time": "13:00", "action": "和朋友们吃午餐", "target": "餐廳"},
+      {"time": "14:30", "action": "在城市里兜风", "target": "街道"},
+      {"time": "17:00", "action": "去商场逛逛", "target": "超市"},
+      {"time": "20:00", "action": "参加晚上的聚会", "target": "酒吧"},
+      {"time": "01:00", "action": "回家睡觉", "target": "公寓"}
+    ]
+  },
+  "ESFP": {
+    "weeklySchedule": {
+      "Monday": "成为众人瞩目的焦点", "Tuesday": "购物或打扮", "Wednesday": "给朋友带来欢乐",
+      "Thursday": "参加表演或KTV", "Friday": "组织一场聚会",
+      "Saturday": "享受当下的一切", "Sunday": "和大家一起去餐厅"
+    },
+    "dailySchedule": [
+      {"time": "10:00", "action": "起床打扮", "target": "公寓"},
+      {"time": "11:30", "action": "去咖啡店和朋友碰面", "target": "咖啡店"},
+      {"time": "13:00", "action": "午餐", "target": "餐廳"},
+      {"time": "15:00", "action": "逛街购物", "target": "超市"},
+      {"time": "18:00", "action": "准备晚上的派对", "target": "公寓"},
+      {"time": "20:00", "action": "派对时间", "target": "House"},
+      {"time": "00:00", "action": "睡觉", "target": "公寓"}
+    ]
+  },
+  "ENFP": {
+    "weeklySchedule": {
+      "Monday": "构思一百个新点子", "Tuesday": "鼓励身边的朋友", "Wednesday": "参加社交活动认识新人",
+      "Thursday": "探索新的兴趣爱好", "Friday": "来一场头脑风暴",
+      "Saturday": "和一大群朋友出去玩", "Sunday": "自由地即兴发挥"
+    },
+    "dailySchedule": [
+      {"time": "09:00", "action": "起床，充满活力", "target": "公寓"},
+      {"time": "10:00", "action": "在咖啡店与人交流", "target": "咖啡店"},
+      {"time": "13:00", "action": "和新认识的朋友吃午餐", "target": "餐廳"},
+      {"time": "15:00", "action": "参加创意工作坊", "target": "學校"},
+      {"time": "18:00", "action": "去公园即兴表演", "target": "Park"},
+      {"time": "20:30", "action": "和朋友们晚餐", "target": "餐廳"},
+      {"time": "23:30", "action": "睡觉", "target": "公寓"}
+    ]
+  },
+  "ENTP": {
+    "weeklySchedule": {
+      "Monday": "挑战现有规则", "Tuesday": "与人进行智力辩论", "Wednesday": "发明一个新东西",
+      "Thursday": "同时开启多个项目", "Friday": "寻找系统漏洞并加以利用",
+      "Saturday": "参加一个有趣的辩论会", "Sunday": "思考如何改变世界"
+    },
+    "dailySchedule": [
+      {"time": "09:30", "action": "起床，思考新点子", "target": "公寓"},
+      {"time": "11:00", "action": "在网上和人辩论", "target": "公寓"},
+      {"time": "13:00", "action": "午餐", "target": "公寓"},
+      {"time": "14:00", "action": "去学校图书馆查阅资料", "target": "學校"},
+      {"time": "17:00", "action": "与人讨论创业项目", "target": "咖啡店"},
+      {"time": "20:00", "action": "研究新科技", "target": "公寓"},
+      {"time": "02:00", "action": "睡觉", "target": "公寓"}
+    ]
+  },
+  "ESTJ": {
+    "weeklySchedule": {
+      "Monday": "组织团队完成任务", "Tuesday": "确保所有事情都井井有条", "Wednesday": "执行计画",
+      "Thursday": "检查工作进度", "Friday": "主持一个高效的会议",
+      "Saturday": "整理社区环境", "Sunday": "制定下周的详细计画"
+    },
+    "dailySchedule": [
+      {"time": "06:00", "action": "起床并规划一天", "target": "公寓"},
+      {"time": "07:30", "action": "在办公室开始工作", "target": "办公室"},
+      {"time": "12:00", "action": "工作午餐", "target": "办公室"},
+      {"time": "13:00", "action": "监督项目执行", "target": "办公室"},
+      {"time": "18:00", "action": "下班", "target": "办公室"},
+      {"time": "19:00", "action": "参加社区会议", "target": "社区中心"},
+      {"time": "22:00", "action": "回家准备睡觉", "target": "公寓"}
+    ]
+  },
+  "ESFJ": {
+    "weeklySchedule": {
+      "Monday": "帮助同事解决困难", "Tuesday": "组织办公室聚餐", "Wednesday": "关心家人的近况",
+      "Thursday": "确保团队和谐", "Friday": "举办一个温馨的派对",
+      "Saturday": "参加社区服务", "Sunday": "和家人朋友共度"
+    },
+    "dailySchedule": [
+      {"time": "07:00", "action": "起床为大家准备早餐", "target": "公寓"},
+      {"time": "09:00", "action": "开始一天的工作", "target": "办公室"},
+      {"time": "12:30", "action": "组织大家一起订午餐", "target": "办公室"},
+      {"time": "13:30", "action": "帮助同事", "target": "办公室"},
+      {"time": "18:30", "action": "去超市为晚餐采购", "target": "超市"},
+      {"time": "20:00", "action": "和家人共进晚餐", "target": "公寓"},
+      {"time": "23:00", "action": "睡觉", "target": "公寓"}
+    ]
+  },
+  "ENFJ": {
+    "weeklySchedule": {
+      "Monday": "激励团队成员", "Tuesday": "指导和培养新人", "Wednesday": "发表演讲",
+      "Thursday": "组织一个团队建设活动", "Friday": "为他人的成长喝采",
+      "Saturday": "参加有意义的社交活动", "Sunday": "与所爱的人共度时光"
+    },
+    "dailySchedule": [
+      {"time": "07:00", "action": "起床，充满正能量", "target": "公寓"},
+      {"time": "08:30", "action": "在办公室激励同事", "target": "办公室"},
+      {"time": "12:00", "action": "与团队共进午餐", "target": "餐廳"},
+      {"time": "14:00", "action": "在学校进行分享讲座", "target": "學校"},
+      {"time": "17:00", "action": "与朋友喝咖啡交流", "target": "咖啡店"},
+      {"time": "19:30", "action": "参加晚宴", "target": "餐廳"},
+      {"time": "23:00", "action": "睡觉", "target": "公寓"}
+    ]
+  },
+  "ENTJ": {
+    "weeklySchedule": {
+      "Monday": "制定并下达指令", "Tuesday": "领导团队攻克难关", "Wednesday": "优化流程提升效率",
+      "Thursday": "进行商业谈判", "Friday": "达成目标并设定新目标",
+      "Saturday": "阅读管理学书籍", "Sunday": "规划帝国的下一步"
+    },
+    "dailySchedule": [
+      {"time": "06:30", "action": "起床并审阅计画", "target": "公寓"},
+      {"time": "08:00", "action": "在办公室主持晨会", "target": "办公室"},
+      {"time": "12:30", "action": "与重要客户午餐", "target": "餐廳"},
+      {"time": "14:00", "action": "指挥项目进行", "target": "办公室"},
+      {"time": "19:00", "action": "去健身房保持精力", "target": "健身房"},
+      {"time": "21:00", "action": "晚上继续处理战略问题", "target": "公寓"},
+      {"time": "00:00", "action": "睡觉", "target": "公寓"}
+    ]
+  }
+}
