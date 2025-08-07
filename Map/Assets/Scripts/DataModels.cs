@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-
+using Newtonsoft.Json.Linq;
 // 发送到后端
 [Serializable]
 public class SimulationStartCommand { [JsonProperty("command")] public string Command = "start_simulation"; [JsonProperty("params")] public SimulationParameters Params; }
@@ -26,8 +26,12 @@ public class SimulationParameters
 
 // 从后端接收
 [Serializable]
-public class WebSocketMessage { [JsonProperty("type")] public string Type; [JsonProperty("data")] public UpdateData Data; [JsonProperty("message")] public string Message; }
-
+public class WebSocketMessage
+{
+    [JsonProperty("type")] public string Type;
+    [JsonProperty("data")] public JToken Data;
+    [JsonProperty("message")] public string Message;
+}
 [Serializable]
 public class UpdateData
 {
@@ -37,6 +41,9 @@ public class UpdateData
     [JsonProperty("buildingStates")] public Dictionary<string, BuildingState> BuildingStates;
     [JsonProperty("llmLog")] public string LlmLog;
     [JsonProperty("status")] public string Status;
+    [JsonProperty("focusAgent")] public string FocusAgent;
+    [JsonProperty("intensity")] public float Intensity;
+
 }
 
 [Serializable]
@@ -44,3 +51,20 @@ public class AgentState { [JsonProperty("name")] public string Name; [JsonProper
 
 [Serializable]
 public class BuildingState { [JsonProperty("id")] public string Id; [JsonProperty("integrity")] public float Integrity; }
+
+[Serializable]
+public class ScoreDetail
+{
+    [JsonProperty("loss_score")] public float LossScore;
+    [JsonProperty("response_score")] public float ResponseScore;
+    [JsonProperty("coop_score")] public float CoopScore;
+    [JsonProperty("total_score")] public float TotalScore;
+    [JsonProperty("notes")] public string Notes;
+}
+
+[Serializable]
+public class EvaluationReport
+{
+    [JsonProperty("scores")] public Dictionary<string, ScoreDetail> Scores;
+    [JsonProperty("text")] public string Text;
+}

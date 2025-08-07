@@ -125,7 +125,10 @@ class TownAgent:
         self.current_thought = ""; self.health = 100; self.is_injured = False; self.mental_state = "calm"
         self.current_building = None; self.interrupted_action = None
         self.memory = "尚未生成"; self.weekly_schedule = {}
-        self.daily_schedule = []; self.wake_time = "07-00"; self.sleep_time = "23-00"
+        self.daily_schedule = []
+        self.current_schedule_index = 0  # 用於行程切換
+        self.wake_time = "07-00"
+        self.sleep_time = "23-00"
         self.disaster_experience_log = []
 
     def is_location_outdoors(self, location_name):
@@ -175,6 +178,36 @@ class TownAgent:
                     return portal
         
         return destination # 如果找不到路徑，則待在原地
+
+    def get_schedule_item_at(self, current_time_hm_str):
+        """根據當前時間取得對應的行程項目。"""
+        try:
+            current_t = datetime.strptime(current_time_hm_str, "%H-%M")
+        except (ValueError, TypeError):
+            return None
+
+        latest_item = None
+        for item in self.daily_schedule:
+            if len(item) < 2:
+                continue
+            action, start_str = item[0], item[1]
+            target = item[2] if len(item) > 2 else action
+            try:
+                start_t = datetime.strptime(start_str, "%H-%M")
+            except (ValueError, TypeError):
+                continue
+            if start_t <= current_t:
+                latest_item = (action, target)
+        return latest_item
+
+    async def update_action_by_time(self, current_time_hm_str):
+        """依據當前時間切換行程與規劃路徑。"""
+        item = self.get_schedule_item_at(current_time_hm_str)
+        if not item:
+            return
+        action, target = item
+        if action != self.curr_action or target != self.target_place:
+            await self.set_new_action(action, target)
 
 
     def teleport(self, target_portal_name: str):
@@ -337,6 +370,7 @@ class TownAgent:
                 
                 # 使用原始的 [名称, 分钟数] 列表来生成行程
                 self.daily_schedule = update_agent_schedule(self.wake_time, raw_tasks)
+                self.current_schedule_index = 0
                 
                 # 计算睡眠时间
                 try:
@@ -353,6 +387,8 @@ class TownAgent:
             preset_schedule = 從檔案載入行程表(self.name, schedule_file_path)
             if preset_schedule:
                 self.daily_schedule = preset_schedule
+                self.current_schedule_index = 0
+
                 # 从预设行程中推断作息时间
                 if self.daily_schedule:
                     self.wake_time = self.daily_schedule[0][1] # 第一个活动的开始时间

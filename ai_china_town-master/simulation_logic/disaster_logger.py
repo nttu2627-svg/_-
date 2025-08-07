@@ -100,3 +100,15 @@ class 災難記錄器:
                 "notes": f"有效合作 {有效合作次數} 次, 爭吵 {data['爭吵次數']} 次"
             }
         return 結果
+
+    def 生成報表(self, 代理人最終狀態: Dict[str, Any]) -> Dict[str, Any]:
+        """產出包含各代理人分數細項的報表。"""
+        評分結果 = self.計算評分(代理人最終狀態)
+        行數 = ["--- 災難模擬評分報表 ---"]
+        for agent_id, scores in 評分結果.items():
+            行數.append(
+                f"{agent_id}: 總分 {scores['total_score']} (損失 {scores['loss_score']}, 反應 {scores['response_score']}, 合作 {scores['coop_score']})"
+            )
+            行數.append(f"  {scores['notes']}")
+        報表文字 = "\n".join(行數)
+        return {"scores": 評分結果, "text": 報表文字}

@@ -23,6 +23,7 @@ public class AgentController : MonoBehaviour
     private Camera _mainCamera;
     private SimulationClient _simulationClient; 
     private string _targetLocationName;
+    private string _currentAction;
 
     void Awake()
     {
@@ -92,7 +93,7 @@ public class AgentController : MonoBehaviour
             }
         }
     }
-    
+
     public void UpdateState(AgentState state)
     {
         if (!_isInitialized) return;
@@ -105,6 +106,13 @@ public class AgentController : MonoBehaviour
         {
             Debug.LogWarning($"地點 '{state.Location}' 在場景中未找到，代理人 '{agentName}' 將停在原地。");
         }
+        _currentAction = state.CurrentState;
+    }
+
+    public void SetActionState(string action)
+    {
+        _currentAction = action;
+        // 目前僅記錄動作，可在此觸發動畫或 UI 顯示
     }
     
     private void OnTriggerEnter2D(Collider2D other)

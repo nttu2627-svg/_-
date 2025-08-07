@@ -115,8 +115,13 @@ async def initialize_and_simulate(params):
         except Exception as e: _history_log_buffer.append(f"[ERROR] 載入地震事件JSON錯誤: {e}")
 
     sim_state = {'phase': "Normal", 'time': start_time_dt, 'next_event_idx': 0, 'eq_enabled': eq_enabled}
-    llm_context = {'update_log': lambda msg, lvl: _history_log_buffer.append(f"[{lvl}] {msg}"), 'chat_buffer': _chat_buffer, 'event_log_buffer': _event_log_buffer, 'disaster_logger': disaster_logger}
-    
+    llm_context = {
+        'update_log': lambda msg, lvl: _history_log_buffer.append(f"[{lvl}] {msg}"),
+        'chat_buffer': _chat_buffer,
+        'event_log_buffer': _event_log_buffer,
+        'disaster_logger': disaster_logger,
+        'ws_event_queue': []
+    }    
     while sim_state['time'] < sim_end_time_dt:
         current_time_dt = sim_state['time']
         current_time_hm_str = current_time_dt.strftime('%H-%M')
@@ -155,9 +160,11 @@ async def initialize_and_simulate(params):
     
     # ### 新增：模拟结束后计算并发送评分 ###
     final_agent_states = {agent.name: {"hp": agent.health} for agent in agents}
-    scores = disaster_logger.計算評分(final_agent_states)
-    print(f"模擬結束，災後評分: {scores}")
-    yield {"type": "evaluation", "data": scores}
+    report = llm_context.get('evaluation_report')
+    if not report:
+        report = disaster_logger.生成報表(final_agent_states)
+    print(f"模擬結束，災後評分: {report['scores']}")
+    yield {"type": "evaluation", "data": report}
 
     yield {"type": "end", "data": { "message": "模擬結束" }}
 

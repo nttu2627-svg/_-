@@ -16,6 +16,8 @@ public class UIController : MonoBehaviour
     [Header("核心依賴 (必须赋值!)")]
     [Tooltip("場景中的 CameraManager 實例，用於控制攝影機")]
     public CameraManager cameraManager; // ### 新增攝影機管理器引用 ###
+    [Tooltip("場景中的 CameraController 實例，用於手動跟隨")]
+    public CameraController cameraController;
     [Tooltip("場景中的 SimulationClient 實例")]
     public SimulationClient simulationClient;
     [Tooltip("包含所有代理人 Prefab 實例的父物件")]
@@ -49,6 +51,15 @@ public class UIController : MonoBehaviour
     public LogScrollView historyLogView;
     public LogScrollView llmLogView;
 
+    [Header("日誌切換與其他按鈕 (可選)")]
+    [Tooltip("包含三個日誌切換按鈕的父物件")]
+    public GameObject logButtonGroup;
+    [Tooltip("啟動前隱藏的攝影機按鈕面板")]
+    public GameObject cameraButtonsPanel;
+    public Button mainLogButton;
+    public Button historyLogButton;
+    public Button llmLogButton;
+
     [Header("事件相关 UI (可选)")]
     public Toggle eqEnabledToggle;
     public TMP_InputField eqJsonInput;
@@ -71,7 +82,7 @@ public class UIController : MonoBehaviour
     {
         if (!ValidateDependencies())
         {
-            Debug.LogError("UIController 已被禁用，因为缺少一个或多个关键的 Inspector 引用。请检查 Console 中的错误讯息。", this);
+            Debug.LogError("UIController 已被禁用，因为缺少一个或多个关键的 Inspector 引用。请检查 Console 中的錯誤讯息。", this);
             this.enabled = false;
             return;
         }
@@ -90,6 +101,18 @@ public class UIController : MonoBehaviour
         {
             startButton.onClick.AddListener(OnStartButtonClick);
         }
+        // 啟動前先隱藏特定 UI
+        if (logButtonGroup != null) logButtonGroup.SetActive(false);
+        if (cameraButtonsPanel != null) cameraButtonsPanel.SetActive(false);
+        if (statusBarText != null) statusBarText.gameObject.SetActive(false);
+        if (mainLogView != null) mainLogView.gameObject.SetActive(false);
+        if (historyLogView != null) historyLogView.gameObject.SetActive(false);
+        if (llmLogView != null) llmLogView.gameObject.SetActive(false);
+
+        // 設定日誌切換按鈕
+        if (mainLogButton != null) mainLogButton.onClick.AddListener(ShowMainLogDisplay);
+        if (historyLogButton != null) historyLogButton.onClick.AddListener(ShowHistoryLogDisplay);
+        if (llmLogButton != null) llmLogButton.onClick.AddListener(ShowLlmLogDisplay);
 
         SetDefaultValues();
 
@@ -103,6 +126,9 @@ public class UIController : MonoBehaviour
     {
         // 移除所有監聽器，防止記憶體洩漏
         if (startButton != null) startButton.onClick.RemoveListener(OnStartButtonClick);
+        if (mainLogButton != null) mainLogButton.onClick.RemoveListener(ShowMainLogDisplay);
+        if (historyLogButton != null) historyLogButton.onClick.RemoveListener(ShowHistoryLogDisplay);
+        if (llmLogButton != null) llmLogButton.onClick.RemoveListener(ShowLlmLogDisplay);
         SimulationClient.OnStatusUpdate -= UpdateStatusBar;
         SimulationClient.OnLogUpdate -= UpdateLogs;
 
@@ -119,13 +145,14 @@ public class UIController : MonoBehaviour
     {
         bool isValid = true;
         // ### 新增對 CameraManager 的檢查 ###
-        if (cameraManager == null) { Debug.LogError("UIController 错误: 'Camera Manager' 未赋值! 攝影機跟隨功能將失效。", this); isValid = false; }
-        if (simulationClient == null) { Debug.LogError("UIController 错误: 'Simulation Client' 未赋值!", this); isValid = false; }
-        if (characterRoot == null) { Debug.LogError("UIController 错误: 'Character Root' 未赋值!", this); isValid = false; }
-        if (locationRoot == null) { Debug.LogError("UIController 错误: 'Location Root' 未赋值!", this); isValid = false; }
-        if (mbtiTogglePrefab == null) { Debug.LogError("UIController 错误: 'Mbti Toggle Prefab' 未赋值!", this); isValid = false; }
-        if (mbtiToggleGroupParent == null) { Debug.LogError("UIController 错误: 'Mbti Toggle Group Parent' 未赋值!", this); isValid = false; }
-        if (startButton == null) { Debug.LogError("UIController 错误: 'Start Button' 未赋值!", this); isValid = false; }
+        if (cameraManager == null) { Debug.LogError("UIController 錯誤: 'Camera Manager' 未賦值! 攝影機跟隨功能將失效。", this); isValid = false; }
+        if (cameraController == null) { Debug.LogError("UIController 错误: 'Camera Controller' 未赋值!", this); isValid = false; }
+        if (simulationClient == null) { Debug.LogError("UIController 錯誤: 'Simulation Client' 未賦值!", this); isValid = false; }
+        if (characterRoot == null) { Debug.LogError("UIController 錯誤: 'Character Root' 未賦值!", this); isValid = false; }
+        if (locationRoot == null) { Debug.LogError("UIController 錯誤: 'Location Root' 未賦值!", this); isValid = false; }
+        if (mbtiTogglePrefab == null) { Debug.LogError("UIController 錯誤: 'Mbti Toggle Prefab' 未賦值!", this); isValid = false; }
+        if (mbtiToggleGroupParent == null) { Debug.LogError("UIController 錯誤: 'Mbti Toggle Group Parent' 未賦值!", this); isValid = false; }
+        if (startButton == null) { Debug.LogError("UIController 錯誤: 'Start Button' 未賦值!", this); isValid = false; }
         return isValid;
     }
 
@@ -199,7 +226,8 @@ public class UIController : MonoBehaviour
             // 則命令攝影機管理器切換模式並開始跟隨此代理人
             if (isOn && cameraManager != null)
             {
-                cameraManager.SetFollowTarget(agent.transform);
+                cameraController?.FollowTarget(agent.transform);
+
             }
         }
     }
@@ -281,7 +309,7 @@ public class UIController : MonoBehaviour
 
         if (selectedMbti.Count == 0)
         {
-            UpdateStatusBar("错误：请至少选择一个代理人");
+            UpdateStatusBar("錯誤：请至少选择一个代理人");
             return;
         }
 
@@ -309,6 +337,12 @@ public class UIController : MonoBehaviour
 
         HideSettingsPanels();
         simulationClient.StartSimulation(parameters);
+
+        // 顯示被隱藏的 UI 元件
+        if (logButtonGroup != null) logButtonGroup.SetActive(true);
+        if (cameraButtonsPanel != null) cameraButtonsPanel.SetActive(true);
+        if (statusBarText != null) statusBarText.gameObject.SetActive(true);
+        ShowMainLogDisplay();
     }
 
     private void UpdateStatusBar(string status)
@@ -332,7 +366,28 @@ public class UIController : MonoBehaviour
         historyLogView?.SetTimeFilter(start, end);
         llmLogView?.SetTimeFilter(start, end);
     }
-        private void PopulateCameraButtonUI()
+
+    private void ShowMainLogDisplay()
+    {
+        if (mainLogView != null) mainLogView.gameObject.SetActive(true);
+        if (historyLogView != null) historyLogView.gameObject.SetActive(false);
+        if (llmLogView != null) llmLogView.gameObject.SetActive(false);
+    }
+
+    private void ShowHistoryLogDisplay()
+    {
+        if (mainLogView != null) mainLogView.gameObject.SetActive(false);
+        if (historyLogView != null) historyLogView.gameObject.SetActive(true);
+        if (llmLogView != null) llmLogView.gameObject.SetActive(false);
+    }
+
+    private void ShowLlmLogDisplay()
+    {
+        if (mainLogView != null) mainLogView.gameObject.SetActive(false);
+        if (historyLogView != null) historyLogView.gameObject.SetActive(false);
+        if (llmLogView != null) llmLogView.gameObject.SetActive(true);
+    }
+    private void PopulateCameraButtonUI()
     {
         // 檢查必要的引用是否都已設定
         if (cameraButtonGroupParent == null || cameraButtonPrefab == null || cameraManager == null)

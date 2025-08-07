@@ -6,6 +6,29 @@ import asyncio
 
 # 导入异步 LLM 函数
 from tools.LLM.run_gpt_prompt import run_gpt_prompt_summarize_disaster, run_gpt_prompt_pronunciatio
+def _push_earthquake_update(agents, buildings, intensity, llm_context):
+    """將地震狀態推送到 llm_context 的佇列中以供前端使用。"""
+    queue = llm_context.setdefault("ws_event_queue", [])
+    building_states = {name: {"id": b.id, "integrity": b.integrity} for name, b in buildings.items()}
+    agent_states = {
+        agent.name: {
+            "name": agent.name,
+            "currentState": agent.curr_action,
+            "location": agent.curr_place,
+            "hp": agent.health,
+        }
+        for agent in agents
+    }
+    queue.append(
+        {
+            "type": "earthquake",
+            "data": {
+                "intensity": intensity,
+                "buildingStates": building_states,
+                "agentStates": agent_states,
+            },
+        }
+    )
 
 def generate_disaster_report(buildings, initial_report=False):
     """生成災前或災後損傷報告的文字。"""
@@ -75,6 +98,7 @@ async def check_and_handle_phase_transitions(sim_state, agents, buildings, sched
             pronunciatios = await asyncio.gather(*pronunciatio_tasks)
             for i, agent in enumerate(agents):
                 agent.curr_action_pronunciatio = pronunciatios[i]
+            _push_earthquake_update(agents, buildings, next_eq["intensity"], llm_context)
             return
 
     # 2. 处理地震中状态，并检查是否结束
@@ -87,6 +111,8 @@ async def check_and_handle_phase_transitions(sim_state, agents, buildings, sched
         action_logs = await asyncio.gather(*action_tasks)
         for log in action_logs:
             if log: llm_context['event_log_buffer'].append(log)
+        
+        _push_earthquake_update(agents, buildings, quake_details['intensity'], llm_context)
         
         if current_time >= quake_details['end_time_dt']:
             sim_state['phase'] = "Recovery"
@@ -124,4 +150,8 @@ async def check_and_handle_phase_transitions(sim_state, agents, buildings, sched
     if phase == "PostQuakeDiscussion" and current_time >= sim_state.get('discussion_end_time', current_time):
         sim_state['phase'] = "Normal"
         update_log("災後討論期結束，恢復正常。", "EVENT")
+        if disaster_logger:
+            最終狀態 = {agent.name: {"hp": agent.health} for agent in agents}
+            報表 = disaster_logger.生成報表(最終狀態)
+            llm_context['evaluation_report'] = 報表
         return

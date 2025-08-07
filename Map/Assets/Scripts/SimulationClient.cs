@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using NativeWebSocket;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 public class SimulationClient : MonoBehaviour
 {
@@ -16,6 +17,8 @@ public class SimulationClient : MonoBehaviour
     public Transform characterRoot;
     public Transform locationRoot;
     public Transform buildingRoot;
+        [Header("Camera Control")]
+    public CameraController cameraController;
 
     private WebSocket websocket;
     private readonly Queue<Action> _mainThreadActions = new Queue<Action>();
@@ -27,6 +30,9 @@ public class SimulationClient : MonoBehaviour
 
     public static event Action<string> OnStatusUpdate;
     public static event Action<UpdateData> OnLogUpdate;
+    public static event Action<EvaluationReport> OnEvaluationReceived;
+
+    public static event Action<float> OnEarthquake;
 
     void Start()
     {
@@ -131,10 +137,26 @@ public class SimulationClient : MonoBehaviour
                 case "update":
                     if(wsMessage.Data != null)
                     {
-                        OnStatusUpdate?.Invoke(wsMessage.Data.Status);
-                        OnLogUpdate?.Invoke(wsMessage.Data);
+                        var updateData = wsMessage.Data.ToObject<UpdateData>();
+                        OnStatusUpdate?.Invoke(updateData.Status);
+                        OnLogUpdate?.Invoke(updateData);
+                        UpdateAllAgentStates(updateData.AgentStates);
+                        UpdateAllBuildingStates(updateData.BuildingStates);
+                    }
+                    break;
+                case "evaluation":
+                    if (wsMessage.Data != null)
+                    {
+                        var evalData = wsMessage.Data.ToObject<EvaluationReport>();
+                        OnEvaluationReceived?.Invoke(evalData);
+                    }
+                    break;
+                case "earthquake":
+                    if (wsMessage.Data != null)
+                    {
                         UpdateAllAgentStates(wsMessage.Data.AgentStates);
                         UpdateAllBuildingStates(wsMessage.Data.BuildingStates);
+                        OnEarthquake?.Invoke(wsMessage.Data.Intensity);
                     }
                     break;
                 case "status": case "error": case "end":
@@ -161,6 +183,8 @@ public class SimulationClient : MonoBehaviour
             if (agentStates.TryGetValue(activeControllerPair.Key, out AgentState state))
             {
                 activeControllerPair.Value.UpdateState(state);
+                // 新增：轉送當前行動狀態，供控制器顯示或處理
+                activeControllerPair.Value.SetActionState(state.CurrentState);
             }
         }
     }

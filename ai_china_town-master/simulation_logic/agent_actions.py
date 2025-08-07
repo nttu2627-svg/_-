@@ -79,3 +79,38 @@ async def process_monologue(agent, agent_context, generate_inner_monologue):
     """处理单个独白的异步函数。"""
     _, monologue = await generate_inner_monologue(agent_context)
     agent.current_thought = monologue
+
+
+# ---------------------------------------------------------------------------
+# 新增：依據行程產生「移動」與「互動」指令
+# ---------------------------------------------------------------------------
+
+async def generate_action_instructions(active_agents, current_time_hm_str):
+    """
+    根據每個代理人的行程決策，產生移動或互動指令。
+
+    回傳格式為::
+
+        [
+            {"agent": 名稱, "command": "move", "target": 目的地},
+            {"agent": 名稱, "command": "interact", "action": 行動描述},
+            ...
+        ]
+    """
+
+    instructions = []
+    for agent in active_agents:
+        await agent.update_action_by_time(current_time_hm_str)
+        if agent.curr_place != agent.target_place:
+            instructions.append({
+                "agent": agent.name,
+                "command": "move",
+                "target": agent.curr_place,
+            })
+        else:
+            instructions.append({
+                "agent": agent.name,
+                "command": "interact",
+                "action": agent.curr_action,
+            })
+    return instructions
