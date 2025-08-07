@@ -59,6 +59,11 @@ public class UIController : MonoBehaviour
     public Button mainLogButton;
     public Button historyLogButton;
     public Button llmLogButton;
+    // 原始按鈕顏色，用於切換時恢復
+    private Color _mainLogButtonColor;
+    private Color _historyLogButtonColor;
+    private Color _llmLogButtonColor;
+    private const float ActiveDarkenFactor = 0.8f;
 
     [Header("事件相关 UI (可选)")]
     public Toggle eqEnabledToggle;
@@ -113,6 +118,10 @@ public class UIController : MonoBehaviour
         if (mainLogButton != null) mainLogButton.onClick.AddListener(ShowMainLogDisplay);
         if (historyLogButton != null) historyLogButton.onClick.AddListener(ShowHistoryLogDisplay);
         if (llmLogButton != null) llmLogButton.onClick.AddListener(ShowLlmLogDisplay);
+        // 紀錄按鈕的預設顏色
+        if (mainLogButton != null) _mainLogButtonColor = mainLogButton.image.color;
+        if (historyLogButton != null) _historyLogButtonColor = historyLogButton.image.color;
+        if (llmLogButton != null) _llmLogButtonColor = llmLogButton.image.color;
 
         SetDefaultValues();
 
@@ -250,7 +259,7 @@ public class UIController : MonoBehaviour
         for (int i = 0; i < toggles.Count; i++)
         {
             // 確保只在需要時觸發 OnValueChanged，避免遊戲一開始就跟隨
-            if (i < 2)
+            if (i < 1)
             {
                 toggles[i].SetIsOnWithoutNotify(true);
                 OnAgentToggleChanged(_agentToggleMap[toggles[i]], true); // 手動觸發一次以顯示物件
@@ -366,12 +375,21 @@ public class UIController : MonoBehaviour
         historyLogView?.SetTimeFilter(start, end);
         llmLogView?.SetTimeFilter(start, end);
     }
+    private void HighlightActiveLogButton(Button active)
+    {
+        if (mainLogButton != null) mainLogButton.image.color = _mainLogButtonColor;
+        if (historyLogButton != null) historyLogButton.image.color = _historyLogButtonColor;
+        if (llmLogButton != null) llmLogButton.image.color = _llmLogButtonColor;
+        if (active != null) active.image.color *= ActiveDarkenFactor;
+    }
 
     private void ShowMainLogDisplay()
     {
         if (mainLogView != null) mainLogView.gameObject.SetActive(true);
         if (historyLogView != null) historyLogView.gameObject.SetActive(false);
         if (llmLogView != null) llmLogView.gameObject.SetActive(false);
+        HighlightActiveLogButton(mainLogButton);
+
     }
 
     private void ShowHistoryLogDisplay()
@@ -379,6 +397,7 @@ public class UIController : MonoBehaviour
         if (mainLogView != null) mainLogView.gameObject.SetActive(false);
         if (historyLogView != null) historyLogView.gameObject.SetActive(true);
         if (llmLogView != null) llmLogView.gameObject.SetActive(false);
+        HighlightActiveLogButton(historyLogButton);
     }
 
     private void ShowLlmLogDisplay()
@@ -386,6 +405,7 @@ public class UIController : MonoBehaviour
         if (mainLogView != null) mainLogView.gameObject.SetActive(false);
         if (historyLogView != null) historyLogView.gameObject.SetActive(false);
         if (llmLogView != null) llmLogView.gameObject.SetActive(true);
+        HighlightActiveLogButton(llmLogButton);
     }
     private void PopulateCameraButtonUI()
     {
