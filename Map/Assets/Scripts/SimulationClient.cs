@@ -154,9 +154,10 @@ public class SimulationClient : MonoBehaviour
                 case "earthquake":
                     if (wsMessage.Data != null)
                     {
-                        UpdateAllAgentStates(wsMessage.Data.AgentStates);
-                        UpdateAllBuildingStates(wsMessage.Data.BuildingStates);
-                        OnEarthquake?.Invoke(wsMessage.Data.Intensity);
+                        var quakeData = wsMessage.Data.ToObject<EarthquakeData>();
+                        UpdateAllAgentStates(quakeData.AgentStates);
+                        UpdateAllBuildingStates(quakeData.BuildingStates);
+                        OnEarthquake?.Invoke(quakeData.Intensity);
                     }
                     break;
                 case "status": case "error": case "end":

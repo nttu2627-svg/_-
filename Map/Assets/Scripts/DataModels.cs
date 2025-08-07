@@ -53,6 +53,14 @@ public class AgentState { [JsonProperty("name")] public string Name; [JsonProper
 public class BuildingState { [JsonProperty("id")] public string Id; [JsonProperty("integrity")] public float Integrity; }
 
 [Serializable]
+public class EarthquakeData
+{
+    [JsonProperty("agentStates")] public Dictionary<string, AgentState> AgentStates;
+    [JsonProperty("buildingStates")] public Dictionary<string, BuildingState> BuildingStates;
+    [JsonProperty("intensity")] public float Intensity;
+}
+
+[Serializable]
 public class ScoreDetail
 {
     [JsonProperty("loss_score")] public float LossScore;
