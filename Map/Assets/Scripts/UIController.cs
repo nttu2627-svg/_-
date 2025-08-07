@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 /// <summary>
 /// 負責管理遊戲中的所有主要 UI 互動。
@@ -44,9 +45,9 @@ public class UIController : MonoBehaviour
 
     [Header("显示区域 (必须赋值!)")]
     public TextMeshProUGUI statusBarText;
-    public TMP_InputField mainLogText;
-    public TMP_InputField historyLogText;
-    public TMP_InputField llmLogText;
+    public LogScrollView mainLogView;
+    public LogScrollView historyLogView;
+    public LogScrollView llmLogView;
 
     [Header("事件相关 UI (可选)")]
     public Toggle eqEnabledToggle;
@@ -317,9 +318,19 @@ public class UIController : MonoBehaviour
 
     private void UpdateLogs(UpdateData data)
     {
-        if (mainLogText != null) mainLogText.text = data.MainLog;
-        if (historyLogText != null) historyLogText.text = data.HistoryLog;
-        if (llmLogText != null) llmLogText.text = data.LlmLog;
+        if (mainLogView != null) mainLogView.AddLog(data.MainLog);
+        if (historyLogView != null) historyLogView.AddLog(data.HistoryLog);
+        if (llmLogView != null) llmLogView.AddLog(data.LlmLog);
+    }
+
+    /// <summary>
+    /// 依時間範圍篩選顯示的日誌。
+    /// </summary>
+    public void FilterLogs(DateTime? start, DateTime? end)
+    {
+        mainLogView?.SetTimeFilter(start, end);
+        historyLogView?.SetTimeFilter(start, end);
+        llmLogView?.SetTimeFilter(start, end);
     }
         private void PopulateCameraButtonUI()
     {
