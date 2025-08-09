@@ -361,9 +361,23 @@ public class UIController : MonoBehaviour
 
     private void UpdateLogs(UpdateData data)
     {
-        if (mainLogView != null) mainLogView.AddLog(data.MainLog);
-        if (historyLogView != null) historyLogView.AddLog(data.HistoryLog);
-        if (llmLogView != null) llmLogView.AddLog(data.LlmLog);
+        string main = CleanLog(data.MainLog);
+        string history = CleanLog(data.HistoryLog);
+        string llm = CleanLog(data.LlmLog);
+
+        if (mainLogView != null)
+        {
+            mainLogView.Clear();
+            mainLogView.AddLog(main);
+        }
+        if (historyLogView != null) historyLogView.AddLog(history);
+        if (llmLogView != null) llmLogView.AddLog(llm);
+    }
+
+    private static string CleanLog(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return s;
+        return System.Text.RegularExpressions.Regex.Replace(s, "<think>.*?</think>", string.Empty, System.Text.RegularExpressions.RegexOptions.Singleline);
     }
 
     /// <summary>

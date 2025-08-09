@@ -3,6 +3,7 @@
 using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
+using DisasterSimulation;
 
 public class AgentController : MonoBehaviour
 {
@@ -13,6 +14,10 @@ public class AgentController : MonoBehaviour
     [Header("UI (可选)")]
     [Tooltip("對應此代理人在Canvas下的名字UI组件 (TextMeshProUGUI)")]
     public TextMeshProUGUI nameTextUGUI;
+
+    [Header("氣泡 (可選)")]
+    [Tooltip("顯示代理人行為的氣泡控制器")]
+    public 思考氣泡控制器 bubbleController;
 
     // 私有变量
     private Transform _transform;
@@ -112,7 +117,18 @@ public class AgentController : MonoBehaviour
     public void SetActionState(string action)
     {
         _currentAction = action;
-        // 目前僅記錄動作，可在此觸發動畫或 UI 顯示
+                string bubbleText = null;
+        if (!string.IsNullOrEmpty(action))
+        {
+            string lower = action.ToLower();
+            if (lower.Contains("chat") || lower.Contains("聊天")) bubbleText = "・・・";
+            else if (lower.Contains("rest") || lower.Contains("休息")) bubbleText = "😴";
+            else if (lower.Contains("move") || lower.Contains("移動")) bubbleText = "🏃";
+        }
+        if (!string.IsNullOrEmpty(bubbleText) && bubbleController != null)
+        {
+            bubbleController.顯示氣泡(bubbleText, _transform);
+        }
     }
     
     private void OnTriggerEnter2D(Collider2D other)
