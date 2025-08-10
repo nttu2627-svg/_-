@@ -22,6 +22,7 @@ public class SimulationParameters
     [JsonProperty("eq_enabled")] public bool EqEnabled;
     [JsonProperty("eq_json")] public string EqJson;
     [JsonProperty("eq_step")] public int EqStep;
+        [JsonProperty("use_default_calendar")] public bool UseDefaultCalendar;
 }
 
 // 从后端接收

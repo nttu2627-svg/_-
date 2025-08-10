@@ -6,6 +6,7 @@ using TMPro;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using UnityEngine.Events;
 
 /// <summary>
 /// 負責管理遊戲中的所有主要 UI 互動。
@@ -56,7 +57,7 @@ public class UIController : MonoBehaviour
     public GameObject logButtonGroup;
     [Tooltip("啟動前隱藏的攝影機按鈕面板")]
     public GameObject cameraButtonsPanel;
-    public Button mainLogButton;
+   public Button mainLogButton;
     public Button historyLogButton;
     public Button llmLogButton;
     // 原始按鈕顏色，用於切換時恢復
@@ -70,12 +71,20 @@ public class UIController : MonoBehaviour
     public TMP_InputField eqJsonInput;
     public TMP_Dropdown eqStepDropdown;
 
+    [Header("行事曆設定")]
+    public Toggle useDefaultCalendarToggle;
+
 
     [Header("攝影機UI (可選, 用於自動生成)")]
     [Tooltip("用於容納所有動態生成的攝影機按鈕的父物件")]
     public Transform cameraButtonGroupParent;
     [Tooltip("一個設計好的攝影機按鈕 Prefab")]
     public GameObject cameraButtonPrefab;
+    private Button _followAgentButton;
+    private int _followAgentIndex = -1;
+    private Button _uiToggleButton;
+    private Color _uiToggleDefaultColor;
+    private bool _isUIHidden = false;
 
     // 用于存储 UI Toggle 和 AgentController 之间的映射关系
     private readonly Dictionary<Toggle, AgentController> _agentToggleMap = new Dictionary<Toggle, AgentController>();
@@ -113,7 +122,6 @@ public class UIController : MonoBehaviour
         if (mainLogView != null) mainLogView.gameObject.SetActive(false);
         if (historyLogView != null) historyLogView.gameObject.SetActive(false);
         if (llmLogView != null) llmLogView.gameObject.SetActive(false);
-
         // 設定日誌切換按鈕
         if (mainLogButton != null) mainLogButton.onClick.AddListener(ShowMainLogDisplay);
         if (historyLogButton != null) historyLogButton.onClick.AddListener(ShowHistoryLogDisplay);
@@ -138,6 +146,8 @@ public class UIController : MonoBehaviour
         if (mainLogButton != null) mainLogButton.onClick.RemoveListener(ShowMainLogDisplay);
         if (historyLogButton != null) historyLogButton.onClick.RemoveListener(ShowHistoryLogDisplay);
         if (llmLogButton != null) llmLogButton.onClick.RemoveListener(ShowLlmLogDisplay);
+        if (_followAgentButton != null) _followAgentButton.onClick.RemoveListener(CycleFollowAgent);
+        if (_uiToggleButton != null) _uiToggleButton.onClick.RemoveListener(ToggleUIVisibility);
         SimulationClient.OnStatusUpdate -= UpdateStatusBar;
         SimulationClient.OnLogUpdate -= UpdateLogs;
 
@@ -230,14 +240,6 @@ public class UIController : MonoBehaviour
         {
             // 啟用或禁用代理人在場景中的 GameObject
             agent.gameObject.SetActive(isOn);
-
-            // 如果 Toggle 是被「選中」，並且 CameraManager 已賦值
-            // 則命令攝影機管理器切換模式並開始跟隨此代理人
-            if (isOn && cameraManager != null)
-            {
-                cameraController?.FollowTarget(agent.transform);
-
-            }
         }
     }
 
@@ -270,18 +272,17 @@ public class UIController : MonoBehaviour
             }
         }
 
-        // 如果有多個被選中，預設跟隨第一個
-        var firstSelected = _agentToggleMap.FirstOrDefault(p => p.Key.isOn);
-        if (firstSelected.Value != null)
-        {
-            cameraManager.SetFollowTarget(firstSelected.Value.transform);
-        }
+        if (useDefaultCalendarToggle != null) useDefaultCalendarToggle.isOn = true;
 
 
         if (eqEnabledToggle != null) eqEnabledToggle.isOn = true;
-        if (eqJsonInput != null) eqJsonInput.text = "[{\"time\": \"2024-11-18-11-00\", \"duration\": 30, \"intensity\": 0.75}]";
-        if (eqStepDropdown != null)
+        if (eqJsonInput != null)
         {
+            // 預設一次地震事件：2024-11-18 11:00 開始、持續 30 分鐘，共 1 次
+            eqJsonInput.text = "[{\"time\": \"2024-11-18-11-00\", \"count\": 1, \"duration\": 30, \"intensity\": 0.75}]";
+        } if (eqStepDropdown != null)
+        {
+            // 地震期間每步 5 分鐘 -> 30 分鐘共 6 步
             int targetIndex = eqStepDropdown.options.FindIndex(option => option.text == "5");
             if (targetIndex != -1) eqStepDropdown.value = targetIndex;
         }
@@ -311,10 +312,13 @@ public class UIController : MonoBehaviour
             foreach (Transform location in locationRoot) locationNames.Add(location.name);
         }
 
-        List<string> selectedMbti = _agentToggleMap
+        var selectedAgents = _agentToggleMap
             .Where(pair => pair.Key != null && pair.Key.isOn)
-            .Select(pair => pair.Value.agentName)
+            .Select(pair => pair.Value)
             .ToList();
+
+        List<string> selectedMbti = selectedAgents
+            .Select(a => a.agentName)            .ToList();
 
         if (selectedMbti.Count == 0)
         {
@@ -341,8 +345,10 @@ public class UIController : MonoBehaviour
             Locations = locationNames,
             EqEnabled = eqEnabledToggle != null ? eqEnabledToggle.isOn : true,
             EqJson = eqJsonInput != null ? eqJsonInput.text : "[]",
-            EqStep = eqStepValue
+            EqStep = eqStepValue,
+            UseDefaultCalendar = useDefaultCalendarToggle != null ? useDefaultCalendarToggle.isOn : true
         };
+        TeleportAgentsToApartment(selectedAgents);
 
         HideSettingsPanels();
         simulationClient.StartSimulation(parameters);
@@ -443,34 +449,42 @@ public class UIController : MonoBehaviour
         // 3. 為每一個攝影機名稱生成一個按鈕
         foreach (string camName in cameraNames)
         {
+            if (camName.Equals("VCAM_FOLLOW", StringComparison.OrdinalIgnoreCase)) continue;
+
             GameObject buttonGO = Instantiate(cameraButtonPrefab, cameraButtonGroupParent);
             buttonGO.name = "Button_" + camName;
 
-            // 設定按鈕上的文字
             TextMeshProUGUI buttonText = buttonGO.GetComponentInChildren<TextMeshProUGUI>();
             if (buttonText != null)
             {
-                // 將 "VCAM_" 前綴去掉，讓按鈕文字更簡潔
-                buttonText.text = camName.Replace("VCAM_", ""); 
+                if (camName.Equals("VCAM_FOLLOWAGENT", StringComparison.OrdinalIgnoreCase))
+                    buttonText.text = "FOLLOW AGENT";
+                else
+                    buttonText.text = camName.Replace("VCAM_", "");
             }
 
-            // **核心：為按鈕添加點擊事件監聽器**
             Button button = buttonGO.GetComponent<Button>();
             if (button != null)
             {
-                // 使用 Lambda 表達式來捕獲當前的攝影機名稱 (camName)
-                // 這樣每個按鈕點擊時，都會傳遞它自己的攝影機名稱
-                button.onClick.AddListener(() => 
+                if (camName.Equals("VCAM_FOLLOWAGENT", StringComparison.OrdinalIgnoreCase))
                 {
-                    cameraManager.SwitchToCinemachineMode(camName);
-                });
+                    _followAgentButton = button;
+                    button.onClick.AddListener(CycleFollowAgent);
+                }
+                else
+                {
+                    button.onClick.AddListener(() =>
+                    {
+                        cameraManager.SwitchToCinemachineMode(camName);
+                    });
+                }
             }
         }
 
         // 4. 額外生成一個「自由模式」的按鈕
         GameObject freeLookButtonGO = Instantiate(cameraButtonPrefab, cameraButtonGroupParent);
         freeLookButtonGO.name = "Button_FreeLook";
-        
+
         TextMeshProUGUI freeLookButtonText = freeLookButtonGO.GetComponentInChildren<TextMeshProUGUI>();
         if (freeLookButtonText != null)
         {
@@ -486,6 +500,89 @@ public class UIController : MonoBehaviour
             });
         }
         
-        Debug.Log($"[UIController] 已成功生成 {cameraNames.Count() + 1} 個攝影機控制按鈕。");
+
+        // 5. 隱藏狀態欄按鈕
+        GameObject hideStatusButtonGO = Instantiate(cameraButtonPrefab, cameraButtonGroupParent);
+        hideStatusButtonGO.name = "Button_ToggleStatus";
+        TextMeshProUGUI hideStatusText = hideStatusButtonGO.GetComponentInChildren<TextMeshProUGUI>();
+        if (hideStatusText != null) hideStatusText.text = "隱藏狀態";
+        Button hideStatusButton = hideStatusButtonGO.GetComponent<Button>();
+        if (hideStatusButton != null) hideStatusButton.onClick.AddListener(ToggleStatusBar);
+
+        // 6. 隱藏所有 UI 按鈕
+        GameObject hideUiButtonGO = Instantiate(cameraButtonPrefab, cameraButtonGroupParent);
+        hideUiButtonGO.name = "Button_ToggleUI";
+        TextMeshProUGUI hideUiText = hideUiButtonGO.GetComponentInChildren<TextMeshProUGUI>();
+        if (hideUiText != null) hideUiText.text = "隱藏 UI";
+        _uiToggleButton = hideUiButtonGO.GetComponent<Button>();
+        if (_uiToggleButton != null)
+        {
+            _uiToggleDefaultColor = _uiToggleButton.image.color;
+            _uiToggleButton.onClick.AddListener(ToggleUIVisibility);
+        }
+
+        Debug.Log($"[UIController] 已成功生成 {cameraNames.Count() + 3} 個攝影機控制按鈕。");
+    }
+
+    private void ToggleStatusBar()
+    {
+        if (statusBarText != null)
+        {
+            bool active = statusBarText.gameObject.activeSelf;
+            statusBarText.gameObject.SetActive(!active);
+        }
+    }
+
+    private void ToggleUIVisibility()
+    {
+        _isUIHidden = !_isUIHidden;
+
+        if (logButtonGroup != null) logButtonGroup.SetActive(!_isUIHidden);
+        if (statusBarText != null) statusBarText.gameObject.SetActive(!_isUIHidden);
+
+        foreach (Transform child in cameraButtonGroupParent)
+        {
+            if (_uiToggleButton != null && child == _uiToggleButton.transform) continue;
+            child.gameObject.SetActive(!_isUIHidden);
+        }
+
+        if (_uiToggleButton != null)
+        {
+            var img = _uiToggleButton.image;
+            if (img != null) img.color = _isUIHidden ? Color.red : _uiToggleDefaultColor;
+        }
+    }
+
+    private void CycleFollowAgent()
+    {
+        var agents = _agentToggleMap.Where(p => p.Key != null && p.Key.isOn)
+            .Select(p => p.Value).ToList();
+        if (agents.Count == 0 || cameraManager == null) return;
+
+        _followAgentIndex = (_followAgentIndex + 1) % agents.Count;
+        cameraManager.SetFollowTarget(agents[_followAgentIndex].transform);
+    }
+
+    private void TeleportAgentsToApartment(List<AgentController> agents)
+    {
+        if (agents == null || agents.Count == 0) return;
+
+        Transform f1 = GameObject.Find("VCam_Apartment_F1")?.transform;
+        Transform f2 = GameObject.Find("VCam_Apartment_F2")?.transform;
+        if (f1 == null) return;
+
+        Vector3[] offsets = new Vector3[]
+        {
+            new Vector3(-2,0,-2), new Vector3(0,0,-2), new Vector3(2,0,-2), new Vector3(-2,0,0),
+            new Vector3(0,0,0), new Vector3(2,0,0), new Vector3(-2,0,2), new Vector3(0,0,2)
+        };
+
+        for (int i = 0; i < agents.Count; i++)
+        {
+            Transform baseT = (i < 8 || f2 == null) ? f1 : f2;
+            int offsetIdx = i % 8;
+            agents[i].transform.position = baseT.position + offsets[offsetIdx];
+        }
+
     }
 }
