@@ -3,6 +3,14 @@
   "WorkspaceRootPath": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\SimulationClient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\SimulationClient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\Camera\\CameraManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Camera\\CameraManager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\UnityMainThreadDispatcher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\UnityMainThreadDispatcher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -13,10 +21,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\CameraController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\CameraController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\SimulationClient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\SimulationClient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Library\\PackageCache\\com.unity.ugui@c82f62fefab3\\Runtime\\TMP\\TextMeshProUGUI.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -50,24 +54,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "UnityMainThreadDispatcher.cs",
-              "DocumentMoniker": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\UnityMainThreadDispatcher.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\UnityMainThreadDispatcher.cs",
-              "ToolTip": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\UnityMainThreadDispatcher.cs",
-              "RelativeToolTip": "Assets\\Scripts\\UnityMainThreadDispatcher.cs",
-              "ViewState": "AgIAADEAAAAAAAAAAAAcwDQAAAArAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-30T04:44:54.202Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "ContentSizeFitter.cs",
               "DocumentMoniker": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Library\\PackageCache\\com.unity.ugui@c82f62fefab3\\Runtime\\UGUI\\UI\\Core\\Layout\\ContentSizeFitter.cs",
               "RelativeDocumentMoniker": "Library\\PackageCache\\com.unity.ugui@c82f62fefab3\\Runtime\\UGUI\\UI\\Core\\Layout\\ContentSizeFitter.cs",
@@ -79,7 +70,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 4,
               "Title": "CameraController.cs",
               "DocumentMoniker": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\CameraController.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\CameraController.cs",
@@ -91,7 +82,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "AgentController.cs",
               "DocumentMoniker": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\Agent\\AgentController.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Agent\\AgentController.cs",
@@ -103,7 +94,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "TMP_SDF.shader",
               "DocumentMoniker": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\TextMesh Pro\\Shaders\\TMP_SDF.shader",
               "RelativeDocumentMoniker": "Assets\\TextMesh Pro\\Shaders\\TMP_SDF.shader",
@@ -115,7 +106,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "NativeWebSocket.cs",
               "DocumentMoniker": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\ThirdParty\\NativeWebSocket.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\ThirdParty\\NativeWebSocket.cs",
@@ -127,19 +118,45 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 0,
               "Title": "SimulationClient.cs",
               "DocumentMoniker": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\SimulationClient.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\SimulationClient.cs",
               "ToolTip": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\SimulationClient.cs",
               "RelativeToolTip": "Assets\\Scripts\\SimulationClient.cs",
-              "ViewState": "AgIAAFYAAAAAAAAAAAAcwG0AAABOAAAAAAAAAA==",
+              "ViewState": "AgIAAFwAAAAAAAAAAAAcwHMAAABOAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-09T08:35:21.141Z"
+              "WhenOpened": "2025-07-09T08:35:21.141Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "UnityMainThreadDispatcher.cs",
+              "DocumentMoniker": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\UnityMainThreadDispatcher.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\UnityMainThreadDispatcher.cs",
+              "ToolTip": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\UnityMainThreadDispatcher.cs",
+              "RelativeToolTip": "Assets\\Scripts\\UnityMainThreadDispatcher.cs",
+              "ViewState": "AgIAADEAAAAAAAAAAAAcwDQAAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-30T04:44:54.202Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "CameraManager.cs",
+              "DocumentMoniker": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\Camera\\CameraManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Camera\\CameraManager.cs",
+              "ToolTip": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\Camera\\CameraManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Camera\\CameraManager.cs",
+              "ViewState": "AgIAAAcAAAAAAAAAAAAcwB4AAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-07-30T05:37:05.764Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "UIController.cs",
               "DocumentMoniker": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\UIController.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\UIController.cs",
@@ -147,12 +164,11 @@
               "RelativeToolTip": "Assets\\Scripts\\UIController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-25T02:49:34.024Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-07-25T02:49:34.024Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "SceneController.cs",
               "DocumentMoniker": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Assets\\Scripts\\SceneController.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\SceneController.cs",
@@ -164,7 +180,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "TextMeshProUGUI.cs",
               "DocumentMoniker": "C:\\Users\\ls990\\Downloads\\Map (1)\\Map\\Library\\PackageCache\\com.unity.ugui@c82f62fefab3\\Runtime\\TMP\\TextMeshProUGUI.cs",
               "RelativeDocumentMoniker": "Library\\PackageCache\\com.unity.ugui@c82f62fefab3\\Runtime\\TMP\\TextMeshProUGUI.cs",

@@ -1,3 +1,4 @@
 Base path: 'C:/Users/ls990/unity/6000.0.37f1/6000.0.43f1/Editor/Data', plugins path 'C:/Users/ls990/unity/6000.0.37f1/6000.0.43f1/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
 
+Cmd: shutdown

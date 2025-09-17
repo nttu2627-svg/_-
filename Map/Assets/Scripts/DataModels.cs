@@ -1,11 +1,18 @@
-// Scripts/DataModels.cs (更新版)
+// Scripts/DataModels.cs (修正版，已補全所有資料結構)
+
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-// 发送到后端
+
+// --- 發送到後端 ---
+
 [Serializable]
-public class SimulationStartCommand { [JsonProperty("command")] public string Command = "start_simulation"; [JsonProperty("params")] public SimulationParameters Params; }
+public class SimulationStartCommand 
+{
+    [JsonProperty("command")] public string Command = "start_simulation";
+    [JsonProperty("params")] public SimulationParameters Params;
+}
 
 [Serializable]
 public class SimulationParameters
@@ -18,14 +25,15 @@ public class SimulationParameters
     [JsonProperty("hour")] public int Hour;
     [JsonProperty("minute")] public int Minute;
     [JsonProperty("mbti")] public List<string> Mbti;
-    [JsonProperty("locations")] public List<string> Locations; // ### 新增 ###
+    [JsonProperty("locations")] public List<string> Locations;
     [JsonProperty("eq_enabled")] public bool EqEnabled;
     [JsonProperty("eq_json")] public string EqJson;
     [JsonProperty("eq_step")] public int EqStep;
-        [JsonProperty("use_default_calendar")] public bool UseDefaultCalendar;
+    [JsonProperty("use_default_calendar")] public bool UseDefaultCalendar;
 }
 
-// 从后端接收
+// --- 從後端接收 ---
+
 [Serializable]
 public class WebSocketMessage
 {
@@ -33,6 +41,7 @@ public class WebSocketMessage
     [JsonProperty("data")] public JToken Data;
     [JsonProperty("message")] public string Message;
 }
+
 [Serializable]
 public class UpdateData
 {
@@ -42,23 +51,46 @@ public class UpdateData
     [JsonProperty("buildingStates")] public Dictionary<string, BuildingState> BuildingStates;
     [JsonProperty("llmLog")] public string LlmLog;
     [JsonProperty("status")] public string Status;
-    [JsonProperty("focusAgent")] public string FocusAgent;
-    [JsonProperty("intensity")] public float Intensity;
-
 }
 
 [Serializable]
-public class AgentState { [JsonProperty("name")] public string Name; [JsonProperty("currentState")] public string CurrentState; [JsonProperty("location")] public string Location; [JsonProperty("hp")] public int Hp; [JsonProperty("schedule")] public string Schedule; [JsonProperty("memory")] public string Memory; [JsonProperty("weeklySchedule")] public Dictionary<string, string> WeeklySchedule; [JsonProperty("dailySchedule")] public List<List<string>> DailySchedule; }
+public class AgentState 
+{
+    [JsonProperty("name")] public string Name;
+    [JsonProperty("currentState")] public string CurrentState;
+    [JsonProperty("location")] public string Location;
+    [JsonProperty("hp")] public int Hp;
+    [JsonProperty("schedule")] public string Schedule;
+    [JsonProperty("memory")] public string Memory;
+    [JsonProperty("weeklySchedule")] public Dictionary<string, string> WeeklySchedule;
+    [JsonProperty("dailySchedule")] public List<List<string>> DailySchedule;
+}
 
 [Serializable]
-public class BuildingState { [JsonProperty("id")] public string Id; [JsonProperty("integrity")] public float Integrity; }
+public class BuildingState 
+{
+    [JsonProperty("id")] public string Id;
+    [JsonProperty("integrity")] public float Integrity;
+}
 
+/// <summary>
+/// 【核心修正】
+/// 新增這個 class 以解決 "找不到類型" 的編譯錯誤。
+/// 這個結構對應後端在 type="earthquake" 時發送的資料。
+/// </summary>
 [Serializable]
 public class EarthquakeData
 {
     [JsonProperty("agentStates")] public Dictionary<string, AgentState> AgentStates;
     [JsonProperty("buildingStates")] public Dictionary<string, BuildingState> BuildingStates;
     [JsonProperty("intensity")] public float Intensity;
+}
+
+[Serializable]
+public class EvaluationReport
+{
+    [JsonProperty("scores")] public Dictionary<string, ScoreDetail> Scores;
+    [JsonProperty("text")] public string Text;
 }
 
 [Serializable]
@@ -69,11 +101,4 @@ public class ScoreDetail
     [JsonProperty("coop_score")] public float CoopScore;
     [JsonProperty("total_score")] public float TotalScore;
     [JsonProperty("notes")] public string Notes;
-}
-
-[Serializable]
-public class EvaluationReport
-{
-    [JsonProperty("scores")] public Dictionary<string, ScoreDetail> Scores;
-    [JsonProperty("text")] public string Text;
 }

@@ -51,13 +51,18 @@ public class UIController : MonoBehaviour
     public LogScrollView mainLogView;
     public LogScrollView historyLogView;
     public LogScrollView llmLogView;
+    [Header("Log 容器 (可選)")]
+    [Tooltip("LogPanels 的父物件；若不指定，將以分頁還原方式個別控制三個日誌視圖")]
+    public GameObject logPanelsRoot;
 
+    private enum LogTab { None, Main, History, Llm }
+    private LogTab _lastLogTab = LogTab.None;
     [Header("日誌切換與其他按鈕 (可選)")]
     [Tooltip("包含三個日誌切換按鈕的父物件")]
     public GameObject logButtonGroup;
     [Tooltip("啟動前隱藏的攝影機按鈕面板")]
     public GameObject cameraButtonsPanel;
-   public Button mainLogButton;
+    public Button mainLogButton;
     public Button historyLogButton;
     public Button llmLogButton;
     // 原始按鈕顏色，用於切換時恢復
@@ -67,7 +72,6 @@ public class UIController : MonoBehaviour
     private const float ActiveDarkenFactor = 0.8f;
 
     [Header("事件相关 UI (可选)")]
-    public Toggle eqEnabledToggle;
     public TMP_InputField eqJsonInput;
     public TMP_Dropdown eqStepDropdown;
 
@@ -246,6 +250,9 @@ public class UIController : MonoBehaviour
     /// <summary>
     /// 設定 UI 輸入欄位的預設值。
     /// </summary>
+    /// <summary>
+    /// 設定 UI 輸入欄位的預設值。
+    /// </summary>
     private void SetDefaultValues()
     {
         if (durationInput != null) durationInput.text = "2400";
@@ -260,29 +267,22 @@ public class UIController : MonoBehaviour
         var toggles = _agentToggleMap.Keys.ToList();
         for (int i = 0; i < toggles.Count; i++)
         {
-            // 確保只在需要時觸發 OnValueChanged，避免遊戲一開始就跟隨
-            if (i < 1)
+            if (i < 3) // 您可以修改這裡的數字來決定預設選中幾個
             {
-                toggles[i].SetIsOnWithoutNotify(true);
-                OnAgentToggleChanged(_agentToggleMap[toggles[i]], true); // 手動觸發一次以顯示物件
+                toggles[i].isOn = true;
             }
             else
             {
-                toggles[i].SetIsOnWithoutNotify(false);
+                toggles[i].isOn = false;
             }
         }
-
         if (useDefaultCalendarToggle != null) useDefaultCalendarToggle.isOn = true;
-
-
-        if (eqEnabledToggle != null) eqEnabledToggle.isOn = true;
         if (eqJsonInput != null)
         {
-            // 預設一次地震事件：2024-11-18 11:00 開始、持續 30 分鐘，共 1 次
-            eqJsonInput.text = "[{\"time\": \"2024-11-18-11-00\", \"count\": 1, \"duration\": 30, \"intensity\": 0.75}]";
-        } if (eqStepDropdown != null)
+            eqJsonInput.text = "[{\"time\": \"2024-11-18-11-00\", \"duration\": 30, \"intensity\": 0.75}]";
+        } 
+        if (eqStepDropdown != null)
         {
-            // 地震期間每步 5 分鐘 -> 30 分鐘共 6 步
             int targetIndex = eqStepDropdown.options.FindIndex(option => option.text == "5");
             if (targetIndex != -1) eqStepDropdown.value = targetIndex;
         }
@@ -301,9 +301,10 @@ public class UIController : MonoBehaviour
         if (timeSettingsPanel != null) timeSettingsPanel.SetActive(false);
         if (controlPanel != null) controlPanel.SetActive(false);
         if (startButton != null) startButton.gameObject.SetActive(false);
+        if (useDefaultCalendarToggle != null) useDefaultCalendarToggle.gameObject.SetActive(false);
+
     }
 
-    // ... (日誌與狀態更新函式與您提供的版本相同，功能完整故不重複貼出)
     private void OnStartButtonClick()
     {
         List<string> locationNames = new List<string>();
@@ -318,11 +319,11 @@ public class UIController : MonoBehaviour
             .ToList();
 
         List<string> selectedMbti = selectedAgents
-            .Select(a => a.agentName)            .ToList();
+            .Select(a => a.agentName).ToList();
 
         if (selectedMbti.Count == 0)
         {
-            UpdateStatusBar("錯誤：请至少选择一个代理人");
+            UpdateStatusBar("誤：請至少選擇一個代理人");
             return;
         }
 
@@ -331,6 +332,15 @@ public class UIController : MonoBehaviour
         {
             int.TryParse(eqStepDropdown.options[eqStepDropdown.value].text, out eqStepValue);
         }
+    // ### 核心修正 ###
+    // 直接從 UI 元件讀取當前的文字內容，而不是依賴 Awake/Start 時設定的值
+        string earthquakeJson = (eqJsonInput != null && !string.IsNullOrEmpty(eqJsonInput.text)) 
+                            ? eqJsonInput.text 
+                            : "[{\"time\": \"2024-11-18-11-00\", \"duration\": 30, \"intensity\": 0.75}]"; // 提供一個最終的後備值
+
+        // ### 問題5 實作 ###
+        // 讀取行事曆設定 Toggle 的狀態
+        bool shouldUseDefaultCalendar = useDefaultCalendarToggle != null ? useDefaultCalendarToggle.isOn : false;
 
         var parameters = new SimulationParameters
         {
@@ -343,11 +353,14 @@ public class UIController : MonoBehaviour
             Minute = int.TryParse(minuteInput.text, out int min) ? min : 0,
             Mbti = selectedMbti,
             Locations = locationNames,
-            EqEnabled = eqEnabledToggle != null ? eqEnabledToggle.isOn : true,
-            EqJson = eqJsonInput != null ? eqJsonInput.text : "[]",
+            EqEnabled = true, 
+            EqJson = earthquakeJson, // 使用我們剛剛讀取到的值
             EqStep = eqStepValue,
-            UseDefaultCalendar = useDefaultCalendarToggle != null ? useDefaultCalendarToggle.isOn : true
+            UseDefaultCalendar = shouldUseDefaultCalendar // 將讀取到的狀態賦值
         };
+
+        // ### 問題1 實作 ###
+        // 在發送模擬指令前，先將代理人傳送到公寓
         TeleportAgentsToApartment(selectedAgents);
 
         HideSettingsPanels();
@@ -357,7 +370,7 @@ public class UIController : MonoBehaviour
         if (logButtonGroup != null) logButtonGroup.SetActive(true);
         if (cameraButtonsPanel != null) cameraButtonsPanel.SetActive(true);
         if (statusBarText != null) statusBarText.gameObject.SetActive(true);
-        ShowMainLogDisplay();
+        ShowMainLogDisplay(); // 預設顯示主日誌
     }
 
     private void UpdateStatusBar(string status)
@@ -373,11 +386,10 @@ public class UIController : MonoBehaviour
 
         if (mainLogView != null)
         {
-            mainLogView.Clear();
-            mainLogView.AddLog(main);
+            mainLogView.SetSingle(main);
         }
-        if (historyLogView != null) historyLogView.AddLog(history);
-        if (llmLogView != null) llmLogView.AddLog(llm);
+        if (historyLogView != null) historyLogView.SetSingle(history);
+        if (llmLogView != null) llmLogView.SetSingle(llm);
     }
 
     private static string CleanLog(string s)
@@ -499,7 +511,7 @@ public class UIController : MonoBehaviour
                 cameraManager.SwitchToFreeLookMode();
             });
         }
-        
+
 
         // 5. 隱藏狀態欄按鈕
         GameObject hideStatusButtonGO = Instantiate(cameraButtonPrefab, cameraButtonGroupParent);
@@ -545,12 +557,49 @@ public class UIController : MonoBehaviour
             if (_uiToggleButton != null && child == _uiToggleButton.transform) continue;
             child.gameObject.SetActive(!_isUIHidden);
         }
+        if (_isUIHidden)
+        {
+            // 記住目前是哪一頁在顯示（僅在未指定父物件時需要）
+            if (logPanelsRoot == null)
+            {
+                _lastLogTab = LogTab.None;
+                if (mainLogView != null && mainLogView.gameObject.activeSelf) _lastLogTab = LogTab.Main;
+                else if (historyLogView != null && historyLogView.gameObject.activeSelf) _lastLogTab = LogTab.History;
+                else if (llmLogView != null && llmLogView.gameObject.activeSelf) _lastLogTab = LogTab.Llm;
 
+                if (mainLogView != null) mainLogView.gameObject.SetActive(false);
+                if (historyLogView != null) historyLogView.gameObject.SetActive(false);
+                if (llmLogView != null) llmLogView.gameObject.SetActive(false);
+            }
+            else
+            {
+                logPanelsRoot.SetActive(false);
+            }
+        }
+        else
+        {
+            if (logPanelsRoot == null)
+            {
+                // 沒有父容器就還原到剛剛那一頁
+                switch (_lastLogTab)
+                {
+                    case LogTab.Main: ShowMainLogDisplay(); break;
+                    case LogTab.History: ShowHistoryLogDisplay(); break;
+                    case LogTab.Llm: ShowLlmLogDisplay(); break;
+                    default: ShowMainLogDisplay(); break;
+                }
+            }
+            else
+            {
+                logPanelsRoot.SetActive(true);
+            }
+        }
         if (_uiToggleButton != null)
         {
             var img = _uiToggleButton.image;
             if (img != null) img.color = _isUIHidden ? Color.red : _uiToggleDefaultColor;
         }
+
     }
 
     private void CycleFollowAgent()
@@ -563,26 +612,55 @@ public class UIController : MonoBehaviour
         cameraManager.SetFollowTarget(agents[_followAgentIndex].transform);
     }
 
+    /// <summary>
+    /// ### 問題1 實作函式 ###
+    /// 在模擬開始時，將選定的代理人傳送到公寓的 F1 或 F2。
+    /// 一樓最多8人，超過的會被送到二樓。
+    /// </summary>
     private void TeleportAgentsToApartment(List<AgentController> agents)
     {
         if (agents == null || agents.Count == 0) return;
 
+        // 使用 GameObject.Find 查找場景中的攝影機物件
         Transform f1 = GameObject.Find("VCam_Apartment_F1")?.transform;
         Transform f2 = GameObject.Find("VCam_Apartment_F2")?.transform;
-        if (f1 == null) return;
 
+        // ### 問題3 Debug 輔助 ###
+        if (f1 == null)
+        {
+            Debug.LogError("[傳送失敗] 找不到名為 'VCam_Apartment_F1' 的物件！請檢查 Hierarchy 中的物件名稱。");
+            return;
+        }
+        if (f2 == null)
+        {
+            Debug.LogWarning("[傳送警告] 找不到名為 'VCam_Apartment_F2' 的物件。所有代理人都會被傳送到 F1。");
+        }
+
+        Debug.Log($"[傳送] F1 位置: {f1.position}, F2 位置: {(f2 != null ? f2.position.ToString() : "未找到")}");
+
+        // 定義8個在攝影機中心附近的偏移位置，避免重疊
         Vector3[] offsets = new Vector3[]
         {
-            new Vector3(-2,0,-2), new Vector3(0,0,-2), new Vector3(2,0,-2), new Vector3(-2,0,0),
-            new Vector3(0,0,0), new Vector3(2,0,0), new Vector3(-2,0,2), new Vector3(0,0,2)
+            new Vector3(0, 0, 0),       new Vector3(-2.5f, 1.5f, 0), new Vector3(2.5f, 1.5f, 0),
+            new Vector3(-4f, -1.5f, 0), new Vector3(4f, -1.5f, 0),   new Vector3(0, -3f, 0),
+            new Vector3(-2.5f, 4f, 0),  new Vector3(2.5f, 4f, 0)
         };
 
         for (int i = 0; i < agents.Count; i++)
         {
-            Transform baseT = (i < 8 || f2 == null) ? f1 : f2;
-            int offsetIdx = i % 8;
-            agents[i].transform.position = baseT.position + offsets[offsetIdx];
-        }
+            // 如果當前索引小於8，或找不到F2，則使用F1作為基準點
+            Transform baseTransform = (i < 8 || f2 == null) ? f1 : f2;
+            int offsetIndex = i % 8; // 讓索引在 0-7 之間循環
 
+            // 計算最終位置並應用
+            Vector3 targetPosition = baseTransform.position + offsets[offsetIndex];
+            // 因為攝影機有 Z 軸-10，我們需要將代理人的 Z 軸設為 0
+            targetPosition.z = 0; 
+            agents[i].transform.position = targetPosition;
+
+            // ### 問題3 Debug 輔助 ###
+            Debug.Log($"[傳送] 已將 '{agents[i].name}' 傳送到樓層 {(baseTransform == f1 ? "F1" : "F2")} 的位置: {targetPosition}");
+        }
     }
+    
 }

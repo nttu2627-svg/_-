@@ -1,4 +1,4 @@
-// Scripts/SimulationClient.cs (传送功能补全最终版)
+// Scripts/SimulationClient.cs (功能健壯最終版)
 
 using UnityEngine;
 using System;
@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using NativeWebSocket;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq; // 確保引用 JToken
 
 public class SimulationClient : MonoBehaviour
 {
@@ -17,22 +17,21 @@ public class SimulationClient : MonoBehaviour
     public Transform characterRoot;
     public Transform locationRoot;
     public Transform buildingRoot;
-        [Header("Camera Control")]
-    public CameraController cameraController;
-
+    
+    // 私有變數
     private WebSocket websocket;
     private readonly Queue<Action> _mainThreadActions = new Queue<Action>();
+    private readonly Dictionary<string, AgentController> _sceneAgentControllers = new Dictionary<string, AgentController>();
+    private readonly Dictionary<string, AgentController> _activeAgentControllers = new Dictionary<string, AgentController>();
+    private readonly Dictionary<string, Transform> _locationTransforms = new Dictionary<string, Transform>();
+    private readonly Dictionary<string, BuildingController> _buildingControllers = new Dictionary<string, BuildingController>();
 
-    private Dictionary<string, AgentController> _sceneAgentControllers = new Dictionary<string, AgentController>();
-    private Dictionary<string, AgentController> _activeAgentControllers = new Dictionary<string, AgentController>();
-    private Dictionary<string, Transform> _locationTransforms = new Dictionary<string, Transform>();
-    private Dictionary<string, BuildingController> _buildingControllers = new Dictionary<string, BuildingController>();
-
+    // --- 全局靜態事件 ---
+    // 外部腳本 (如 UIController) 可以訂閱這些事件來接收更新
     public static event Action<string> OnStatusUpdate;
     public static event Action<UpdateData> OnLogUpdate;
     public static event Action<EvaluationReport> OnEvaluationReceived;
-
-    public static event Action<float> OnEarthquake;
+    public static event Action<float> OnEarthquake; // 地震事件
 
     void Start()
     {
@@ -43,19 +42,14 @@ public class SimulationClient : MonoBehaviour
     
     void Update()
     {
+        // 在主線程中執行來自網路線程的任務
         lock (_mainThreadActions)
         {
             while (_mainThreadActions.Count > 0)
             {
                 var action = _mainThreadActions.Dequeue();
-                try 
-                {
-                    action?.Invoke();
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"[SimulationClient] EXCEPTION in Main Thread Action: {e}");
-                }
+                try { action?.Invoke(); }
+                catch (Exception e) { Debug.LogError($"[SimulationClient] EXCEPTION in Main Thread Action: {e}"); }
             }
         }
         
@@ -75,6 +69,7 @@ public class SimulationClient : MonoBehaviour
 
     private void InitializeSceneReferences()
     {
+        // ... (這部分與您提供的程式碼完全相同，無需修改)
         Debug.Log("[SimulationClient] Initializing scene references...");
         if (locationRoot != null)
         {
@@ -108,34 +103,40 @@ public class SimulationClient : MonoBehaviour
     private async Task ConnectToServer()
     {
         websocket = new WebSocket(serverUrl);
-        websocket.OnOpen += () => { EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke("已連接到伺服器")); };
-        websocket.OnError += (e) => { EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke($"錯誤: {e}")); };
-        websocket.OnClose += (e) => { EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke($"與伺服器斷開連接 (代碼: {e})")); };
+        websocket.OnOpen += () => EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke("已連接到伺服器"));
+        websocket.OnError += (e) => EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke($"錯誤: {e}"));
+        websocket.OnClose += (e) => EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke($"與伺服器斷開連接 (代碼: {e})"));
+        
         websocket.OnMessage += (bytes) => {
             var message = System.Text.Encoding.UTF8.GetString(bytes);
             Debug.Log($"[SimulationClient] Raw message received:\n{message}");
             try
             {
                 var wsMessage = JsonConvert.DeserializeObject<WebSocketMessage>(message);
-                EnqueueMainThreadAction(() => { ProcessMessageOnMainThread(wsMessage); });
+                // 將反序列化後的訊息排入主線程佇列等待處理
+                EnqueueMainThreadAction(() => ProcessMessageOnMainThread(wsMessage));
             }
             catch (Exception e)
             {
-                EnqueueMainThreadAction(() => { Debug.LogError($"[SimulationClient] JSON Deserialization failed: {e.Message}"); });
+                EnqueueMainThreadAction(() => Debug.LogError($"[SimulationClient] JSON Deserialization failed: {e.Message}\nRawData: {message}"));
             }
         };
         await websocket.Connect();
     }
     
+    /// <summary>
+    /// 在主線程中安全地處理來自 WebSocket 的訊息。
+    /// </summary>
     private void ProcessMessageOnMainThread(WebSocketMessage wsMessage)
     {
         if (wsMessage == null) return;
         try
         {
+            // 使用 switch 根據訊息類型，將 Data 反序列化為對應的具體類別
             switch (wsMessage.Type)
             {
                 case "update":
-                    if(wsMessage.Data != null)
+                    if (wsMessage.Data != null)
                     {
                         var updateData = wsMessage.Data.ToObject<UpdateData>();
                         OnStatusUpdate?.Invoke(updateData.Status);
@@ -144,6 +145,7 @@ public class SimulationClient : MonoBehaviour
                         UpdateAllBuildingStates(updateData.BuildingStates);
                     }
                     break;
+                    
                 case "evaluation":
                     if (wsMessage.Data != null)
                     {
@@ -151,6 +153,7 @@ public class SimulationClient : MonoBehaviour
                         OnEvaluationReceived?.Invoke(evalData);
                     }
                     break;
+
                 case "earthquake":
                     if (wsMessage.Data != null)
                     {
@@ -160,14 +163,17 @@ public class SimulationClient : MonoBehaviour
                         OnEarthquake?.Invoke(quakeData.Intensity);
                     }
                     break;
-                case "status": case "error": case "end":
+
+                case "status": 
+                case "error": 
+                case "end":
                     OnStatusUpdate?.Invoke(wsMessage.Message);
                     break;
             }
         }
         catch (Exception e)
         {
-            Debug.LogError($"[SimulationClient] Error processing message on main thread: {e}");
+            Debug.LogError($"[SimulationClient] Error processing message on main thread (Type: {wsMessage.Type}): {e}");
         }
     }
 
@@ -184,8 +190,6 @@ public class SimulationClient : MonoBehaviour
             if (agentStates.TryGetValue(activeControllerPair.Key, out AgentState state))
             {
                 activeControllerPair.Value.UpdateState(state);
-                // 新增：轉送當前行動狀態，供控制器顯示或處理
-                activeControllerPair.Value.SetActionState(state.CurrentState);
             }
         }
     }
@@ -211,19 +215,19 @@ public class SimulationClient : MonoBehaviour
         }
         
         Debug.Log("[SimulationClient] Activating selected agents for simulation...");
-        foreach (var controller in _sceneAgentControllers.Values) { controller.gameObject.SetActive(false); }
         _activeAgentControllers.Clear();
-
-        foreach (string mbti in parameters.Mbti)
+        foreach (var agentName in parameters.Mbti)
         {
-            string standardizedMbti = mbti.ToUpper();
+            string standardizedMbti = agentName.ToUpper();
             if (_sceneAgentControllers.TryGetValue(standardizedMbti, out AgentController controller))
             {
                 controller.gameObject.SetActive(true);
                 _activeAgentControllers[standardizedMbti] = controller;
-                Debug.Log($"-- Activating {standardizedMbti}");
             }
-            else { Debug.LogWarning($"[SimulationClient] Selected agent '{standardizedMbti}' not found in scene controllers."); }
+            else 
+            {
+                Debug.LogWarning($"[SimulationClient] Selected agent '{standardizedMbti}' not found in scene controllers.");
+            }
         }
 
         var command = new SimulationStartCommand { Params = parameters };
@@ -232,9 +236,9 @@ public class SimulationClient : MonoBehaviour
         await websocket.SendText(jsonCommand);
     }
 
-
     public async void SendTeleportRequest(string agentName, string targetPortalName)
     {
+        // ... (這部分與您提供的程式碼完全相同，無需修改)
         if (websocket == null || websocket.State != WebSocketState.Open)
         {
             Debug.LogWarning("Cannot send teleport request: WebSocket is not connected.");
