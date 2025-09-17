@@ -1,57 +1,51 @@
-# simulation_logic/agent_memory.py (完整版)
+# simulation_logic/agent_memory.py (完整修正版)
 
 from datetime import datetime, timedelta
-import sys
-
-
-def get_llm_memory_func():
-    """在函數內部導入並返回 LLM 函數，以解決模組間的循環依賴。"""
-    try:
-        from tools.LLM.run_gpt_prompt import run_gpt_prompt_generate_initial_memory
-        return run_gpt_prompt_generate_initial_memory
-    except ImportError as e:
-        print(f"❌ [CRITICAL_ERROR] 無法從 tools.LLM.run_gpt_prompt 導入 'run_gpt_prompt_generate_initial_memory': {e}", file=sys.stderr)
-        # 返回一個總是失敗的佔位符函數
-        return lambda agent: (None, None, False)
-
-
-from datetime import datetime, timedelta
-import sys
-
-
-def compare_times_hm(time_str1_hm, time_str2_hm):
-
-    try:
-        time1 = datetime.strptime(str(time_str1_hm), '%H-%M')
-        time2 = datetime.strptime(str(time_str2_hm), '%H-%M')
-        return time1 < time2
-    except (ValueError, TypeError):
-        return False
 
 def update_agent_schedule(wake_up_time_str, schedule_tasks):
+    """
+    【核心工具函式】
+    將一個包含 [活動名稱, 持續分鐘數] 的列表，
+    根據指定的起床時間，轉換為一個包含 [活動名稱, 開始時間 HH-MM] 的完整日程表。
 
+    Args:
+        wake_up_time_str (str): 起床時間，格式為 "HH-MM" 或 "HH:MM"。
+        schedule_tasks (list): 原始的任務列表，例如 [['工作', 240], ['午餐', 60]]。
+
+    Returns:
+        list: 轉換後的完整日程表，例如 [['醒來', '07-00'], ['工作', '07-00'], ['午餐', '11-00']]。
+    """
     try:
+        # 標準化時間格式
         wake_up_time_str = str(wake_up_time_str).replace(":", "-")
+        # 處理單個小時數的情況，例如 "7-00" -> "07-00"
         if "-" in wake_up_time_str and len(wake_up_time_str.split('-')[0]) == 1:
             wake_up_time_str = "0" + wake_up_time_str
         wake_up_time = datetime.strptime(wake_up_time_str, '%H-%M')
     except (ValueError, TypeError):
+        # 如果傳入的時間格式不正確，使用一個安全的預設值
         wake_up_time = datetime.strptime("07-00", '%H-%M')
     
     current_time = wake_up_time
+    # 日程表的第一項永遠是 "醒來"
     updated_schedule = [['醒來', wake_up_time.strftime('%H-%M')]]
     
     if not isinstance(schedule_tasks, list):
         return updated_schedule
 
     for item in schedule_tasks:
+        # 健壯性檢查，確保列表中的項目是正確的格式
         if not isinstance(item, (list, tuple)) or len(item) < 2:
             continue
+        
         activity, duration_val = item[0], item[1]
         try:
             duration_minutes = int(duration_val)
             if duration_minutes <= 0: continue
+            
+            # 將當前時間點作為活動的開始時間
             updated_schedule.append([activity, current_time.strftime('%H-%M')])
+            # 將當前時間往後推移活動的持續時間
             current_time += timedelta(minutes=duration_minutes)
         except (ValueError, TypeError):
             continue
@@ -59,51 +53,41 @@ def update_agent_schedule(wake_up_time_str, schedule_tasks):
     return updated_schedule
 
 def find_agent_current_activity(current_time_hm_str, schedule_with_start_times):
+    """
+    【核心工具函式】
+    根據當前時間，從一個包含開始時間的完整日程表中，找出代理人現在應該從事的活動。
 
+    Args:
+        current_time_hm_str (str): 當前時間，格式為 "HH-MM"。
+        schedule_with_start_times (list): 完整的日程表，格式為 [['活動', 'HH-MM'], ...]。
+
+    Returns:
+        str: 當前應該從事的活動名稱。如果找不到，則返回 '睡覺'。
+    """
     try:
         current_time = datetime.strptime(current_time_hm_str, '%H-%M')
     except (ValueError, TypeError):
-        return '時間錯誤' 
+        return '時間格式錯誤' 
         
     if not isinstance(schedule_with_start_times, list) or not schedule_with_start_times:
         return '睡覺'
 
-    possible_activities = []
+    latest_activity = '睡覺' # 預設活動
+    latest_activity_time = datetime.min # 用於比較的最小時間
+
     for item in schedule_with_start_times:
         if not isinstance(item, (list, tuple)) or len(item) < 2 or not isinstance(item[1], str):
             continue
+        
         activity, time_str = item[0], item[1]
         try:
             activity_start_time = datetime.strptime(time_str.replace(":", "-"), '%H-%M')
-            if activity_start_time <= current_time:
-                possible_activities.append((activity_start_time, activity))
+            # 如果活動的開始時間小於等於當前時間，
+            # 並且比上一個找到的活動時間更晚，就更新它。
+            if activity_start_time <= current_time and activity_start_time >= latest_activity_time:
+                latest_activity_time = activity_start_time
+                latest_activity = activity
         except (ValueError, TypeError):
             continue
 
-    if possible_activities:
-        latest_activity = max(possible_activities, key=lambda x: x[0])
-        return latest_activity[1]
-    else:
-        return '睡覺'
-
-
-def generate_and_set_initial_memory(agent):
-    # 獲取 LLM 函數
-    run_gpt_prompt_generate_initial_memory = get_llm_memory_func()
-    
-    # 調用 LLM 生成數據
-    memory, schedule_item, success = run_gpt_prompt_generate_initial_memory(agent)
-    
-    if success:
-        # 如果成功，直接在 agent 對象上設置屬性
-        agent.initial_memory = memory
-        agent.weekly_schedule_summary = schedule_item
-        # 將背景故事和本週目標合併到代理人的主記憶中，以便後續LLM調用可以參考
-        agent.memory = f"[背景]\n{memory}\n\n[本週目標]\n{schedule_item}"
-        print(f"✅ [{agent.name}] 的初始記憶和週目標已成功生成。")
-    else:
-        # 如果失敗，打印錯誤日誌
-        print(f"❌ [{agent.name}] 的初始記憶生成失敗。將在下次循環重試。")
-
-    # 返回成功標誌，供 main_quake1.py 中的初始化循環判斷是否需要重試
-    return success
+    return latest_activity

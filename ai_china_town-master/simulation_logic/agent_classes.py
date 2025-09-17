@@ -1,4 +1,4 @@
-# simulation_logic/agent_classes.py (傳送邏輯重構最終版)
+# simulation_logic/agent_classes.py (完整最終版)
 
 import random
 import os
@@ -8,13 +8,11 @@ import sys
 # 从我们重构后的模组中导入
 from tools.LLM import run_gpt_prompt as llm
 from .agent_memory import update_agent_schedule
-from .schedule_manager import 從檔案載入行程表  # 导入新的预设行程载入函数
+from .schedule_manager import 從檔案載入行程表
 
-# --- 核心修改：定義場景中的傳送門連接關係 ---
-# 這是整個傳送系統的核心規則。
+# --- 核心：定義場景中的傳送門連接關係 ---
 # 鍵(Key): 代理人當前所在的傳送點 GameObject 名稱。
 # 值(Value): 代理人穿過該傳送點後，應該出現的目標傳送點 GameObject 名稱。
-# 對於一對多的出口（如地鐵），值可以是一個列表，系統會隨機選擇一個。
 PORTAL_CONNECTIONS = {
     # --- 公寓出入口 (雙向) ---
     "公寓大門_室內": "公寓大門_室外",
@@ -57,9 +55,9 @@ PORTAL_CONNECTIONS = {
     "餐廳_室外": "餐廳_室內",
 }
 
-# --- 動態載入代理人設定 (此部分與您提供的程式碼相同) ---
+# --- 動態載入代理人設定 ---
 BASE_DIR = './agents/'
-# ... (此處省略您檔案中從 25 行到 63 行完全相同的程式碼)
+
 def read_file(file_path):
     try:
         with open(file_path, "r", encoding="utf-8") as file: return file.read()
@@ -93,26 +91,27 @@ def load_mbti_profiles_from_files(base_dir):
     return profiles
 
 MBTI_PROFILES = load_mbti_profiles_from_files(BASE_DIR)
-DEFAULT_MBTI_TYPES = list(MBTI_PROFILES.keys())
-
 
 class Building:
-    # ... (Building 類別與您提供的程式碼相同)
     def __init__(self, bld_id, position, integrity=100.0):
-        self.id = bld_id; self.position = position; self.integrity = float(integrity)
+        self.id = bld_id
+        self.position = position
+        self.integrity = float(integrity)
+
     def apply_damage(self, intensity):
         vulnerability = (100 - self.integrity) / 100.0
         damage = (intensity * 20) + (intensity * 30 * vulnerability) + random.uniform(-5, 5)
         self.integrity = max(0, self.integrity - max(0, damage))
         return damage
 
-
 class TownAgent:
     def __init__(self, agent_id_mbti, initial_home_name, available_locations):
-        # ... (初始化前半部分與您提供的程式碼相同)
-        self.id = agent_id_mbti.upper(); self.name = agent_id_mbti.upper(); self.MBTI = agent_id_mbti.upper()
+        self.id = agent_id_mbti.upper()
+        self.name = agent_id_mbti.upper()
+        self.MBTI = agent_id_mbti.upper()
         self.available_locations = available_locations 
         self.home = initial_home_name
+        
         mbti_info = MBTI_PROFILES.get(self.MBTI, {'desc': '未知個性', 'cooperation': 0.5})
         self.personality_desc = mbti_info['desc']
         self.cooperation_inclination = mbti_info['cooperation']
@@ -121,66 +120,53 @@ class TownAgent:
         self.curr_place = initial_home_name
         self.target_place = initial_home_name
         
-        self.last_action = "等待初始化"; self.curr_action = "等待初始化"; self.curr_action_pronunciatio = "⏳"
-        self.current_thought = ""; self.health = 100; self.is_injured = False; self.mental_state = "calm"
-        self.current_building = None; self.interrupted_action = None
-        self.memory = "尚未生成"; self.weekly_schedule = {}
+        self.last_action = "等待初始化"
+        self.curr_action = "等待初始化"
+        self.curr_action_pronunciatio = "⏳"
+        self.current_thought = ""
+        self.health = 100
+        self.is_injured = False
+        self.mental_state = "calm"
+        self.current_building = None
+        self.interrupted_action = None
+        self.memory = "尚未生成"
+        self.weekly_schedule = {}
         self.daily_schedule = []
-        self.current_schedule_index = 0  # 用於行程切換
         self.wake_time = "07-00"
         self.sleep_time = "23-00"
         self.disaster_experience_log = []
 
     def is_location_outdoors(self, location_name):
-        # 判斷一個地點是否在室外
-        # 注意：我們現在用 "_室外" 後綴來做更精確的判斷
         return "_室外" in str(location_name)
 
     def find_path(self, destination):
-        """
-        [重構後] 根據當前位置和最終目的地，決定下一步要移動到的具體地點(GameObject)。
-        如果需要跨區（室內/室外），它會返回通往該區域的入口/出口名稱。
-        """
-        # 檢查目的地是否有效
         if not destination or destination == self.curr_place:
             return self.curr_place
         
         is_current_outdoors = self.is_location_outdoors(self.curr_place)
         is_destination_outdoors = self.is_location_outdoors(destination)
 
-        # 如果起點和終點在同一區域 (都在室內或都在室外)，直接前往目的地。
         if is_current_outdoors == is_destination_outdoors:
             return destination
         
-        # 如果需要從室外進入室內
         elif is_current_outdoors and not is_destination_outdoors:
-            # 例如：從 "公園" 到 "公寓"，需要先去 "公寓大門_室外"
-            # 這部分邏輯可以再細化，但目前先假設入口名稱與目標建築名相關
-            # 這裡我們假設入口的命名規則是 '建築名_..._室外'
-            # 這裡的邏輯需要一個從 "公寓" -> "公寓大門_室外" 的映射，暫時簡化
-            return f"{destination}_門口_室外" # 假設有這樣的命名規則，例如 "學校_門口_室外"
+            return f"{destination}_門口_室外"
             
-        # 如果需要從室內出去到室外
-        else: # not is_current_outdoors and is_destination_outdoors
-            # 從當前位置找到對應的出口
-            # 例如：從 "公寓" 到 "公園"，需要先去 "公寓大門_室內"
+        else:
             if self.curr_place in PORTAL_CONNECTIONS:
-                return self.curr_place # 如果當前就在門口，就待在原地等待觸發
+                return self.curr_place
             
-            # 簡化邏輯：假設建築物的主出口就是 "建築名_大門_室內"
             building_name = self.curr_place.split('_')[0]
             main_exit = f"{building_name}大門_室內"
             if main_exit in PORTAL_CONNECTIONS:
                 return main_exit
-            # 如果沒有大門，則返回第一個找到的相關出口
             for portal in PORTAL_CONNECTIONS.keys():
                 if portal.startswith(building_name) and "_室內" in portal:
                     return portal
         
-        return destination # 如果找不到路徑，則待在原地
+        return destination
 
     def get_schedule_item_at(self, current_time_hm_str):
-        """根據當前時間取得對應的行程項目。"""
         try:
             current_t = datetime.strptime(current_time_hm_str, "%H-%M")
         except (ValueError, TypeError):
@@ -201,7 +187,6 @@ class TownAgent:
         return latest_item
 
     async def update_action_by_time(self, current_time_hm_str):
-        """依據當前時間切換行程與規劃路徑。"""
         item = self.get_schedule_item_at(current_time_hm_str)
         if not item:
             return
@@ -209,12 +194,7 @@ class TownAgent:
         if action != self.curr_action or target != self.target_place:
             await self.set_new_action(action, target)
 
-
     def teleport(self, target_portal_name: str):
-        """
-        [重構後] 由 WebSocket 服務器調用，處理代理人的傳送。
-        這個函式現在直接使用 PORTAL_CONNECTIONS 字典來更新代理人的位置。
-        """
         destination = PORTAL_CONNECTIONS.get(target_portal_name)
         
         if not destination:
@@ -222,7 +202,6 @@ class TownAgent:
             self.current_thought = f"嗯？這扇門好像是壞的... ({target_portal_name})"
             return
 
-        # 如果目標是一個列表（例如地鐵出口），隨機選一個
         if isinstance(destination, list):
             self.curr_place = random.choice(destination)
         else:
@@ -231,18 +210,13 @@ class TownAgent:
         self.current_thought = f"好了，我到 '{self.curr_place}' 了。"
         print(f"✅ [傳送成功] {self.name} 從 '{target_portal_name}' 傳送到 '{self.curr_place}'")
 
-
     async def set_new_action(self, new_action, destination):
-        """設定代理人新的行動與目的地並更新相關狀態。"""
-        # 紀錄被中斷的行動
         self.interrupt_action()
 
-        # 更新行動與位置
         self.curr_action = new_action
         self.target_place = destination
         self.curr_place = self.find_path(destination)
 
-        # 產生內心想法與行動圖示
         try:
             if new_action == "醒來":
                 self.current_thought = "新的一天開始了！"
@@ -279,12 +253,16 @@ class TownAgent:
         self.health = max(0, self.health - damage)
         self.disaster_experience_log.append(f"遭受 {damage} 點傷害 (HP: {self.health})")
         if self.health <= 0:
-            self.is_injured = True; self.mental_state = "unconscious"; self.curr_action = "Unconscious"
+            self.is_injured = True
+            self.mental_state = "unconscious"
+            self.curr_action = "Unconscious"
             return
         elif self.health < 50: self.is_injured = True
         
-        reaction_action_key = "alert"; new_mental_state = "alert"
-        if self.is_injured: reaction_action_key, new_mental_state = "尋找醫療救助", "injured"
+        reaction_action_key = "alert"
+        new_mental_state = "alert"
+        if self.is_injured: 
+            reaction_action_key, new_mental_state = "尋找醫療救助", "injured"
         elif intensity >= 0.65:
             if 'E' in self.MBTI and 'TJ' in self.MBTI: reaction_action_key, new_mental_state = "指揮疏散", "focused"
             elif 'E' in self.MBTI and 'F' in self.MBTI: reaction_action_key, new_mental_state = "安撫他人", "panicked"
@@ -293,9 +271,11 @@ class TownAgent:
         else:
             if 'J' in self.MBTI: reaction_action_key, new_mental_state = "評估周圍環境", "calm"
             else: reaction_action_key, new_mental_state = "尋找遮蔽物", "alert"
+        
         if not self.is_injured and self.cooperation_inclination > 0.6 and reaction_action_key not in ["躲到桌下"]:
             if any(o.id != self.id and o.health > 0 and o.is_injured and self.Is_nearby(o.get_position()) for o in other_agents_list):
                 reaction_action_key, new_mental_state = "協助受傷的人", "helping"
+        
         self.mental_state = new_mental_state
         self.curr_action = reaction_action_key
 
@@ -313,66 +293,83 @@ class TownAgent:
     def get_position(self): return (0, 0)
     def Is_nearby(self, other_agent_position): return True
     def interrupt_action(self):
-        self.interrupted_action = self.curr_action if self.curr_action not in ["睡覺", "Unconscious"] else None
+        if self.curr_action not in ["睡覺", "Unconscious"]:
+            self.interrupted_action = self.curr_action
+        else:
+            self.interrupted_action = None
 
     async def initialize_agent(self, current_date, schedule_mode: str, schedule_file_path: str):
         """
-        根据指定的模式初始化代理人。
-        schedule_mode: 'llm' 或 'preset'
-        schedule_file_path: 預設行程檔案的路徑
+        根據指定的模式初始化代理人，徹底分離 preset 和 llm 的邏輯。
         """
-        # 记忆和周计划总是由 LLM 生成，以保证角色的独特性
-        memory, mem_success = await llm.run_gpt_prompt_generate_initial_memory(
-            self.name, self.MBTI, self.persona_summary, self.home
-        )
-        if not mem_success:
-            return False
-        self.memory = memory
-        
+        # --- Preset 模式：完全不使用 LLM ---
         if schedule_mode == "preset":
+            print(f"🏃 [Agent {self.name}] 正在以 'preset' 模式初始化...")
             try:
+                # 記憶：直接使用 personality_desc 作為基本記憶
+                self.memory = self.persona_summary
+                
+                # 從 schedules.json 讀取週計劃和日計劃
                 with open(schedule_file_path, "r", encoding="utf-8") as f:
                     all_schedules = json.load(f)
                 agent_data = all_schedules.get(self.name)
                 if not agent_data:
+                    print(f"❌ [Agent {self.name}] 在 '{schedule_file_path}' 中找不到對應的資料。")
                     return False
-                self.weekly_schedule = agent_data.get("weeklySchedule", {})
-            except Exception:
+                
+                # 讀取週計劃，如果沒有就給一個預設值
+                self.weekly_schedule = agent_data.get("weeklySchedule", {day: "自由活動" for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]})
+                
+                # 呼叫 update_daily_schedule 處理日計劃
+                return await self.update_daily_schedule(current_date, "preset", schedule_file_path)
+
+            except Exception as e:
+                print(f"❌ [Agent {self.name}] 在 'preset' 模式初始化期間發生錯誤: {e}")
                 return False
-            return await self.update_daily_schedule(current_date, "preset", schedule_file_path)
 
-        # schedule_mode == 'llm'
-        schedule, sched_success = await llm.run_gpt_prompt_generate_weekly_schedule(self.persona_summary)
-        if not sched_success:
+        # --- LLM 模式：完全由 LLM 生成 ---
+        elif schedule_mode == "llm":
+            print(f"🤖 [Agent {self.name}] 正在以 'llm' 模式初始化...")
+            # 1. 生成初始記憶
+            memory, mem_success = await llm.run_gpt_prompt_generate_initial_memory(
+                self.name, self.MBTI, self.persona_summary, self.home
+            )
+            if not mem_success:
+                print(f"❌ [Agent {self.name}] LLM 生成初始記憶失敗。")
+                return False
+            self.memory = memory
+            
+            # 2. 生成週計劃
+            schedule, sched_success = await llm.run_gpt_prompt_generate_weekly_schedule(self.persona_summary)
+            if not sched_success:
+                print(f"❌ [Agent {self.name}] LLM 生成週計劃失敗。")
+                return False
+            self.weekly_schedule = schedule
+
+            # 3. 生成日計劃
+            return await self.update_daily_schedule(current_date, "llm", schedule_file_path)
+
+        # 未知模式
+        else:
+            print(f"❌ [Agent {self.name}] 未知的 schedule_mode: '{schedule_mode}'")
             return False
-        self.weekly_schedule = schedule
 
-        return await self.update_daily_schedule(current_date, "llm", schedule_file_path)
-
-    # ### 核心修改：每日更新流程也接受 schedule_mode ###
     async def update_daily_schedule(self, current_date, schedule_mode: str, schedule_file_path: str):
         """根据模式更新并设定一天的日程。"""
         
-        base_tasks = []
         if schedule_mode == "llm":
-            # --- LLM 生成模式 ---
-            print(f"[Agent {self.name}] 使用 LLM 生成今日行程...")
+            print(f"🤖 [Agent {self.name}] 使用 LLM 生成今日行程...")
             weekday_name = current_date.strftime('%A')
             today_goal = self.weekly_schedule.get(weekday_name, "自由活動")
             raw_tasks = await llm.run_gpt_prompt_generate_hourly_schedule(self.persona_summary, current_date.strftime('%Y-%m-%d'), today_goal)
             
-            # 从 LLM 返回的 [名称, 分钟数] 格式转换为 [名称, 开始时间] 格式所需的原始数据
             if raw_tasks and isinstance(raw_tasks[0], list):
-                 # 重新计算 wake_time
                 wake_time_str = await llm.run_gpt_prompt_wake_up_hour(self.persona_summary, current_date.strftime('%Y-%m-%d'), raw_tasks)
                 if not wake_time_str: return False
                 self.wake_time = wake_time_str.replace(":", "-")
                 
-                # 使用原始的 [名称, 分钟数] 列表来生成行程
                 self.daily_schedule = update_agent_schedule(self.wake_time, raw_tasks)
-                self.current_schedule_index = 0
                 
-                # 计算睡眠时间
                 try:
                     total_duration = sum(int(task[1]) for task in raw_tasks)
                     self.sleep_time = (datetime.strptime(self.wake_time, '%H-%M') + timedelta(minutes=total_duration)).strftime('%H-%M')
@@ -382,21 +379,73 @@ class TownAgent:
                 return True
 
         elif schedule_mode == "preset":
-            # --- 预设行程模式 ---
-            print(f"[Agent {self.name}] 使用预设档案 '{schedule_file_path}' 载入行程...")
+            print(f"💾 [Agent {self.name}] 使用预设档案 '{schedule_file_path}' 载入行程...")
             preset_schedule = 從檔案載入行程表(self.name, schedule_file_path)
             if preset_schedule:
                 self.daily_schedule = preset_schedule
-                self.current_schedule_index = 0
-
-                # 从预设行程中推断作息时间
                 if self.daily_schedule:
-                    self.wake_time = self.daily_schedule[0][1] # 第一个活动的开始时间
-                    # 假设最后一个活动持续一小时
+                    self.wake_time = self.daily_schedule[0][1]
                     last_activity_time = datetime.strptime(self.daily_schedule[-1][1], '%H-%M')
                     self.sleep_time = (last_activity_time + timedelta(hours=1)).strftime('%H-%M')
+                print(f"✅ [Agent {self.name}] 已成功從檔案載入行程。")
                 return True
 
-        # 如果两种模式都失败，则返回 False
         print(f"❌ [Agent {self.name}] 无法生成或载入行程。")
         return False
+    async def perform_earthquake_step_action(self, agents, buildings, intensity, disaster_logger, current_time):
+        """
+        在地震的每一個時間步驟中，決定並執行代理人的行動。
+        """
+        self.update_current_building(buildings)
+        
+        # 根據隨機性和建築損毀度，施加持續傷害
+        if self.current_building and random.random() < intensity * 0.1 * (120 - self.current_building.integrity) / 100:
+            damage = random.randint(1, int(intensity * 10))
+            original_hp = self.health
+            self.health = max(0, self.health - damage)
+            log_msg = f"{self.name} 因建築物搖晃/掉落物受到 {damage} 點傷害 (HP: {self.health})。"
+            self.disaster_experience_log.append(log_msg)
+            if disaster_logger:
+                disaster_logger.記錄事件(self.name, "損失", current_time, {"value": damage, "reason": "Falling Debris"})
+            if self.health <= 0:
+                self.curr_action = "Unconscious"
+                return log_msg + " 代理人已失去意識。"
+        
+        # 使用 LLM 決定下一步行動
+        new_action, new_thought = await llm.run_gpt_prompt_earthquake_step_action(
+            self.persona_summary, self.health, self.mental_state, self.curr_place, intensity, self.disaster_experience_log[-5:]
+        )
+        self.curr_action = new_action
+        self.current_thought = new_thought
+        self.disaster_experience_log.append(f"在 {self.curr_place} 決定 {new_action}。內心想法: {new_thought}")
+
+        # 執行幫助行為
+        help_log = self.perceive_and_help(agents)
+        if help_log and disaster_logger:
+            # 這裡可以擴充，記錄幫助事件的細節
+            disaster_logger.記錄事件(self.name, "合作", current_time, {"details": help_log})
+
+        return f"{self.name} 正在 {self.curr_action} (HP:{self.health})。想法:『{self.current_thought}』"
+
+    async def perform_recovery_step_action(self, agents, buildings, disaster_logger, current_time):
+        """
+        在地震後的恢復階段，決定並執行代理人的行動。
+        """
+        # 優先處理自救或互救
+        if self.is_injured:
+            self.curr_action = "尋找醫療資源或休息"
+        else:
+            help_log = self.perceive_and_help(agents)
+            if help_log:
+                self.curr_action = "幫助他人"
+                if disaster_logger:
+                     disaster_logger.記錄事件(self.name, "合作", current_time, {"details": help_log})
+            else:
+                # 如果沒有人需要幫助，使用 LLM 決定恢復行動
+                self.curr_action = await llm.run_gpt_prompt_get_recovery_action(
+                    self.persona_summary, self.mental_state, self.curr_place
+                )
+        
+        log_msg = f"{self.name} 正在 {self.curr_action} (HP:{self.health})。"
+        self.disaster_experience_log.append(log_msg)
+        return log_msg    
