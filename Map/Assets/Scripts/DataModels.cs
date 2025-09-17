@@ -30,6 +30,12 @@ public class SimulationParameters
     [JsonProperty("eq_json")] public string EqJson;
     [JsonProperty("eq_step")] public int EqStep;
     [JsonProperty("use_default_calendar")] public bool UseDefaultCalendar;
+        // ### 核心修正：新增一個欄位來傳遞初始位置 ###
+    // 這是一個 代理人名稱 -> 地點名稱 的字典
+    [JsonProperty("initial_positions")]
+    public Dictionary<string, string> InitialPositions;
+
+    // Removed invalid implicit operator for SimulationParameters
 }
 
 // --- 從後端接收 ---

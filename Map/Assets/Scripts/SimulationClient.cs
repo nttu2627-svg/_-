@@ -25,6 +25,8 @@ public class SimulationClient : MonoBehaviour
     private readonly Dictionary<string, AgentController> _activeAgentControllers = new Dictionary<string, AgentController>();
     private readonly Dictionary<string, Transform> _locationTransforms = new Dictionary<string, Transform>();
     private readonly Dictionary<string, BuildingController> _buildingControllers = new Dictionary<string, BuildingController>();
+    private List<Collider2D> _boundsColliders = new List<Collider2D>();
+
 
     // --- 全局靜態事件 ---
     // 外部腳本 (如 UIController) 可以訂閱這些事件來接收更新
@@ -33,6 +35,7 @@ public class SimulationClient : MonoBehaviour
     public static event Action<EvaluationReport> OnEvaluationReceived;
     public static event Action<float> OnEarthquake; // 地震事件
 
+    [Obsolete]
     void Start()
     {
         Debug.Log("[SimulationClient] Starting...");
@@ -67,6 +70,7 @@ public class SimulationClient : MonoBehaviour
         }
     }
 
+    [Obsolete]
     private void InitializeSceneReferences()
     {
         // ... (這部分與您提供的程式碼完全相同，無需修改)
@@ -96,7 +100,17 @@ public class SimulationClient : MonoBehaviour
             {
                 if (!string.IsNullOrEmpty(building.buildingName)) { _buildingControllers[building.buildingName] = building; }
             }
-             Debug.Log($"[SimulationClient] Registered {_buildingControllers.Count} building controllers.");
+            Debug.Log($"[SimulationClient] Registered {_buildingControllers.Count} building controllers.");
+        }
+        
+        // 收集場景中所有名稱包含 "Bounds" 的 Collider2D，避免隨機傳送到不可到達區域。
+        _boundsColliders.Clear();
+        foreach (Collider2D col in FindObjectsOfType<Collider2D>())
+        {
+            if (col.gameObject.name.Contains("Bounds"))
+            {
+                _boundsColliders.Add(col);
+            }
         }
     }
 
@@ -205,6 +219,65 @@ public class SimulationClient : MonoBehaviour
             }
         }
     }
+    private bool IsInsideBounds(Vector3 position)
+    {
+        foreach (var col in _boundsColliders)
+        {
+            if (col.bounds.Contains(position)) return true;
+        }
+        return false;
+    }
+
+    private Vector3 GetRandomApartmentPosition()
+    {
+        for (int attempt = 0; attempt < 30; attempt++)
+        {
+            bool secondFloor = UnityEngine.Random.value > 0.5f;
+            bool singleRoom = UnityEngine.Random.value > 0.5f;
+            float x, y;
+            if (!secondFloor)
+            {
+                if (singleRoom)
+                {
+                    x = UnityEngine.Random.Range(-130.4f, -112.9f);
+                    y = UnityEngine.Random.Range(-93.9f, -46.9f);
+                }
+                else
+                {
+                    x = UnityEngine.Random.Range(-96f, -80.4f);
+                    y = UnityEngine.Random.Range(-86.9f, -46.4f);
+                }
+            }
+            else
+            {
+                if (singleRoom)
+                {
+                    x = UnityEngine.Random.Range(-194.01f, -179.52f);
+                    y = UnityEngine.Random.Range(-93.52f, -45.09f);
+                }
+                else
+                {
+                    x = UnityEngine.Random.Range(-224.69f, -210.07f);
+                    y = UnityEngine.Random.Range(-87.37f, -46.16f);
+                }
+            }
+
+            Vector3 candidate = new Vector3(x, y, 0f);
+            if (!IsInsideBounds(candidate))
+            {
+                return candidate;
+            }
+        }
+        return Vector3.zero;
+    }
+
+    private void TeleportActiveAgentsToApartmentArea()
+    {
+        foreach (var controller in _activeAgentControllers.Values)
+        {
+            controller.TeleportTo(GetRandomApartmentPosition());
+        }
+    }
 
     public async void StartSimulation(SimulationParameters parameters)
     {
@@ -229,7 +302,7 @@ public class SimulationClient : MonoBehaviour
                 Debug.LogWarning($"[SimulationClient] Selected agent '{standardizedMbti}' not found in scene controllers.");
             }
         }
-
+        TeleportActiveAgentsToApartmentArea();
         var command = new SimulationStartCommand { Params = parameters };
         string jsonCommand = JsonConvert.SerializeObject(command, Formatting.Indented);
         OnStatusUpdate?.Invoke("已發送模擬指令，等待後端響應...");

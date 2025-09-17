@@ -3,6 +3,8 @@
 using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
+using System.Globalization;
+
 using DisasterSimulation;
 
 public class AgentController : MonoBehaviour
@@ -107,17 +109,53 @@ public class AgentController : MonoBehaviour
         {
             _targetPosition = targetLocation.position;
         }
+        else if (state.Location == "公寓")
+        {
+            // 若後端傳來的地點在場景中沒有對應的標記（例如 "公寓"），
+            // 則維持目前的位置，避免代理人被傳回原點。
+            _targetPosition = _transform.position;
+        }
+        else if (TryParseVector3(state.Location, out Vector3 pos))
+        {
+            // 如果後端傳回的是座標字串而非地點名稱，直接使用座標
+            _targetPosition = pos;
+            _transform.position = pos;
+        }
         else
         {
             Debug.LogWarning($"地點 '{state.Location}' 在場景中未找到，代理人 '{agentName}' 將停在原地。");
         }
         _currentAction = state.CurrentState;
     }
+    private static bool TryParseVector3(string input, out Vector3 result)
+    {
+        result = Vector3.zero;
+        if (string.IsNullOrWhiteSpace(input)) return false;
+        input = input.Trim();
+        input = input.Trim('(', ')');
+        string[] parts = input.Split(',');
+        if (parts.Length != 3) return false;
+        float x, y, z;
+        if (!float.TryParse(parts[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out x)) return false;
+        if (!float.TryParse(parts[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out y)) return false;
+        if (!float.TryParse(parts[2].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out z)) return false;
+
+        result = new Vector3(x, y, z);
+        return true;
+    }
+        /// <summary>
+    /// 立即將代理人傳送到指定位置，並同步目標位置。
+    /// </summary>
+    public void TeleportTo(Vector3 position)
+    {
+        _transform.position = position;
+        _targetPosition = position;
+    }
 
     public void SetActionState(string action)
     {
         _currentAction = action;
-                string bubbleText = null;
+        string bubbleText = null;
         if (!string.IsNullOrEmpty(action))
         {
             string lower = action.ToLower();

@@ -1,4 +1,4 @@
-// Scripts/UIController.cs (攝影機控制整合最終版)
+﻿// Scripts/UIController.cs (亂碼修正 + 繁體中文最終版)
 
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,13 +10,13 @@ using UnityEngine.Events;
 
 /// <summary>
 /// 負責管理遊戲中的所有主要 UI 互動。
-/// 包括：讀取模擬設定、動態生成代理人選項、觸發模擬開始、更新日誌，以及【新增的】與攝影機管理器互動。
+/// 包括：讀取模擬設定、動態生成代理人選項、觸發模擬開始、更新日誌，以及與攝影機管理器互動。
 /// </summary>
 public class UIController : MonoBehaviour
 {
-    [Header("核心依賴 (必须赋值!)")]
+    [Header("核心依賴 (必須賦值)")]
     [Tooltip("場景中的 CameraManager 實例，用於控制攝影機")]
-    public CameraManager cameraManager; // ### 新增攝影機管理器引用 ###
+    public CameraManager cameraManager;
     [Tooltip("場景中的 CameraController 實例，用於手動跟隨")]
     public CameraController cameraController;
     [Tooltip("場景中的 SimulationClient 實例")]
@@ -26,11 +26,11 @@ public class UIController : MonoBehaviour
     [Tooltip("包含所有地點 Transform 的父物件 (例如 '內飾')")]
     public Transform locationRoot;
 
-    [Header("UI 面板 (可选，用于隐藏)")]
+    [Header("UI 面板 (可選，用於隱藏)")]
     public GameObject timeSettingsPanel;
     public GameObject controlPanel;
 
-    [Header("UI 输入/输出元件 (必须赋值!)")]
+    [Header("UI 輸入/輸出元件 (必須賦值)")]
     public TMP_InputField durationInput;
     public TMP_InputField stepInput;
     public TMP_InputField yearInput;
@@ -40,13 +40,13 @@ public class UIController : MonoBehaviour
     public TMP_InputField minuteInput;
     public Button startButton;
 
-    [Header("动态生成UI所需 (必须赋值!)")]
-    [Tooltip("一个设计好的 Toggle Prefab，用于实例化")]
+    [Header("動態生成UI所需 (必須賦值)")]
+    [Tooltip("一個設計好的 Toggle Prefab，用於實例化")]
     public GameObject mbtiTogglePrefab;
-    [Tooltip("用于容纳所有动态生成的 Toggle 的父物件 (必须挂载布局组件，如 Grid Layout Group)")]
+    [Tooltip("用於容納所有動態生成的 Toggle 的父物件 (必須掛載佈局組件，如 Grid Layout Group)")]
     public Transform mbtiToggleGroupParent;
 
-    [Header("显示区域 (必须赋值!)")]
+    [Header("顯示區域 (必須賦值)")]
     public TextMeshProUGUI statusBarText;
     public LogScrollView mainLogView;
     public LogScrollView historyLogView;
@@ -71,7 +71,7 @@ public class UIController : MonoBehaviour
     private Color _llmLogButtonColor;
     private const float ActiveDarkenFactor = 0.8f;
 
-    [Header("事件相关 UI (可选)")]
+    [Header("事件相關 UI (可選)")]
     public TMP_InputField eqJsonInput;
     public TMP_Dropdown eqStepDropdown;
 
@@ -90,17 +90,18 @@ public class UIController : MonoBehaviour
     private Color _uiToggleDefaultColor;
     private bool _isUIHidden = false;
 
-    // 用于存储 UI Toggle 和 AgentController 之间的映射关系
+    // 用於儲存 UI Toggle 和 AgentController 之間的對應關係
     private readonly Dictionary<Toggle, AgentController> _agentToggleMap = new Dictionary<Toggle, AgentController>();
-
-    // 使用一个静态布尔值来确保在整个应用生命周期中，UI 只被生成一次
+    // 使用一個靜態布林值來確保在整個應用生命週期中，UI 只被生成一次
     private static bool _isUIPopulated = false;
+    // 標記模擬是否已開始，用於控制運行時的 UI 互動
+    private bool _simulationStarted = false;
 
     void Awake()
     {
         if (!ValidateDependencies())
         {
-            Debug.LogError("UIController 已被禁用，因为缺少一个或多个关键的 Inspector 引用。请检查 Console 中的錯誤讯息。", this);
+            Debug.LogError("UIController 已被禁用，因為缺少一個或多個關鍵的 Inspector 引用。請檢查 Console 中的錯誤訊息。", this);
             this.enabled = false;
             return;
         }
@@ -130,7 +131,7 @@ public class UIController : MonoBehaviour
         if (mainLogButton != null) mainLogButton.onClick.AddListener(ShowMainLogDisplay);
         if (historyLogButton != null) historyLogButton.onClick.AddListener(ShowHistoryLogDisplay);
         if (llmLogButton != null) llmLogButton.onClick.AddListener(ShowLlmLogDisplay);
-        // 紀錄按鈕的預設顏色
+        // 記錄按鈕的預設顏色
         if (mainLogButton != null) _mainLogButtonColor = mainLogButton.image.color;
         if (historyLogButton != null) _historyLogButtonColor = historyLogButton.image.color;
         if (llmLogButton != null) _llmLogButtonColor = llmLogButton.image.color;
@@ -169,7 +170,7 @@ public class UIController : MonoBehaviour
         bool isValid = true;
         // ### 新增對 CameraManager 的檢查 ###
         if (cameraManager == null) { Debug.LogError("UIController 錯誤: 'Camera Manager' 未賦值! 攝影機跟隨功能將失效。", this); isValid = false; }
-        if (cameraController == null) { Debug.LogError("UIController 错误: 'Camera Controller' 未赋值!", this); isValid = false; }
+        if (cameraController == null) { Debug.LogError("UIController 錯誤: 'Camera Controller' 未賦值!", this); isValid = false; }
         if (simulationClient == null) { Debug.LogError("UIController 錯誤: 'Simulation Client' 未賦值!", this); isValid = false; }
         if (characterRoot == null) { Debug.LogError("UIController 錯誤: 'Character Root' 未賦值!", this); isValid = false; }
         if (locationRoot == null) { Debug.LogError("UIController 錯誤: 'Location Root' 未賦值!", this); isValid = false; }
@@ -184,7 +185,7 @@ public class UIController : MonoBehaviour
     /// </summary>
     private void PopulateAgentSelectionUI()
     {
-        Debug.Log("[UIController] 开始动态生成代理人选择UI...");
+        Debug.Log("[UIController] 開始動態生成代理人選擇UI...");
 
         foreach (Transform child in mbtiToggleGroupParent) { Destroy(child.gameObject); }
         _agentToggleMap.Clear();
@@ -233,23 +234,19 @@ public class UIController : MonoBehaviour
     }
 
     /// <summary>
-    /// ### 攝影機控制核心 ###
     /// 當代理人選項的 Toggle 狀態改變時被調用。
     /// </summary>
     /// <param name="agent">對應的代理人控制器</param>
     /// <param name="isOn">Toggle 是否被選中</param>
     private void OnAgentToggleChanged(AgentController agent, bool isOn)
     {
-        if (agent != null)
+        if (agent != null && _simulationStarted)
         {
-            // 啟用或禁用代理人在場景中的 GameObject
+            // 僅在模擬開始後，才允許 Toggle 控制代理人的可見性
             agent.gameObject.SetActive(isOn);
         }
     }
 
-    /// <summary>
-    /// 設定 UI 輸入欄位的預設值。
-    /// </summary>
     /// <summary>
     /// 設定 UI 輸入欄位的預設值。
     /// </summary>
@@ -263,7 +260,7 @@ public class UIController : MonoBehaviour
         if (hourInput != null) hourInput.text = "3";
         if (minuteInput != null) minuteInput.text = "0";
 
-        // 預設選中前兩個代理人
+        // 預設選中前三個代理人
         var toggles = _agentToggleMap.Keys.ToList();
         for (int i = 0; i < toggles.Count; i++)
         {
@@ -289,11 +286,6 @@ public class UIController : MonoBehaviour
     }
 
     /// <summary>
-    /// 當開始模擬按鈕被點擊時，收集所有 UI 設定並發送到後端。
-    /// </summary>
-    // 刪除重複的 OnStartButtonClick 方法（已在下方完整實作）
-
-    /// <summary>
     /// 隱藏設定相關的 UI 面板。
     /// </summary>
     private void HideSettingsPanels()
@@ -302,44 +294,44 @@ public class UIController : MonoBehaviour
         if (controlPanel != null) controlPanel.SetActive(false);
         if (startButton != null) startButton.gameObject.SetActive(false);
         if (useDefaultCalendarToggle != null) useDefaultCalendarToggle.gameObject.SetActive(false);
-
     }
+
+// 在 UIController.cs 中
 
     private void OnStartButtonClick()
     {
-        List<string> locationNames = new List<string>();
-        if (locationRoot != null)
-        {
-            foreach (Transform location in locationRoot) locationNames.Add(location.name);
-        }
 
         var selectedAgents = _agentToggleMap
             .Where(pair => pair.Key != null && pair.Key.isOn)
             .Select(pair => pair.Value)
             .ToList();
 
-        List<string> selectedMbti = selectedAgents
-            .Select(a => a.agentName).ToList();
 
-        if (selectedMbti.Count == 0)
+       foreach (var agent in selectedAgents)
         {
-            UpdateStatusBar("誤：請至少選擇一個代理人");
-            return;
+            agent.gameObject.SetActive(true);
         }
 
+        // 2. 執行傳送，並獲取傳送後的結果
+        TeleportAgentsToApartment(selectedAgents);
+        var initialPositions = selectedAgents.ToDictionary(
+            agent => agent.agentName,
+            agent => agent.transform.position.ToString()
+        );
+
+        // 3. 準備其他參數
+        List<string> locationNames = locationRoot.Cast<Transform>().Select(t => t.name).ToList();
+        List<string> selectedMbti = selectedAgents.Select(a => a.agentName).ToList();
         int eqStepValue = 5;
         if (eqStepDropdown != null && eqStepDropdown.options.Count > 0)
         {
             int.TryParse(eqStepDropdown.options[eqStepDropdown.value].text, out eqStepValue);
         }
-    // ### 核心修正 ###
-    // 直接從 UI 元件讀取當前的文字內容，而不是依賴 Awake/Start 時設定的值
+        
         string earthquakeJson = (eqJsonInput != null && !string.IsNullOrEmpty(eqJsonInput.text)) 
                             ? eqJsonInput.text 
-                            : "[{\"time\": \"2024-11-18-11-00\", \"duration\": 30, \"intensity\": 0.75}]"; // 提供一個最終的後備值
+                            : "[{\"time\": \"2024-11-18-11-00\", \"duration\": 30, \"intensity\": 0.75}]";
 
-        // ### 問題5 實作 ###
-        // 讀取行事曆設定 Toggle 的狀態
         bool shouldUseDefaultCalendar = useDefaultCalendarToggle != null ? useDefaultCalendarToggle.isOn : false;
 
         var parameters = new SimulationParameters
@@ -353,26 +345,27 @@ public class UIController : MonoBehaviour
             Minute = int.TryParse(minuteInput.text, out int min) ? min : 0,
             Mbti = selectedMbti,
             Locations = locationNames,
-            EqEnabled = true, 
-            EqJson = earthquakeJson, // 使用我們剛剛讀取到的值
+            EqEnabled = true,
+            EqJson = earthquakeJson,
             EqStep = eqStepValue,
-            UseDefaultCalendar = shouldUseDefaultCalendar // 將讀取到的狀態賦值
+            UseDefaultCalendar = shouldUseDefaultCalendar,
+            InitialPositions = initialPositions
+
         };
 
-        // ### 問題1 實作 ###
-        // 在發送模擬指令前，先將代理人傳送到公寓
+        // 現在代理人已經被啟用了，可以安全地呼叫傳送函式
         TeleportAgentsToApartment(selectedAgents);
 
         HideSettingsPanels();
         simulationClient.StartSimulation(parameters);
+        _simulationStarted = true;
 
         // 顯示被隱藏的 UI 元件
         if (logButtonGroup != null) logButtonGroup.SetActive(true);
         if (cameraButtonsPanel != null) cameraButtonsPanel.SetActive(true);
         if (statusBarText != null) statusBarText.gameObject.SetActive(true);
-        ShowMainLogDisplay(); // 預設顯示主日誌
+        ShowMainLogDisplay();
     }
-
     private void UpdateStatusBar(string status)
     {
         if (statusBarText != null) statusBarText.text = $"狀態: {status}";
@@ -395,7 +388,13 @@ public class UIController : MonoBehaviour
     private static string CleanLog(string s)
     {
         if (string.IsNullOrEmpty(s)) return s;
-        return System.Text.RegularExpressions.Regex.Replace(s, "<think>.*?</think>", string.Empty, System.Text.RegularExpressions.RegexOptions.Singleline);
+        return System.Text.RegularExpressions.Regex.Replace(
+            s,
+            "<think>[\\s\\S]*?</think>",
+            string.Empty,
+            System.Text.RegularExpressions.RegexOptions.Singleline |
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        ).Trim();
     }
 
     /// <summary>
@@ -421,7 +420,6 @@ public class UIController : MonoBehaviour
         if (historyLogView != null) historyLogView.gameObject.SetActive(false);
         if (llmLogView != null) llmLogView.gameObject.SetActive(false);
         HighlightActiveLogButton(mainLogButton);
-
     }
 
     private void ShowHistoryLogDisplay()
@@ -455,7 +453,6 @@ public class UIController : MonoBehaviour
         }
 
         // 2. 獲取所有可用的攝影機名稱
-        //    (這需要我們先去 CameraManager 中新增一個公開的方法，見步驟三)
         IEnumerable<string> cameraNames = cameraManager.GetVirtualCameraNames();
 
         // 3. 為每一個攝影機名稱生成一個按鈕
@@ -613,23 +610,24 @@ public class UIController : MonoBehaviour
     }
 
     /// <summary>
-    /// ### 問題1 實作函式 ###
     /// 在模擬開始時，將選定的代理人傳送到公寓的 F1 或 F2。
     /// 一樓最多8人，超過的會被送到二樓。
     /// </summary>
-    private void TeleportAgentsToApartment(List<AgentController> agents)
+
+    private Dictionary<string, string> TeleportAgentsToApartment(List<AgentController> agents)
     {
-        if (agents == null || agents.Count == 0) return;
+        var positions = new Dictionary<string, string>();
+        if (agents == null || agents.Count == 0) return positions;
 
         // 使用 GameObject.Find 查找場景中的攝影機物件
         Transform f1 = GameObject.Find("VCam_Apartment_F1")?.transform;
         Transform f2 = GameObject.Find("VCam_Apartment_F2")?.transform;
 
-        // ### 問題3 Debug 輔助 ###
+        // Debug 輔助
         if (f1 == null)
         {
             Debug.LogError("[傳送失敗] 找不到名為 'VCam_Apartment_F1' 的物件！請檢查 Hierarchy 中的物件名稱。");
-            return;
+            return positions;
         }
         if (f2 == null)
         {
@@ -648,19 +646,21 @@ public class UIController : MonoBehaviour
 
         for (int i = 0; i < agents.Count; i++)
         {
-            // 如果當前索引小於8，或找不到F2，則使用F1作為基準點
             Transform baseTransform = (i < 8 || f2 == null) ? f1 : f2;
-            int offsetIndex = i % 8; // 讓索引在 0-7 之間循環
-
-            // 計算最終位置並應用
+            int offsetIndex = i % 8;
             Vector3 targetPosition = baseTransform.position + offsets[offsetIndex];
-            // 因為攝影機有 Z 軸-10，我們需要將代理人的 Z 軸設為 0
             targetPosition.z = 0; 
-            agents[i].transform.position = targetPosition;
+            
+            // 呼叫代理人自己的 TeleportTo 函式來設定位置
+            agents[i].TeleportTo(targetPosition);
+            
+            // 將結果記錄到字典中
+            positions[agents[i].agentName] = "Apartment"; // 後端只需要知道宏觀地點是 "Apartment"
 
-            // ### 問題3 Debug 輔助 ###
-            Debug.Log($"[傳送] 已將 '{agents[i].name}' 傳送到樓層 {(baseTransform == f1 ? "F1" : "F2")} 的位置: {targetPosition}");
+            Debug.Log($"[傳送] 已將 '{agents[i].name}' 傳送到 {targetPosition}");
         }
+        
+        return positions;
     }
-    
 }
+    
