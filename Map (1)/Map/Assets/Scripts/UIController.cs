@@ -252,7 +252,7 @@ public class UIController : MonoBehaviour
     /// </summary>
     private void SetDefaultValues()
     {
-        if (durationInput != null) durationInput.text = "2400";
+        if (durationInput != null) durationInput.text = "1200";
         if (stepInput != null) stepInput.text = "30";
         if (yearInput != null) yearInput.text = "2024";
         if (monthInput != null) monthInput.text = "11";
@@ -652,8 +652,14 @@ public class UIController : MonoBehaviour
             targetPosition.z = 0; 
             
             // 呼叫代理人自己的 TeleportTo 函式來設定位置
-            agents[i].TeleportTo(targetPosition);
-            
+            agents[i].TeleportTo(
+                targetPosition,
+                "Apartment",
+                "公寓",
+                "Apartment_F1",
+                "Apartment_F2",
+                "公寓_F1",
+                "公寓_F2");            
             // 將結果記錄到字典中
             positions[agents[i].agentName] = "Apartment"; // 後端只需要知道宏觀地點是 "Apartment"
 
