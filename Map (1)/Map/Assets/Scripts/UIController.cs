@@ -755,7 +755,7 @@ public class UIController : MonoBehaviour
 
     private string ResolveApartmentLocationName(Transform marker, string fallback)
     {
-        if (!string.IsNullOrEmpty(marker.name))
+        if (marker != null && !string.IsNullOrEmpty(marker.name))
         {
             return LocationNameLocalizer.ToDisplayName(marker.name);
         }
