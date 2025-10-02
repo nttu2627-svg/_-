@@ -279,12 +279,19 @@ async def initialize_and_simulate(params):
         print("地震模組未啟用。")
 
     sim_state = {'phase': "Normal", 'time': start_time_dt, 'next_event_idx': 0, 'eq_enabled': eq_enabled}
+    try:
+        configured_max_chat = int(params.get('max_chat_groups', 1))
+    except (TypeError, ValueError):
+        configured_max_chat = 1
+    configured_max_chat = max(1, configured_max_chat)
+
     llm_context = {
         'update_log': lambda msg, lvl: _history_log_buffer.append(f"[{lvl}] {msg}"),
         'chat_buffer': _chat_buffer,
         'event_log_buffer': _event_log_buffer,
-        'disaster_logger': disaster_logger
-    }
+        'disaster_logger': disaster_logger,
+        'max_chat_groups': configured_max_chat
+        }
 
     while sim_state['time'] < sim_end_time_dt:
         current_time_dt = sim_state['time']
@@ -297,6 +304,7 @@ async def initialize_and_simulate(params):
             if agent.health > 0 and not agent.is_asleep(current_time_dt.strftime('%H-%M'))
         ]
         all_asleep = not active_agents and sim_state['phase'] == "Normal"
+        llm_context['skip_reasoning'] = all_asleep
 
         if not all_asleep and sim_state['phase'] in ["Normal", "PostQuakeDiscussion"]:
             update_tasks = []
@@ -366,13 +374,16 @@ async def agent_update_wrapper(agent, active_agents, current_time_hm_str):
             await agent.set_new_action("醒來", agent.home)
 
         new_action = find_agent_current_activity(current_time_hm_str, agent.daily_schedule)
-        if agent.curr_action != new_action:
-            destination = new_action
-            await agent.set_new_action(new_action, destination)
+        if new_action and new_action != '時間格式錯誤' and agent.curr_action != new_action:
+            await agent.set_new_action(new_action, new_action)
     else:
         agent.curr_action = "Unconscious" if agent.health <= 0 else "睡覺"
-        agent.current_thought = ""
-        agent.curr_action_pronunciatio = await llm.run_gpt_prompt_pronunciatio(agent.curr_action)
+        lightweight = agent.get_lightweight_response(agent.curr_action)
+        if lightweight:
+            agent.current_thought, agent.curr_action_pronunciatio = lightweight
+        else:
+            agent.current_thought = ""
+            agent.curr_action_pronunciatio = await agent.get_pronunciatio(agent.curr_action)
 
     agent.last_action = agent.curr_action
 

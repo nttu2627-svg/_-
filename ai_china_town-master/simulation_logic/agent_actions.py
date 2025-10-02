@@ -21,6 +21,8 @@ async def handle_social_interactions(active_agents, llm_context, llm_functions=N
     """
     异步处理社交互动，LLM 函数通过依赖注入传入。
     """
+    if llm_context.get('skip_reasoning'):
+        return
     chat_buffer = llm_context.get('chat_buffer', {})
     now_time = llm_context.get('current_time_str', '')
     double_agents_chat = llm_functions['double_agents_chat']
@@ -30,7 +32,8 @@ async def handle_social_interactions(active_agents, llm_context, llm_functions=N
     chat_groups_by_location = find_chat_groups(active_agents)
 
     chat_tasks = []
-    for location, group in chat_groups_by_location.items():
+    max_groups = llm_context.get('max_chat_groups', 2)
+    for location, group in list(chat_groups_by_location.items())[:max_groups]:
         if random.random() < 0.6:
             chat_tasks.append(process_chat_group(group, location, chat_buffer, now_time, chatting_agents, double_agents_chat))
 

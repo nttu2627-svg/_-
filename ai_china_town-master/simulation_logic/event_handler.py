@@ -44,8 +44,17 @@ async def check_and_handle_phase_transitions(sim_state, agents, buildings, sched
         # ### 核心偵錯日誌 ###
         # 每一分鐘的模擬時間，在後端終端機印出一次時間比對狀態，幫助我們確認。
         # current_time.second == 0 這個條件可以確保即使模擬步伐很小，也只會每分鐘印一次。
+        should_log = False
         if current_time.second == 0:
+            last_log_time = sim_state.get('_last_event_check_log')
+            if not last_log_time or (current_time - last_log_time) >= timedelta(minutes=10):
+                should_log = True
+            elif current_time >= next_eq['time_dt'] - timedelta(minutes=5):
+                should_log = True
+
+        if should_log:
             print(f"[事件檢查] 當前模擬時間: {current_time} | 下一個地震預計時間: {next_eq['time_dt']}")
+            sim_state['_last_event_check_log'] = current_time
 
         # 核心判斷邏輯
         if current_time >= next_eq['time_dt']:
@@ -56,7 +65,7 @@ async def check_and_handle_phase_transitions(sim_state, agents, buildings, sched
             sim_state['phase'] = "Earthquake"
             sim_state['quake_details'] = { 'intensity': next_eq['intensity'], 'end_time_dt': current_time + timedelta(minutes=next_eq['duration']) }
             sim_state['next_event_idx'] += 1
-            
+            sim_state['_last_event_check_log'] = current_time
             update_log(f"!!! 地震開始 !!! 強度: {next_eq['intensity']:.2f}. 持續 {next_eq['duration']} 分鐘.", "EVENT")
             
             if disaster_logger:

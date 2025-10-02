@@ -9,7 +9,13 @@ import sys
 from tools.LLM import run_gpt_prompt as llm
 from .agent_memory import update_agent_schedule
 from .schedule_manager import 從檔案載入行程表
-
+# --- 輕量化時使用的預設回應 ---
+LIGHTWEIGHT_ACTION_RESPONSES = {
+    "睡覺": ("", "💤"),
+    "醒來": ("新的一天開始了！", "☀️"),
+    "等待初始化": ("稍等，我正在確認今日的安排。", "⏳"),
+    "Unconscious": ("", "😴"),
+}
 # --- 核心：定義場景中的傳送門連接關係 ---
 # 鍵(Key): 代理人當前所在的傳送點 GameObject 名稱。
 # 值(Value): 代理人穿過該傳送點後，應該出現的目標傳送點 GameObject 名稱。
@@ -135,6 +141,7 @@ class TownAgent:
         self.wake_time = "07-00"
         self.sleep_time = "23-00"
         self.disaster_experience_log = []
+        self._pronunciatio_cache = {}
 
     def is_location_outdoors(self, location_name):
         return "_室外" in str(location_name)
@@ -210,29 +217,49 @@ class TownAgent:
         self.current_thought = f"好了，我到 '{self.curr_place}' 了。"
         print(f"✅ [傳送成功] {self.name} 從 '{target_portal_name}' 傳送到 '{self.curr_place}'")
 
+    def get_lightweight_response(self, action):
+        return LIGHTWEIGHT_ACTION_RESPONSES.get(action)
+
+    async def get_pronunciatio(self, action):
+        lightweight = self.get_lightweight_response(action)
+        if lightweight:
+            return lightweight[1]
+
+        if action in self._pronunciatio_cache:
+            return self._pronunciatio_cache[action]
+
+        try:
+            result = await llm.run_gpt_prompt_pronunciatio(action)
+        except Exception:
+            result = ""
+
+        self._pronunciatio_cache[action] = result
+        return result
+
     async def set_new_action(self, new_action, destination):
+        if self.curr_action == new_action and self.target_place == destination:
+            return
         self.interrupt_action()
 
         self.curr_action = new_action
         self.target_place = destination
         self.curr_place = self.find_path(destination)
 
+        lightweight = self.get_lightweight_response(new_action)
+        if lightweight:
+            thought, pronunciatio = lightweight
+            self.current_thought = thought
+            self.curr_action_pronunciatio = pronunciatio
+            return
+
         try:
-            if new_action == "醒來":
-                self.current_thought = "新的一天開始了！"
-            else:
-                self.current_thought = await llm.generate_action_thought(
-                    self.persona_summary, self.curr_place, new_action
-                )
+            self.current_thought = await llm.generate_action_thought(
+                self.persona_summary, self.curr_place, new_action
+            )
         except Exception:
             self.current_thought = ""
 
-        try:
-            self.curr_action_pronunciatio = await llm.run_gpt_prompt_pronunciatio(
-                self.curr_action
-            )
-        except Exception:
-            self.curr_action_pronunciatio = ""
+        self.curr_action_pronunciatio = await self.get_pronunciatio(self.curr_action)
 
     def is_asleep(self, current_time_hm_str):
         try:
