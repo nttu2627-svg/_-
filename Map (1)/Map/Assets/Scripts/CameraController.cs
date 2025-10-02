@@ -110,9 +110,26 @@ public class CameraController : MonoBehaviour
         // 平滑地应用缩放
         cam.orthographicSize = Mathf.Lerp(cam.orthographicSize, _targetZoom, dt * zoomSmoothing);
     }
-        public void FollowTarget(Transform target)
+    public void FollowTarget(Transform target)
     {
         _followTarget = target;
+        
+        if (target == null)
+        {
+            _cycleIndex = -1;
+            return;
+        }
+
+        if (cycleTargets == null || cycleTargets.Length == 0) return;
+
+        for (int i = 0; i < cycleTargets.Length; i++)
+        {
+            if (cycleTargets[i] == target)
+            {
+                _cycleIndex = i;
+                return;
+            }
+        }
     }
 
     private void FollowUpdate(float dt)
@@ -127,8 +144,31 @@ public class CameraController : MonoBehaviour
         if (cycleTargets == null || cycleTargets.Length == 0) return;
         if (Input.GetKeyDown(KeyCode.Tab))
         {
-            _cycleIndex = (_cycleIndex + 1) % cycleTargets.Length;
-            FollowTarget(cycleTargets[_cycleIndex]);
+            int attempts = 0;
+            Transform nextTarget = null;
+
+            while (attempts < cycleTargets.Length)
+            {
+                _cycleIndex = (_cycleIndex + 1) % cycleTargets.Length;
+                Transform candidate = cycleTargets[_cycleIndex];
+
+                if (candidate != null && candidate.gameObject.activeInHierarchy)
+                {
+                    nextTarget = candidate;
+                    break;
+                }
+
+                attempts++;
+            }
+
+            if (nextTarget != null)
+            {
+                FollowTarget(nextTarget);
+            }
+            else
+            {
+                StopFollowing();
+            }
         }
     }
 
@@ -159,7 +199,11 @@ public class CameraController : MonoBehaviour
         }
         StartCoroutine(Shake(intensity));
     }
-
+    public void StopFollowing()
+    {
+        _followTarget = null;
+        _cycleIndex = -1;
+    }
     private IEnumerator Shake(float intensity)
     {
         float elapsed = 0f;

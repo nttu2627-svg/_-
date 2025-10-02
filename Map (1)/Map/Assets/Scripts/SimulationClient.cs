@@ -3,6 +3,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NativeWebSocket;
 using Newtonsoft.Json;
@@ -26,6 +27,9 @@ public class SimulationClient : MonoBehaviour
     private readonly Dictionary<string, Transform> _locationTransforms = new Dictionary<string, Transform>();
     private readonly Dictionary<string, BuildingController> _buildingControllers = new Dictionary<string, BuildingController>();
     private List<Collider2D> _boundsColliders = new List<Collider2D>();
+    private const float AgentCollisionRadius = 0.45f;
+    private const float MinDistanceBetweenAgents = 1.4f;
+    private readonly Collider2D[] _spawnOverlapBuffer = new Collider2D[16];
 
 
     // --- 全局靜態事件 ---
@@ -70,6 +74,142 @@ public class SimulationClient : MonoBehaviour
         }
     }
 
+    private void RegisterLocationTransforms(Transform parent)
+    {
+        if (parent == null) return;
+
+        foreach (Transform child in parent)
+        {
+            if (!_locationTransforms.ContainsKey(child.name))
+            {
+                _locationTransforms[child.name] = child;
+            }
+            RegisterLocationTransforms(child);
+        }
+    }
+
+    private Transform FindLocationTransform(string locationName)
+    {
+        if (string.IsNullOrEmpty(locationName)) return null;
+
+        if (_locationTransforms.TryGetValue(locationName, out Transform cached) && cached != null)
+        {
+            return cached;
+        }
+
+        if (locationRoot == null) return null;
+
+        Transform found = FindChildRecursive(locationRoot, locationName);
+        if (found != null)
+        {
+            _locationTransforms[locationName] = found;
+        }
+        return found;
+    }
+
+    private Transform FindChildRecursive(Transform parent, string targetName)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == targetName) return child;
+            Transform nested = FindChildRecursive(child, targetName);
+            if (nested != null) return nested;
+        }
+        return null;
+    }
+
+    private Collider2D FindLocationCollider(Transform locationTransform)
+    {
+        if (locationTransform == null) return null;
+
+        var colliders = locationTransform.GetComponentsInChildren<Collider2D>();
+        foreach (var col in colliders)
+        {
+            if (col == null || !col.enabled) continue;
+            return col;
+        }
+        return null;
+    }
+
+    private List<Vector3> GenerateSpawnPositions(Transform locationTransform, int count)
+    {
+        var positions = new List<Vector3>();
+        if (locationTransform == null || count <= 0) return positions;
+
+        Collider2D areaCollider = FindLocationCollider(locationTransform);
+        Bounds bounds = areaCollider != null
+            ? areaCollider.bounds
+            : new Bounds(locationTransform.position, Vector3.one * 6f);
+
+        int maxAttempts = Mathf.Max(40, count * 40);
+        int attempts = 0;
+
+        while (positions.Count < count && attempts < maxAttempts)
+        {
+            attempts++;
+            Vector2 candidate = areaCollider != null
+                ? new Vector2(
+                    UnityEngine.Random.Range(bounds.min.x, bounds.max.x),
+                    UnityEngine.Random.Range(bounds.min.y, bounds.max.y))
+                : (Vector2)locationTransform.position + UnityEngine.Random.insideUnitCircle * Mathf.Max(bounds.extents.x, bounds.extents.y);
+
+            if (areaCollider != null && !areaCollider.OverlapPoint(candidate)) continue;
+            if (!IsSpawnCandidateValid(candidate, positions, areaCollider)) continue;
+
+            positions.Add(new Vector3(candidate.x, candidate.y, locationTransform.position.z));
+        }
+
+        if (positions.Count < count)
+        {
+            int gridSize = Mathf.CeilToInt(Mathf.Sqrt(count));
+            float spacing = MinDistanceBetweenAgents;
+            int safety = 0;
+
+            while (positions.Count < count && safety < gridSize * gridSize * 2)
+            {
+                int row = safety / gridSize;
+                int col = safety % gridSize;
+                safety++;
+
+                Vector2 candidate = (Vector2)locationTransform.position + new Vector2(
+                    (col - (gridSize - 1) * 0.5f) * spacing,
+                    (row - (gridSize - 1) * 0.5f) * spacing);
+
+                if (areaCollider != null && !areaCollider.OverlapPoint(candidate)) continue;
+                if (!IsSpawnCandidateValid(candidate, positions, areaCollider)) continue;
+
+                positions.Add(new Vector3(candidate.x, candidate.y, locationTransform.position.z));
+            }
+        }
+
+        return positions;
+    }
+
+    private bool IsSpawnCandidateValid(Vector2 candidate, List<Vector3> existingPositions, Collider2D areaCollider)
+    {
+        if (_boundsColliders.Count > 0 && !IsInsideBounds(new Vector3(candidate.x, candidate.y, 0f))) return false;
+
+        foreach (var pos in existingPositions)
+        {
+            if (Vector2.Distance(pos, candidate) < MinDistanceBetweenAgents)
+            {
+                return false;
+            }
+        }
+
+        int hitCount = Physics2D.OverlapCircleNonAlloc(candidate, AgentCollisionRadius, _spawnOverlapBuffer);
+        for (int i = 0; i < hitCount; i++)
+        {
+            var hit = _spawnOverlapBuffer[i];
+            if (hit == null) continue;
+            if (areaCollider != null && (hit == areaCollider || hit.transform.IsChildOf(areaCollider.transform))) continue;
+            if (hit.GetComponentInParent<AgentController>() != null) continue;
+            if (hit.isTrigger) continue;
+            return false;
+        }
+
+        return true;
+    }
     [Obsolete]
     private void InitializeSceneReferences()
     {
@@ -77,7 +217,7 @@ public class SimulationClient : MonoBehaviour
         Debug.Log("[SimulationClient] Initializing scene references...");
         if (locationRoot != null)
         {
-            foreach (Transform location in locationRoot) { _locationTransforms[location.name] = location; }
+            RegisterLocationTransforms(locationRoot);
             Debug.Log($"[SimulationClient] Registered {_locationTransforms.Count} locations.");
         }
         if (characterRoot != null)
@@ -101,8 +241,7 @@ public class SimulationClient : MonoBehaviour
                 if (!string.IsNullOrEmpty(building.buildingName)) { _buildingControllers[building.buildingName] = building; }
             }
             Debug.Log($"[SimulationClient] Registered {_buildingControllers.Count} building controllers.");
-        }
-        
+        }        
         // 收集場景中所有名稱包含 "Bounds" 的 Collider2D，避免隨機傳送到不可到達區域。
         _boundsColliders.Clear();
         foreach (Collider2D col in FindObjectsOfType<Collider2D>())
@@ -273,16 +412,69 @@ public class SimulationClient : MonoBehaviour
 
     private void TeleportActiveAgentsToApartmentArea()
     {
-        foreach (var controller in _activeAgentControllers.Values)
+        if (_activeAgentControllers.Count == 0) return;
+
+        Transform firstFloor = FindLocationTransform("Apartment_F1");
+        Transform secondFloor = FindLocationTransform("Apartment_F2");
+
+        if (firstFloor == null && secondFloor == null)
         {
+            Debug.LogWarning("[SimulationClient] 未能找到 Apartment_F1 或 Apartment_F2 的 LocationMarker，改用隨機範圍傳送。");
+            foreach (var fallbackController in _activeAgentControllers.Values)
+            {
+                fallbackController.TeleportTo(
+                    GetRandomApartmentPosition(),
+                    "Apartment",
+                    "公寓",
+                    "Apartment_F1",
+                    "Apartment_F2",
+                    "公寓_F1",
+                    "公寓_F2");
+            }
+            return;
+        }
+
+        var activeControllers = _activeAgentControllers
+            .OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(pair => pair.Value)
+            .ToList();
+
+        int firstFloorQuota = Mathf.Min(8, activeControllers.Count);
+        var firstFloorPositions = GenerateSpawnPositions(firstFloor, firstFloorQuota);
+        firstFloorQuota = Mathf.Min(firstFloorQuota, firstFloorPositions.Count);
+
+        int remaining = Mathf.Max(0, activeControllers.Count - firstFloorQuota);
+        var secondFloorPositions = GenerateSpawnPositions(secondFloor, remaining);
+
+        int firstIndex = 0;
+        int secondIndex = 0;
+
+        foreach (var controller in activeControllers)
+        {
+            Vector3 targetPosition;
+
+            if (firstIndex < firstFloorPositions.Count)
+            {
+                targetPosition = firstFloorPositions[firstIndex++];
+            }
+            else if (secondIndex < secondFloorPositions.Count)
+            {
+                targetPosition = secondFloorPositions[secondIndex++];
+            }
+            else
+            {
+                targetPosition = GetRandomApartmentPosition();
+            }
+
             controller.TeleportTo(
-                GetRandomApartmentPosition(),
+                targetPosition,
                 "Apartment",
                 "公寓",
                 "Apartment_F1",
                 "Apartment_F2",
                 "公寓_F1",
-                "公寓_F2");        }
+                "公寓_F2");
+        }
     }
 
     public async void StartSimulation(SimulationParameters parameters)

@@ -336,7 +336,7 @@ public class UIController : MonoBehaviour
 
         var parameters = new SimulationParameters
         {
-            Duration = int.TryParse(durationInput.text, out int dur) ? dur : 2400,
+            Duration = int.TryParse(durationInput.text, out int dur) ? dur : 1200,
             Step = int.TryParse(stepInput.text, out int step) ? step : 30,
             Year = int.TryParse(yearInput.text, out int year) ? year : 2024,
             Month = int.TryParse(monthInput.text, out int month) ? month : 11,
