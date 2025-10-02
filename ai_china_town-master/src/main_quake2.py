@@ -426,7 +426,14 @@ async def handler(websocket, path):
                 break
 
     except (ConnectionClosedOK, ConnectionClosedError, ConnectionClosed) as e:
-        print(f"Unity客戶端斷開連接: {websocket.remote_address}, 原因: {e}")
+        close_code = getattr(e, "code", None)
+        close_reason = getattr(e, "reason", "")
+
+        # WebSockets 會在對端未於 ping_timeout 內回應時丟出 1011，這種情況屬於預期內的閒置斷線
+        if close_code in (1011, 1006) and "ping timeout" in str(e).lower():
+            print(f"Unity客戶端長時間未回應，已自動關閉連線: {websocket.remote_address}")
+        else:
+            print(f"Unity客戶端斷開連接: {websocket.remote_address}, 原因: {close_reason or e}")
     finally:
         print("伺服器處理程序結束。")
 

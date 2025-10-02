@@ -22,7 +22,7 @@ except Exception as e:
     cc = MockCC()
 
 OLLAMA_URL = "http://127.0.0.1:11434/api"
-MODEL_NAME = "deepseek-r1:8b"
+MODEL_NAME = "deepseek-r1:14b"
 PROMPT_DIR = os.path.join(os.path.dirname(__file__), 'prompt_template')
 os.makedirs(PROMPT_DIR, exist_ok=True)
 

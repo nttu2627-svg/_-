@@ -6,7 +6,7 @@ import aiohttp
 from datetime import datetime # <--- 步驟一：導入 datetime 模組
 
 class OllamaAgent:
-    def __init__(self, model="deepseek-r1:8b", api_url="http://127.0.0.1:11434/api"):
+    def __init__(self, model="deepseek-r1:14b", api_url="http://127.0.0.1:11434/api"):
         self.model = model
         self.baseurl = api_url
         connector = aiohttp.TCPConnector(limit=1024 * 1024)
