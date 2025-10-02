@@ -131,16 +131,33 @@ public class SimulationClient : MonoBehaviour
         return null;
     }
 
-    private List<Vector3> GenerateSpawnPositions(Transform locationTransform, int count)
+    private Collider2D FindBoundsColliderByName(string boundsName)
     {
-        var positions = new List<Vector3>();
-        if (locationTransform == null || count <= 0) return positions;
+        if (string.IsNullOrWhiteSpace(boundsName)) return null;
 
-        Collider2D areaCollider = FindLocationCollider(locationTransform);
+        foreach (var col in _boundsColliders)
+        {
+            if (col == null) continue;
+            if (string.Equals(col.gameObject.name, boundsName, StringComparison.OrdinalIgnoreCase))
+            {
+                return col;
+            }
+        }
+
+        return null;
+    }
+
+    private List<Vector3> GenerateSpawnPositions(Transform locationTransform, int count, Collider2D overrideArea = null)    {
+        var positions = new List<Vector3>();
+        if ((locationTransform == null && overrideArea == null) || count <= 0) return positions;
+
+        Collider2D areaCollider = overrideArea != null ? overrideArea : FindLocationCollider(locationTransform);
+        Vector3 referencePosition = locationTransform != null
+            ? locationTransform.position
+            : (areaCollider != null ? (Vector3)areaCollider.bounds.center : Vector3.zero);
         Bounds bounds = areaCollider != null
             ? areaCollider.bounds
-            : new Bounds(locationTransform.position, Vector3.one * 6f);
-
+            : new Bounds(referencePosition, Vector3.one * 6f);
         int maxAttempts = Mathf.Max(40, count * 40);
         int attempts = 0;
 
@@ -156,7 +173,8 @@ public class SimulationClient : MonoBehaviour
             if (areaCollider != null && !areaCollider.OverlapPoint(candidate)) continue;
             if (!IsSpawnCandidateValid(candidate, positions, areaCollider)) continue;
 
-            positions.Add(new Vector3(candidate.x, candidate.y, locationTransform.position.z));
+            float zValue = locationTransform != null ? locationTransform.position.z : referencePosition.z;
+            positions.Add(new Vector3(candidate.x, candidate.y, zValue));
         }
 
         if (positions.Count < count)
@@ -296,6 +314,7 @@ public class SimulationClient : MonoBehaviour
                         OnLogUpdate?.Invoke(updateData);
                         UpdateAllAgentStates(updateData.AgentStates);
                         UpdateAllBuildingStates(updateData.BuildingStates);
+                        ApplyAgentActions(updateData.AgentActions); 
                     }
                     break;
                     
@@ -358,6 +377,21 @@ public class SimulationClient : MonoBehaviour
             }
         }
     }
+    private void ApplyAgentActions(List<AgentActionInstruction> agentActions)
+    {
+        if (agentActions == null || agentActions.Count == 0) return;
+
+        foreach (var instruction in agentActions)
+        {
+            if (instruction == null || string.IsNullOrWhiteSpace(instruction.Agent)) continue;
+
+            string standardized = instruction.Agent.ToUpperInvariant();
+            if (_activeAgentControllers.TryGetValue(standardized, out AgentController controller))
+            {
+                controller.ApplyActionInstruction(instruction);
+            }
+        }
+    }
     private bool IsInsideBounds(Vector3 position)
     {
         foreach (var col in _boundsColliders)
@@ -417,7 +451,10 @@ public class SimulationClient : MonoBehaviour
         Transform firstFloor = FindLocationTransform("Apartment_F1");
         Transform secondFloor = FindLocationTransform("Apartment_F2");
 
-        if (firstFloor == null && secondFloor == null)
+        Collider2D firstFloorBounds = FindBoundsColliderByName("公寓_一樓Bounds");
+        Collider2D secondFloorBounds = FindBoundsColliderByName("公寓_二樓Bounds");
+
+        if (firstFloor == null && secondFloor == null && firstFloorBounds == null && secondFloorBounds == null)
         {
             Debug.LogWarning("[SimulationClient] 未能找到 Apartment_F1 或 Apartment_F2 的 LocationMarker，改用隨機範圍傳送。");
             foreach (var fallbackController in _activeAgentControllers.Values)
@@ -440,11 +477,11 @@ public class SimulationClient : MonoBehaviour
             .ToList();
 
         int firstFloorQuota = Mathf.Min(8, activeControllers.Count);
-        var firstFloorPositions = GenerateSpawnPositions(firstFloor, firstFloorQuota);
+        var firstFloorPositions = GenerateSpawnPositions(firstFloor, firstFloorQuota, firstFloorBounds);
         firstFloorQuota = Mathf.Min(firstFloorQuota, firstFloorPositions.Count);
 
         int remaining = Mathf.Max(0, activeControllers.Count - firstFloorQuota);
-        var secondFloorPositions = GenerateSpawnPositions(secondFloor, remaining);
+        var secondFloorPositions = GenerateSpawnPositions(secondFloor, remaining, secondFloorBounds);
 
         int firstIndex = 0;
         int secondIndex = 0;
@@ -452,20 +489,28 @@ public class SimulationClient : MonoBehaviour
         foreach (var controller in activeControllers)
         {
             Vector3 targetPosition;
+            Transform baseTransform;
+            Collider2D baseBounds;
 
             if (firstIndex < firstFloorPositions.Count)
             {
                 targetPosition = firstFloorPositions[firstIndex++];
+                baseTransform = firstFloor;
+                baseBounds = firstFloorBounds;
             }
             else if (secondIndex < secondFloorPositions.Count)
             {
                 targetPosition = secondFloorPositions[secondIndex++];
+                baseTransform = secondFloor;
+                baseBounds = secondFloorBounds;
             }
             else
             {
                 targetPosition = GetRandomApartmentPosition();
+                baseTransform = firstFloor ?? secondFloor;
+                baseBounds = firstFloorBounds ?? secondFloorBounds;
             }
-
+            string primaryLabel = baseTransform != null ? baseTransform.name : (baseBounds != null ? baseBounds.gameObject.name : "Apartment");
             controller.TeleportTo(
                 targetPosition,
                 "Apartment",
@@ -473,7 +518,8 @@ public class SimulationClient : MonoBehaviour
                 "Apartment_F1",
                 "Apartment_F2",
                 "公寓_F1",
-                "公寓_F2");
+                "公寓_F2",
+                primaryLabel);
         }
     }
 

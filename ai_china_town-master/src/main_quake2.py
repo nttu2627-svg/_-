@@ -38,7 +38,7 @@ try:
     from simulation_logic.agent_classes import TownAgent, Building
     from simulation_logic.agent_memory import find_agent_current_activity
     from simulation_logic.event_handler import check_and_handle_phase_transitions
-    from simulation_logic.agent_actions import handle_social_interactions
+    from simulation_logic.agent_actions import handle_social_interactions, generate_action_instructions
     from simulation_logic.disaster_logger import 災難記錄器
     print("✅ [SUCCESS] 所有核心模組已成功導入。")
     LLM_FUNCTIONS = {
@@ -321,7 +321,7 @@ async def initialize_and_simulate(params):
 
             if len(active_agents) > 1:
                 await handle_social_interactions(active_agents, llm_context, LLM_FUNCTIONS)
-
+        agent_action_plan = await generate_action_instructions(agents)
         current_log = format_log(current_time_dt, sim_state['phase'], all_asleep)
         _history_log_buffer.append(current_log)
 
@@ -342,7 +342,8 @@ async def initialize_and_simulate(params):
                 "agentStates": status_data["agentStates"],
                 "buildingStates": status_data["buildingStates"],
                 "llmLog": _truncate_str(llm_log_raw, LOG_TAIL_LIMIT),
-                "status": f"模擬時間: {current_time_dt.strftime('%H:%M:%S')}"
+                "status": f"模擬時間: {current_time_dt.strftime('%H:%M:%S')}",
+                "agentActions": agent_action_plan,
             }
         }
 

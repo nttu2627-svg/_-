@@ -36,6 +36,7 @@ public class AgentController : MonoBehaviour
     private string _currentAction;
     private readonly HashSet<string> _manualLocationOverrides = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private const float CoordinateSnapThreshold = 8f;
+    private string _lastInstructionDestination;
     void Awake()
     {
         _transform = transform;
@@ -218,6 +219,32 @@ public class AgentController : MonoBehaviour
         _targetPosition = position;
         _lastValidLocationName = locationName;
     }
+   private bool TryGetLocationPosition(string locationName, out Vector3 position)
+    {
+        position = Vector3.zero;
+        if (string.IsNullOrWhiteSpace(locationName) || _locationTransforms == null)
+        {
+            return false;
+        }
+
+        if (_locationTransforms.TryGetValue(locationName, out Transform directTransform) && directTransform != null)
+        {
+            position = directTransform.position;
+            return true;
+        }
+
+        foreach (var pair in _locationTransforms)
+        {
+            if (pair.Value == null) continue;
+            if (string.Equals(pair.Key, locationName, StringComparison.OrdinalIgnoreCase))
+            {
+                position = pair.Value.position;
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private bool TryResolveCoordinateLocation(Vector3 coordinate, out string locationName, out Vector3 position)
     {
@@ -298,6 +325,8 @@ public class AgentController : MonoBehaviour
         _transform.position = position;
         _targetPosition = position;
         SetManualLocationOverrides(locationAliases);
+        _lastInstructionDestination = null;
+
     }
 
     public void SetActionState(string action)
@@ -316,7 +345,52 @@ public class AgentController : MonoBehaviour
             bubbleController.顯示氣泡(bubbleText, _transform);
         }
     }
-    
+
+    public void ApplyActionInstruction(AgentActionInstruction instruction)
+    {
+        if (!_isInitialized || instruction == null) return;
+
+        string command = instruction.Command?.Trim()?.ToLowerInvariant();
+        if (command == "move")
+        {
+            string nextStep = string.IsNullOrWhiteSpace(instruction.NextStep)
+                ? instruction.Destination
+                : instruction.NextStep;
+
+            bool destinationChanged = !string.IsNullOrWhiteSpace(instruction.Destination) &&
+                !string.Equals(_lastInstructionDestination, instruction.Destination, StringComparison.OrdinalIgnoreCase);
+            bool pathChanged = !string.IsNullOrWhiteSpace(nextStep) &&
+                !string.Equals(_targetLocationName, nextStep, StringComparison.OrdinalIgnoreCase);
+
+            if (destinationChanged || pathChanged)
+            {
+                if (destinationChanged && TryGetLocationPosition(instruction.Origin, out Vector3 originPosition))
+                {
+                    _transform.position = originPosition;
+                }
+
+                if (TryGetLocationPosition(nextStep, out Vector3 nextPosition))
+                {
+                    _targetPosition = nextPosition;
+                    _targetLocationName = nextStep;
+                }
+                else if (TryGetLocationPosition(instruction.Destination, out Vector3 destinationPosition))
+                {
+                    _targetPosition = destinationPosition;
+                    _targetLocationName = instruction.Destination;
+                }
+
+                _lastInstructionDestination = instruction.Destination;
+            }
+
+            SetActionState(string.IsNullOrEmpty(instruction.Action) ? "移動" : instruction.Action);
+        }
+        else if (command == "interact")
+        {
+            SetActionState(instruction.Action);
+            _lastInstructionDestination = instruction.Destination;
+        }
+    }
     private void OnTriggerEnter2D(Collider2D other)
     {
         PortalController portal = other.GetComponent<PortalController>();

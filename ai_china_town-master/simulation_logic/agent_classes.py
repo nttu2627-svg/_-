@@ -125,7 +125,7 @@ class TownAgent:
         
         self.curr_place = initial_home_name
         self.target_place = initial_home_name
-        
+        self.previous_place = initial_home_name
         self.last_action = "等待初始化"
         self.curr_action = "等待初始化"
         self.curr_action_pronunciatio = "⏳"
@@ -210,8 +210,10 @@ class TownAgent:
             return
 
         if isinstance(destination, list):
+            self.previous_place = self.curr_place
             self.curr_place = random.choice(destination)
         else:
+            self.previous_place = self.curr_place
             self.curr_place = destination
             
         self.current_thought = f"好了，我到 '{self.curr_place}' 了。"
@@ -243,6 +245,7 @@ class TownAgent:
 
         self.curr_action = new_action
         self.target_place = destination
+        self.previous_place = self.curr_place
         self.curr_place = self.find_path(destination)
 
         lightweight = self.get_lightweight_response(new_action)

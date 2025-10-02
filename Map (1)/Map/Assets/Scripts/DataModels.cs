@@ -57,6 +57,7 @@ public class UpdateData
     [JsonProperty("buildingStates")] public Dictionary<string, BuildingState> BuildingStates;
     [JsonProperty("llmLog")] public string LlmLog;
     [JsonProperty("status")] public string Status;
+    [JsonProperty("agentActions")] public List<AgentActionInstruction> AgentActions;
 }
 
 [Serializable]
@@ -73,10 +74,20 @@ public class AgentState
 }
 
 [Serializable]
-public class BuildingState 
+public class BuildingState
 {
     [JsonProperty("id")] public string Id;
     [JsonProperty("integrity")] public float Integrity;
+}
+[Serializable]
+public class AgentActionInstruction
+{
+    [JsonProperty("agent")] public string Agent;
+    [JsonProperty("command")] public string Command;
+    [JsonProperty("origin")] public string Origin;
+    [JsonProperty("destination")] public string Destination;
+    [JsonProperty("next_step")] public string NextStep;
+    [JsonProperty("action")] public string Action;
 }
 
 /// <summary>

@@ -134,7 +134,10 @@ async def _safe_llm_call(prompt_key: str, prompt_args: list, special_instruction
     try:
         processed_args = [str(arg) for arg in prompt_args]
         prompt = OllamaAgent.generate_prompt(processed_args, prompt_template_path)
-        final_instruction = f"{special_instruction} 請務必使用繁體中文（Traditional Chinese）回答。"
+        final_instruction = (
+            f"{special_instruction} 請務必使用繁體中文（Traditional Chinese）回答，"
+            "請直接給出精簡的最終輸出，避免冗長的推理步驟、<think> 標籤或重複語句。"
+        )
         is_json_output = not isinstance(default_on_error, str)
         raw_response = await ollama_agent.ollama_stream_generate_response(prompt=prompt, special_instruction=final_instruction, expect_json=is_json_output, example_output=default_on_error)
         if raw_response is None: final_output = default_on_error
@@ -201,20 +204,30 @@ async def run_gpt_prompt_earthquake_step_action(persona_summary, health, mental_
 async def double_agents_chat(chat_context):
     default_on_error = {"thought": "解析錯誤。", "dialogue": []}
     prompt_args = [
-        chat_context['location'], chat_context['agent1']['name'], chat_context['agent1']['mbti'], chat_context['agent1']['persona'], str(chat_context['agent1']['memory'])[-500:],
-        chat_context['agent2']['name'], chat_context['agent2']['mbti'], chat_context['agent2']['persona'], str(chat_context['agent2']['memory'])[-500:],
+        chat_context['location'], chat_context['agent1']['name'], chat_context['agent1']['mbti'], chat_context['agent1']['persona'], str(chat_context['agent1']['memory'])[-300:],
+        chat_context['agent2']['name'], chat_context['agent2']['mbti'], chat_context['agent2']['persona'], str(chat_context['agent2']['memory'])[-300:],
         chat_context['now_time'], chat_context['agent1']['action'], chat_context['agent2']['action'],
         chat_context.get('eq_ctx') or "目前一切正常。", json.dumps(chat_context['history'], ensure_ascii=False) ]
-    parsed_output = await _safe_llm_call("double_chat", prompt_args, '輸出一個包含 "thought" 和 "dialogue" 鍵的 JSON 物件。', default_on_error)
+    parsed_output = await _safe_llm_call(
+        "double_chat",
+        prompt_args,
+        '輸出一個包含 "thought" 和 "dialogue" 鍵的 JSON 物件，dialogue 請限制 2~4 句，每句不超過 20 字，避免重複或贅詞。',
+        default_on_error
+    )
     return parsed_output.get("thought", default_on_error["thought"]), parsed_output.get("dialogue", default_on_error["dialogue"])
 
 async def generate_inner_monologue(agent_context):
     default_on_error = {"thought": "解析錯誤。", "monologue": "（正在思考...）"}
     prompt_args = [
         agent_context['name'], agent_context['mbti'], agent_context['persona'], agent_context['location'],
-        agent_context['action'], agent_context['now_time'], str(agent_context['memory'])[-500:],
+        agent_context['action'], agent_context['now_time'], str(agent_context['memory'])[-300:],
         agent_context.get('eq_ctx') or "目前一切正常。" ]
-    parsed_output = await _safe_llm_call("inner_monologue", prompt_args, '輸出一個包含 "thought" 和 "monologue" 鍵的 JSON 物件。', default_on_error)
+    parsed_output = await _safe_llm_call(
+        "inner_monologue",
+        prompt_args,
+        '輸出一個包含 "thought" 和 "monologue" 鍵的 JSON 物件，monologue 內容請控制在 25 字以內並避免重複語句。',
+        default_on_error
+    )
     return parsed_output.get("thought", default_on_error["thought"]), parsed_output.get("monologue", default_on_error["monologue"])
     
 async def run_gpt_prompt_summarize_disaster(agent_name, mbti, health, experience_log):

@@ -23,6 +23,10 @@ async def handle_social_interactions(active_agents, llm_context, llm_functions=N
     """
     if llm_context.get('skip_reasoning'):
         return
+    if not active_agents:
+        return
+    if all(getattr(agent, 'curr_action', None) in {"睡覺", "Unconscious"} for agent in active_agents):
+        return
     chat_buffer = llm_context.get('chat_buffer', {})
     now_time = llm_context.get('current_time_str', '')
     double_agents_chat = llm_functions['double_agents_chat']
@@ -88,32 +92,38 @@ async def process_monologue(agent, agent_context, generate_inner_monologue):
 # 新增：依據行程產生「移動」與「互動」指令
 # ---------------------------------------------------------------------------
 
-async def generate_action_instructions(active_agents, current_time_hm_str):
+async def generate_action_instructions(all_agents):
     """
-    根據每個代理人的行程決策，產生移動或互動指令。
+    根據每個代理人的狀態，產生移動或互動指令，供前端解析。
 
     回傳格式為::
 
         [
-            {"agent": 名稱, "command": "move", "target": 目的地},
-            {"agent": 名稱, "command": "interact", "action": 行動描述},
+            {"agent": 名稱, "command": "move", "origin": 前一地點, "destination": 目標地點, "next_step": 下一個節點},
+            {"agent": 名稱, "command": "interact", "origin": 當前地點, "destination": 目標地點, "action": 行動描述},
             ...
         ]
     """
 
     instructions = []
-    for agent in active_agents:
-        await agent.update_action_by_time(current_time_hm_str)
-        if agent.curr_place != agent.target_place:
+    for agent in all_agents:
+        origin = getattr(agent, 'previous_place', agent.curr_place)
+        destination = agent.target_place or agent.curr_place
+        if agent.curr_place and destination and agent.curr_place != destination:
             instructions.append({
                 "agent": agent.name,
                 "command": "move",
-                "target": agent.curr_place,
+                "origin": origin,
+                "destination": destination,
+                "next_step": agent.curr_place,
+                "action": agent.curr_action,
             })
         else:
             instructions.append({
                 "agent": agent.name,
                 "command": "interact",
+                "origin": agent.curr_place,
+                "destination": destination,
                 "action": agent.curr_action,
             })
     return instructions

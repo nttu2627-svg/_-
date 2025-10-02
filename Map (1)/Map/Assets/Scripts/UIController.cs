@@ -654,6 +654,91 @@ public class UIController : MonoBehaviour
 
         return FindChildRecursive(locationRoot, markerName);
     }
+    private Collider2D FindBoundsCollider(string pathOrName)
+    {
+        if (string.IsNullOrWhiteSpace(pathOrName)) return null;
+
+        string normalized = pathOrName.Replace("\\", "/");
+        GameObject target = GameObject.Find(normalized);
+        if (target != null)
+        {
+            return target.GetComponent<Collider2D>();
+        }
+
+        string nameOnly = normalized.Split('/').LastOrDefault();
+        if (string.IsNullOrEmpty(nameOnly)) return null;
+
+        foreach (var col in FindObjectsOfType<Collider2D>())
+        {
+            if (col != null && string.Equals(col.gameObject.name, nameOnly, StringComparison.OrdinalIgnoreCase))
+            {
+                return col;
+            }
+        }
+
+        return null;
+    }
+
+    private List<Vector3> GenerateSpawnPositionsWithin(Collider2D areaCollider, Transform fallback, int count)
+    {
+        var positions = new List<Vector3>();
+        if (count <= 0) return positions;
+
+        Vector3 referencePosition = fallback != null
+            ? fallback.position
+            : (areaCollider != null ? (Vector3)areaCollider.bounds.center : Vector3.zero);
+        Bounds bounds = areaCollider != null
+            ? areaCollider.bounds
+            : new Bounds(referencePosition, Vector3.one * 6f);
+
+        const float minDistance = 1.4f;
+        const float collisionRadius = 0.45f;
+        int maxAttempts = Mathf.Max(40, count * 40);
+        int attempts = 0;
+
+        while (positions.Count < count && attempts < maxAttempts)
+        {
+            attempts++;
+            Vector2 candidate = areaCollider != null
+                ? new Vector2(
+                    UnityEngine.Random.Range(bounds.min.x, bounds.max.x),
+                    UnityEngine.Random.Range(bounds.min.y, bounds.max.y))
+                : (Vector2)referencePosition + UnityEngine.Random.insideUnitCircle * Mathf.Max(bounds.extents.x, bounds.extents.y);
+
+            if (areaCollider != null && !areaCollider.OverlapPoint(candidate)) continue;
+            if (positions.Any(p => Vector2.Distance(p, candidate) < minDistance)) continue;
+
+            Collider2D hit = Physics2D.OverlapCircle(candidate, collisionRadius);
+            if (hit != null && (areaCollider == null || (hit != areaCollider && !hit.isTrigger))) continue;
+
+            positions.Add(new Vector3(candidate.x, candidate.y, referencePosition.z));
+        }
+
+        if (positions.Count < count)
+        {
+            int gridSize = Mathf.CeilToInt(Mathf.Sqrt(count));
+            float spacing = minDistance;
+            int safety = 0;
+
+            while (positions.Count < count && safety < gridSize * gridSize * 2)
+            {
+                int row = safety / gridSize;
+                int col = safety % gridSize;
+                safety++;
+
+                Vector2 candidate = (Vector2)referencePosition + new Vector2(
+                    (col - (gridSize - 1) * 0.5f) * spacing,
+                    (row - (gridSize - 1) * 0.5f) * spacing);
+
+                if (areaCollider != null && !areaCollider.OverlapPoint(candidate)) continue;
+                if (positions.Any(p => Vector2.Distance(p, candidate) < minDistance)) continue;
+
+                positions.Add(new Vector3(candidate.x, candidate.y, referencePosition.z));
+            }
+        }
+
+        return positions;
+    }
 
     private Transform FindChildRecursive(Transform parent, string targetName)
     {
@@ -697,38 +782,52 @@ public class UIController : MonoBehaviour
 
         Transform f1 = FindLocationMarker("Apartment_F1");
         Transform f2 = FindLocationMarker("Apartment_F2");
-        // Debug 輔助
-        if (f1 == null)
+        Collider2D f1Bounds = FindBoundsCollider("Environment/PhysicsColliders/InteriorBounds/公寓_一樓Bounds");
+        Collider2D f2Bounds = FindBoundsCollider("Environment/PhysicsColliders/InteriorBounds/公寓_二樓Bounds");
+
+        if (f1 == null && f1Bounds == null)
         {
-            Debug.LogError("[傳送失敗] 找不到名為 'Apartment_F1' 的地點標記！請檢查 LocationMarkers 下的物件名稱。");
+            Debug.LogError("[傳送失敗] 找不到名為 'Apartment_F1' 的地點標記或邊界！");
             return positions;
         }
         if (f2 == null)
         {
-            Debug.LogWarning("[傳送警告] 找不到名為 'Apartment_F2' 的地點標記。所有代理人都會被傳送到 F1。");
+            Debug.LogWarning("[傳送警告] 找不到名為 'Apartment_F2' 的地點標記或邊界。所有代理人都會被傳送到 F1。");
         }
 
-        Debug.Log($"[傳送] F1 位置: {f1.position}, F2 位置: {(f2 != null ? f2.position.ToString() : "未找到")}");
+        Debug.Log($"[傳送] F1 位置: {(f1 != null ? f1.position.ToString() : "未找到")}, F2 位置: {(f2 != null ? f2.position.ToString() : "未找到")}");
 
-        // 定義8個在攝影機中心附近的偏移位置，避免重疊
-        Vector3[] offsets = new Vector3[]
-        {
-            new Vector3(0, 0, 0),       new Vector3(-2.5f, 1.5f, 0), new Vector3(2.5f, 1.5f, 0),
-            new Vector3(-4f, -1.5f, 0), new Vector3(4f, -1.5f, 0),   new Vector3(0, -3f, 0),
-            new Vector3(-2.5f, 4f, 0),  new Vector3(2.5f, 4f, 0)
-        };
+        int firstFloorQuota = Mathf.Min(8, agents.Count);
+        var firstFloorPositions = GenerateSpawnPositionsWithin(f1Bounds, f1, firstFloorQuota);
+        var secondFloorPositions = GenerateSpawnPositionsWithin(f2Bounds, f2, Mathf.Max(0, agents.Count - firstFloorPositions.Count));
+
+        int firstIndex = 0;
+        int secondIndex = 0;
 
         for (int i = 0; i < agents.Count; i++)
         {
-            Transform baseTransform = (i < 8 || f2 == null) ? f1 : f2;
-            int offsetIndex = i % 8;
-            Vector3 targetPosition = baseTransform.position + offsets[offsetIndex];
-            targetPosition.z = 0; 
-            
-            // 呼叫代理人自己的 TeleportTo 函式來設定位置
-            string locationLabel = baseTransform == f1
-                ? ResolveApartmentLocationName(f1, "公寓")
-                : ResolveApartmentLocationName(f2, "公寓");
+            AgentController controller = agents[i];
+            Vector3 targetPosition;
+            Transform baseTransform = null;
+
+            if (firstIndex < firstFloorPositions.Count)
+            {
+                targetPosition = firstFloorPositions[firstIndex++];
+                baseTransform = f1;
+            }
+            else if (secondIndex < secondFloorPositions.Count)
+            {
+                targetPosition = secondFloorPositions[secondIndex++];
+                baseTransform = f2;
+            }
+            else
+            {
+                baseTransform = (i < 8 || f2 == null) ? f1 : f2;
+                Vector3 fallbackOrigin = baseTransform != null ? baseTransform.position : Vector3.zero;
+                targetPosition = fallbackOrigin + (Vector3)(UnityEngine.Random.insideUnitCircle * 1.5f);
+            }
+
+            string locationLabel = ResolveApartmentLocationName(baseTransform, "公寓");
 
             List<string> aliases = new List<string>
             {
@@ -745,12 +844,10 @@ public class UIController : MonoBehaviour
                 aliases.Add(locationLabel);
             }
 
-            agents[i].TeleportTo(targetPosition, aliases.ToArray());      
-            // 將結果記錄到字典中
-            positions[agents[i].agentName] = locationLabel;
-            Debug.Log($"[傳送] 已將 '{agents[i].name}' 傳送到 {targetPosition}");
+            controller.TeleportTo(targetPosition, aliases.ToArray());
+            positions[controller.agentName] = locationLabel;
+            Debug.Log($"[傳送] 已將 '{controller.name}' 傳送到 {targetPosition}");
         }
-        
         return positions;
     }
 }
