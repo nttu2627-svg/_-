@@ -29,6 +29,9 @@ class 災難記錄器:
         if self.災難開始時間 is None and 事件類型 != "初始化": return
         記錄 = 事件紀錄(記錄時間, 事件類型, 詳細資料)
         self.代理人事件[代理人_id].append(記錄)
+        message = 詳細資料.get("message") if isinstance(詳細資料, dict) else None
+        if message:
+            print(f"[災難記錄器] {代理人_id} - {事件類型}: {message}")
 
     def 計算評分(self, 代理人最終狀態: Dict[str, Any]) -> Dict[str, Dict[str, float]]:
         """

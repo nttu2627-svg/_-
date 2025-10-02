@@ -1,226 +1,770 @@
 {
   "ISTJ": {
     "weeklySchedule": {
-      "Monday": "完成工作報告", "Tuesday": "整理家中物品", "Wednesday": "去超市採購", "Thursday": "健身房例行鍛鍊", "Friday": "完成本週工作", "Saturday": "在家休息閱讀", "Sunday": "拜訪家人"
+      "Monday": "完成工作報告",
+      "Tuesday": "整理家中物品",
+      "Wednesday": "去超市採購",
+      "Thursday": "健身房例行鍛鍊",
+      "Friday": "完成本週工作",
+      "Saturday": "在家休息閱讀",
+      "Sunday": "拜訪家人"
     },
     "dailySchedule": [
-      { "time": "06:30", "action": "起床並晨跑", "target": "Exterior" },
-      { "time": "08:00", "action": "開始工作", "target": "School" },
-      { "time": "12:00", "action": "午餐", "target": "Rest" },
-      { "time": "13:00", "action": "繼續工作", "target": "School" },
-      { "time": "18:00", "action": "下班並去健身房", "target": "Gym" },
-      { "time": "20:00", "action": "晚餐並回家", "target": "Apartment" },
-      { "time": "22:30", "action": "準備睡覺", "target": "Apartment" }
+      {
+        "time": "06:30",
+        "action": "起床並晨跑",
+        "target": "Exterior"
+      },
+      {
+        "time": "08:00",
+        "action": "開始工作",
+        "target": "School"
+      },
+      {
+        "time": "12:00",
+        "action": "午餐",
+        "target": "Rest"
+      },
+      {
+        "time": "13:00",
+        "action": "繼續工作",
+        "target": "School"
+      },
+      {
+        "time": "18:00",
+        "action": "下班並去健身房",
+        "target": "Gym"
+      },
+      {
+        "time": "20:00",
+        "action": "晚餐並回家",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "22:30",
+        "action": "準備睡覺",
+        "target": "Apartment_F1"
+      }
     ]
   },
   "ISFJ": {
     "weeklySchedule": {
-      "Monday": "照顧辦公室植物", "Tuesday": "為朋友準備禮物", "Wednesday": "去醫院做志工", "Thursday": "整理照片", "Friday": "與朋友小聚", "Saturday": "打掃公寓", "Sunday": "準備一週便當"
+      "Monday": "照顧辦公室植物",
+      "Tuesday": "為朋友準備禮物",
+      "Wednesday": "去醫院做志工",
+      "Thursday": "整理照片",
+      "Friday": "與朋友小聚",
+      "Saturday": "打掃公寓",
+      "Sunday": "準備一週便當"
     },
     "dailySchedule": [
-      { "time": "07:00", "action": "起床準備早餐", "target": "Apartment" },
-      { "time": "09:00", "action": "上班", "target": "School" },
-      { "time": "12:30", "action": "與同事共進午餐", "target": "Rest" },
-      { "time": "13:30", "action": "下午的工作", "target": "School" },
-      { "time": "18:30", "action": "去超市購物", "target": "Super" },
-      { "time": "20:00", "action": "回家做飯並看劇", "target": "Apartment" },
-      { "time": "23:00", "action": "睡覺", "target": "Apartment" }
+      {
+        "time": "07:00",
+        "action": "起床準備早餐",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "09:00",
+        "action": "上班",
+        "target": "School"
+      },
+      {
+        "time": "12:30",
+        "action": "與同事共進午餐",
+        "target": "Rest"
+      },
+      {
+        "time": "13:30",
+        "action": "下午的工作",
+        "target": "School"
+      },
+      {
+        "time": "18:30",
+        "action": "去超市購物",
+        "target": "Super"
+      },
+      {
+        "time": "20:00",
+        "action": "回家做飯並看劇",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "23:00",
+        "action": "睡覺",
+        "target": "Apartment_F1"
+      }
     ]
   },
   "INFJ": {
     "weeklySchedule": {
-      "Monday": "構思新計畫", "Tuesday": "與摯友深談", "Wednesday": "閱讀心理學書籍", "Thursday": "寫日記反思", "Friday": "參加講座", "Saturday": "獨自散步思考", "Sunday": "規劃如何幫助他人"
+      "Monday": "構思新計畫",
+      "Tuesday": "與摯友深談",
+      "Wednesday": "閱讀心理學書籍",
+      "Thursday": "寫日記反思",
+      "Friday": "參加講座",
+      "Saturday": "獨自散步思考",
+      "Sunday": "規劃如何幫助他人"
     },
     "dailySchedule": [
-      { "time": "07:30", "action": "起床冥想", "target": "Apartment" },
-      { "time": "09:30", "action": "在咖啡店寫作", "target": "Rest" },
-      { "time": "13:00", "action": "簡單的午餐", "target": "Rest" },
-      { "time": "14:00", "action": "去圖書館查資料", "target": "School" },
-      { "time": "18:00", "action": "回家準備晚餐", "target": "Apartment" },
-      { "time": "21:00", "action": "與朋友線上聊天", "target": "Apartment" },
-      { "time": "23:30", "action": "睡覺", "target": "Apartment" }
+      {
+        "time": "07:30",
+        "action": "起床冥想",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "09:30",
+        "action": "在咖啡店寫作",
+        "target": "Rest"
+      },
+      {
+        "time": "13:00",
+        "action": "簡單的午餐",
+        "target": "Rest"
+      },
+      {
+        "time": "14:00",
+        "action": "去圖書館查資料",
+        "target": "School"
+      },
+      {
+        "time": "18:00",
+        "action": "回家準備晚餐",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "21:00",
+        "action": "與朋友線上聊天",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "23:30",
+        "action": "睡覺",
+        "target": "Apartment_F1"
+      }
     ]
   },
   "INTJ": {
     "weeklySchedule": {
-      "Monday": "優化長期戰略", "Tuesday": "研究新技術", "Wednesday": "獨立解決複雜問題", "Thursday": "整理知識體系", "Friday": "評估本週效率", "Saturday": "個人研究專案", "Sunday": "閱讀與規劃"
+      "Monday": "優化長期戰略",
+      "Tuesday": "研究新技術",
+      "Wednesday": "獨立解決複雜問題",
+      "Thursday": "整理知識體系",
+      "Friday": "評估本週效率",
+      "Saturday": "個人研究專案",
+      "Sunday": "閱讀與規劃"
     },
     "dailySchedule": [
-      { "time": "08:00", "action": "起床並規劃一天", "target": "Apartment" },
-      { "time": "09:00", "action": "深度工作", "target": "School" },
-      { "time": "13:00", "action": "獨自快速午餐", "target": "School" },
-      { "time": "13:30", "action": "繼續解決核心問題", "target": "School" },
-      { "time": "19:00", "action": "去健身房", "target": "Gym" },
-      { "time": "21:00", "action": "回家進行晚間閱讀", "target": "Apartment" },
-      { "time": "00:00", "action": "睡覺", "target": "Apartment" }
+      {
+        "time": "08:00",
+        "action": "起床並規劃一天",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "09:00",
+        "action": "深度工作",
+        "target": "School"
+      },
+      {
+        "time": "13:00",
+        "action": "獨自快速午餐",
+        "target": "School"
+      },
+      {
+        "time": "13:30",
+        "action": "繼續解決核心問題",
+        "target": "School"
+      },
+      {
+        "time": "19:00",
+        "action": "去健身房",
+        "target": "Gym"
+      },
+      {
+        "time": "21:00",
+        "action": "回家進行晚間閱讀",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "00:00",
+        "action": "睡覺",
+        "target": "Apartment_F1"
+      }
     ]
   },
   "ISTP": {
     "weeklySchedule": {
-      "Monday": "修理家裡電器", "Tuesday": "嘗試新運動", "Wednesday": "研究機械原理", "Thursday": "去地鐵站觀察", "Friday": "城市探險", "Saturday": "組裝模型", "Sunday": "開車去郊外"
+      "Monday": "修理家裡電器",
+      "Tuesday": "嘗試新運動",
+      "Wednesday": "研究機械原理",
+      "Thursday": "去地鐵站觀察",
+      "Friday": "城市探險",
+      "Saturday": "組裝模型",
+      "Sunday": "開車去郊外"
     },
     "dailySchedule": [
-      { "time": "09:00", "action": "起床", "target": "Apartment" },
-      { "time": "10:00", "action": "在工作室忙活", "target": "Apartment" },
-      { "time": "14:00", "action": "出門解決午餐", "target": "Rest" },
-      { "time": "15:00", "action": "去健身房活動", "target": "Gym" },
-      { "time": "18:00", "action": "騎車在城市穿梭", "target": "Exterior" },
-      { "time": "20:00", "action": "回家玩遊戲", "target": "Apartment" },
-      { "time": "01:00", "action": "睡覺", "target": "Apartment" }
+      {
+        "time": "09:00",
+        "action": "起床",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "10:00",
+        "action": "在工作室忙活",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "14:00",
+        "action": "出門解決午餐",
+        "target": "Rest"
+      },
+      {
+        "time": "15:00",
+        "action": "去健身房活動",
+        "target": "Gym"
+      },
+      {
+        "time": "18:00",
+        "action": "騎車在城市穿梭",
+        "target": "Exterior"
+      },
+      {
+        "time": "20:00",
+        "action": "回家玩遊戲",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "01:00",
+        "action": "睡覺",
+        "target": "Apartment_F1"
+      }
     ]
   },
   "ISFP": {
     "weeklySchedule": {
-      "Monday": "藝術創作", "Tuesday": "照顧寵物", "Wednesday": "逛美術館", "Thursday": "在公園寫生", "Friday": "與好友相處", "Saturday": "探索小巷", "Sunday": "享受下午茶"
+      "Monday": "藝術創作",
+      "Tuesday": "照顧寵物",
+      "Wednesday": "逛美術館",
+      "Thursday": "在公園寫生",
+      "Friday": "與好友相處",
+      "Saturday": "探索小巷",
+      "Sunday": "享受下午茶"
     },
     "dailySchedule": [
-      { "time": "09:30", "action": "自然醒", "target": "Apartment" },
-      { "time": "10:30", "action": "進行藝術創作", "target": "Apartment" },
-      { "time": "13:00", "action": "午餐", "target": "Apartment" },
-      { "time": "14:30", "action": "帶寵物去公園散步", "target": "Exterior" },
-      { "time": "17:00", "action": "去咖啡店喝東西", "target": "Rest" },
-      { "time": "19:00", "action": "回家準備晚餐", "target": "Apartment" },
-      { "time": "23:00", "action": "睡覺", "target": "Apartment" }
+      {
+        "time": "09:30",
+        "action": "自然醒",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "10:30",
+        "action": "進行藝術創作",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "13:00",
+        "action": "午餐",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "14:30",
+        "action": "帶寵物去公園散步",
+        "target": "Exterior"
+      },
+      {
+        "time": "17:00",
+        "action": "去咖啡店喝東西",
+        "target": "Rest"
+      },
+      {
+        "time": "19:00",
+        "action": "回家準備晚餐",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "23:00",
+        "action": "睡覺",
+        "target": "Apartment_F1"
+      }
     ]
   },
   "INFP": {
     "weeklySchedule": {
-      "Monday": "寫詩或故事", "Tuesday": "探索價值觀", "Wednesday": "看感人電影", "Thursday": "為理想事業做貢獻", "Friday": "與知己交流", "Saturday": "沉浸在幻想中", "Sunday": "聽音樂放鬆"
+      "Monday": "寫詩或故事",
+      "Tuesday": "探索價值觀",
+      "Wednesday": "看感人電影",
+      "Thursday": "為理想事業做貢獻",
+      "Friday": "與知己交流",
+      "Saturday": "沉浸在幻想中",
+      "Sunday": "聽音樂放鬆"
     },
     "dailySchedule": [
-      { "time": "10:00", "action": "起床寫日記", "target": "Apartment" },
-      { "time": "11:00", "action": "閱讀或寫作", "target": "Apartment" },
-      { "time": "13:30", "action": "午餐", "target": "Apartment" },
-      { "time": "15:00", "action": "在咖啡店尋找靈感", "target": "Rest" },
-      { "time": "18:00", "action": "在公園發呆", "target": "Exterior" },
-      { "time": "20:00", "action": "回家看電影", "target": "Apartment" },
-      { "time": "00:30", "action": "睡覺", "target": "Apartment" }
+      {
+        "time": "10:00",
+        "action": "起床寫日記",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "11:00",
+        "action": "閱讀或寫作",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "13:30",
+        "action": "午餐",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "15:00",
+        "action": "在咖啡店尋找靈感",
+        "target": "Rest"
+      },
+      {
+        "time": "18:00",
+        "action": "在公園發呆",
+        "target": "Exterior"
+      },
+      {
+        "time": "20:00",
+        "action": "回家看電影",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "00:30",
+        "action": "睡覺",
+        "target": "Apartment_F1"
+      }
     ]
   },
   "INTP": {
     "weeklySchedule": {
-      "Monday": "鑽研複雜理論", "Tuesday": "編程解題", "Wednesday": "閱讀科學文章", "Thursday": "分析系統模式", "Friday": "與聰明人辯論", "Saturday": "沉迷個人興趣", "Sunday": "構思發明"
+      "Monday": "鑽研複雜理論",
+      "Tuesday": "編程解題",
+      "Wednesday": "閱讀科學文章",
+      "Thursday": "分析系統模式",
+      "Friday": "與聰明人辯論",
+      "Saturday": "沉迷個人興趣",
+      "Sunday": "構思發明"
     },
     "dailySchedule": [
-      { "time": "11:00", "action": "起床", "target": "Apartment" },
-      { "time": "12:00", "action": "瀏覽技術論壇", "target": "Apartment" },
-      { "time": "14:00", "action": "叫外賣午餐", "target": "Apartment" },
-      { "time": "15:00", "action": "個人專案研究", "target": "Apartment" },
-      { "time": "20:00", "action": "玩策略遊戲", "target": "Apartment" },
-      { "time": "02:00", "action": "深夜思考", "target": "Apartment" },
-      { "time": "03:00", "action": "睡覺", "target": "Apartment" }
+      {
+        "time": "11:00",
+        "action": "起床",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "12:00",
+        "action": "瀏覽技術論壇",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "14:00",
+        "action": "叫外賣午餐",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "15:00",
+        "action": "個人專案研究",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "20:00",
+        "action": "玩策略遊戲",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "02:00",
+        "action": "深夜思考",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "03:00",
+        "action": "睡覺",
+        "target": "Apartment_F1"
+      }
     ]
   },
   "ESTP": {
     "weeklySchedule": {
-      "Monday": "競技運動", "Tuesday": "認識新朋友", "Wednesday": "處理緊急事務", "Thursday": "健身挑戰極限", "Friday": "參加派對", "Saturday": "即興旅行", "Sunday": "嘗試刺激活動"
+      "Monday": "競技運動",
+      "Tuesday": "認識新朋友",
+      "Wednesday": "處理緊急事務",
+      "Thursday": "健身挑戰極限",
+      "Friday": "參加派對",
+      "Saturday": "即興旅行",
+      "Sunday": "嘗試刺激活動"
     },
     "dailySchedule": [
-      { "time": "08:00", "action": "起床去健身房", "target": "Gym" },
-      { "time": "10:00", "action": "處理機動工作", "target": "School" },
-      { "time": "13:00", "action": "和朋友吃午餐", "target": "Rest" },
-      { "time": "14:30", "action": "在城市兜風", "target": "Exterior" },
-      { "time": "17:00", "action": "去商場逛逛", "target": "Super" },
-      { "time": "20:00", "action": "參加聚會", "target": "Rest" },
-      { "time": "01:00", "action": "回家睡覺", "target": "Apartment" }
+      {
+        "time": "08:00",
+        "action": "起床去健身房",
+        "target": "Gym"
+      },
+      {
+        "time": "10:00",
+        "action": "處理機動工作",
+        "target": "School"
+      },
+      {
+        "time": "13:00",
+        "action": "和朋友吃午餐",
+        "target": "Rest"
+      },
+      {
+        "time": "14:30",
+        "action": "在城市兜風",
+        "target": "Exterior"
+      },
+      {
+        "time": "17:00",
+        "action": "去商場逛逛",
+        "target": "Super"
+      },
+      {
+        "time": "20:00",
+        "action": "參加聚會",
+        "target": "Rest"
+      },
+      {
+        "time": "01:00",
+        "action": "回家睡覺",
+        "target": "Apartment_F1"
+      }
     ]
   },
   "ESFP": {
     "weeklySchedule": {
-      "Monday": "成為焦點", "Tuesday": "購物打扮", "Wednesday": "給朋友帶來歡樂", "Thursday": "參加表演", "Friday": "組織聚會", "Saturday": "享受當下", "Sunday": "和大家去餐廳"
+      "Monday": "成為焦點",
+      "Tuesday": "購物打扮",
+      "Wednesday": "給朋友帶來歡樂",
+      "Thursday": "參加表演",
+      "Friday": "組織聚會",
+      "Saturday": "享受當下",
+      "Sunday": "和大家去餐廳"
     },
     "dailySchedule": [
-      { "time": "10:00", "action": "起床打扮", "target": "Apartment" },
-      { "time": "11:30", "action": "去咖啡店和朋友碰面", "target": "Rest" },
-      { "time": "13:00", "action": "午餐", "target": "Rest" },
-      { "time": "15:00", "action": "逛街購物", "target": "Super" },
-      { "time": "18:00", "action": "準備派對", "target": "Apartment" },
-      { "time": "20:00", "action": "派對時間", "target": "Exterior" },
-      { "time": "00:00", "action": "睡覺", "target": "Apartment" }
+      {
+        "time": "10:00",
+        "action": "起床打扮",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "11:30",
+        "action": "去咖啡店和朋友碰面",
+        "target": "Rest"
+      },
+      {
+        "time": "13:00",
+        "action": "午餐",
+        "target": "Rest"
+      },
+      {
+        "time": "15:00",
+        "action": "逛街購物",
+        "target": "Super"
+      },
+      {
+        "time": "18:00",
+        "action": "準備派對",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "20:00",
+        "action": "派對時間",
+        "target": "Exterior"
+      },
+      {
+        "time": "00:00",
+        "action": "睡覺",
+        "target": "Apartment_F1"
+      }
     ]
   },
   "ENFP": {
     "weeklySchedule": {
-      "Monday": "構思新點子", "Tuesday": "鼓勵朋友", "Wednesday": "參加社交活動", "Thursday": "探索新興趣", "Friday": "頭腦風暴", "Saturday": "和朋友出去玩", "Sunday": "即興發揮"
+      "Monday": "構思新點子",
+      "Tuesday": "鼓勵朋友",
+      "Wednesday": "參加社交活動",
+      "Thursday": "探索新興趣",
+      "Friday": "頭腦風暴",
+      "Saturday": "和朋友出去玩",
+      "Sunday": "即興發揮"
     },
     "dailySchedule": [
-      { "time": "09:00", "action": "起床", "target": "Apartment" },
-      { "time": "10:00", "action": "在咖啡店與人交流", "target": "Rest" },
-      { "time": "13:00", "action": "和新朋友吃午餐", "target": "Rest" },
-      { "time": "15:00", "action": "參加創意工作坊", "target": "School" },
-      { "time": "18:00", "action": "去公園即興表演", "target": "Exterior" },
-      { "time": "20:30", "action": "和朋友晚餐", "target": "Rest" },
-      { "time": "23:30", "action": "睡覺", "target": "Apartment" }
+      {
+        "time": "09:00",
+        "action": "起床",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "10:00",
+        "action": "在咖啡店與人交流",
+        "target": "Rest"
+      },
+      {
+        "time": "13:00",
+        "action": "和新朋友吃午餐",
+        "target": "Rest"
+      },
+      {
+        "time": "15:00",
+        "action": "參加創意工作坊",
+        "target": "School"
+      },
+      {
+        "time": "18:00",
+        "action": "去公園即興表演",
+        "target": "Exterior"
+      },
+      {
+        "time": "20:30",
+        "action": "和朋友晚餐",
+        "target": "Rest"
+      },
+      {
+        "time": "23:30",
+        "action": "睡覺",
+        "target": "Apartment_F1"
+      }
     ]
   },
   "ENTP": {
     "weeklySchedule": {
-      "Monday": "挑戰規則", "Tuesday": "智力辯論", "Wednesday": "發明新東西", "Thursday": "開啟多個專案", "Friday": "尋找系統漏洞", "Saturday": "參加辯論會", "Sunday": "思考如何改變世界"
+      "Monday": "挑戰規則",
+      "Tuesday": "智力辯論",
+      "Wednesday": "發明新東西",
+      "Thursday": "開啟多個專案",
+      "Friday": "尋找系統漏洞",
+      "Saturday": "參加辯論會",
+      "Sunday": "思考如何改變世界"
     },
     "dailySchedule": [
-      { "time": "09:30", "action": "起床思考", "target": "Apartment" },
-      { "time": "11:00", "action": "在網上辯論", "target": "Apartment" },
-      { "time": "13:00", "action": "午餐", "target": "Apartment" },
-      { "time": "14:00", "action": "去學校圖書館查資料", "target": "School" },
-      { "time": "17:00", "action": "討論創業專案", "target": "Rest" },
-      { "time": "20:00", "action": "研究新科技", "target": "Apartment" },
-      { "time": "02:00", "action": "睡覺", "target": "Apartment" }
+      {
+        "time": "09:30",
+        "action": "起床思考",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "11:00",
+        "action": "在網上辯論",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "13:00",
+        "action": "午餐",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "14:00",
+        "action": "去學校圖書館查資料",
+        "target": "School"
+      },
+      {
+        "time": "17:00",
+        "action": "討論創業專案",
+        "target": "Rest"
+      },
+      {
+        "time": "20:00",
+        "action": "研究新科技",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "02:00",
+        "action": "睡覺",
+        "target": "Apartment_F1"
+      }
     ]
   },
   "ESTJ": {
     "weeklySchedule": {
-      "Monday": "組織團隊", "Tuesday": "確保事情井井有條", "Wednesday": "執行計畫", "Thursday": "檢查進度", "Friday": "主持會議", "Saturday": "整理社區環境", "Sunday": "制定下週計畫"
+      "Monday": "組織團隊",
+      "Tuesday": "確保事情井井有條",
+      "Wednesday": "執行計畫",
+      "Thursday": "檢查進度",
+      "Friday": "主持會議",
+      "Saturday": "整理社區環境",
+      "Sunday": "制定下週計畫"
     },
     "dailySchedule": [
-      { "time": "06:00", "action": "起床規劃一天", "target": "Apartment" },
-      { "time": "07:30", "action": "在辦公室工作", "target": "School" },
-      { "time": "12:00", "action": "工作午餐", "target": "School" },
-      { "time": "13:00", "action": "監督專案", "target": "School" },
-      { "time": "18:00", "action": "下班", "target": "School" },
-      { "time": "19:00", "action": "參加社區會議", "target": "School" },
-      { "time": "22:00", "action": "回家準備睡覺", "target": "Apartment" }
+      {
+        "time": "06:00",
+        "action": "起床規劃一天",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "07:30",
+        "action": "在辦公室工作",
+        "target": "School"
+      },
+      {
+        "time": "12:00",
+        "action": "工作午餐",
+        "target": "School"
+      },
+      {
+        "time": "13:00",
+        "action": "監督專案",
+        "target": "School"
+      },
+      {
+        "time": "18:00",
+        "action": "下班",
+        "target": "School"
+      },
+      {
+        "time": "19:00",
+        "action": "參加社區會議",
+        "target": "School"
+      },
+      {
+        "time": "22:00",
+        "action": "回家準備睡覺",
+        "target": "Apartment_F1"
+      }
     ]
   },
   "ESFJ": {
     "weeklySchedule": {
-      "Monday": "幫助同事", "Tuesday": "組織聚餐", "Wednesday": "關心家人", "Thursday": "確保團隊和諧", "Friday": "舉辦派對", "Saturday": "社區服務", "Sunday": "與家人朋友共度"
+      "Monday": "幫助同事",
+      "Tuesday": "組織聚餐",
+      "Wednesday": "關心家人",
+      "Thursday": "確保團隊和諧",
+      "Friday": "舉辦派對",
+      "Saturday": "社區服務",
+      "Sunday": "與家人朋友共度"
     },
     "dailySchedule": [
-      { "time": "07:00", "action": "起床準備早餐", "target": "Apartment" },
-      { "time": "09:00", "action": "開始工作", "target": "School" },
-      { "time": "12:30", "action": "組織午餐", "target": "School" },
-      { "time": "13:30", "action": "幫助同事", "target": "School" },
-      { "time": "18:30", "action": "去超市採購", "target": "Super" },
-      { "time": "20:00", "action": "和家人晚餐", "target": "Apartment" },
-      { "time": "23:00", "action": "睡覺", "target": "Apartment" }
+      {
+        "time": "07:00",
+        "action": "起床準備早餐",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "09:00",
+        "action": "開始工作",
+        "target": "School"
+      },
+      {
+        "time": "12:30",
+        "action": "組織午餐",
+        "target": "School"
+      },
+      {
+        "time": "13:30",
+        "action": "幫助同事",
+        "target": "School"
+      },
+      {
+        "time": "18:30",
+        "action": "去超市採購",
+        "target": "Super"
+      },
+      {
+        "time": "20:00",
+        "action": "和家人晚餐",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "23:00",
+        "action": "睡覺",
+        "target": "Apartment_F1"
+      }
     ]
   },
   "ENFJ": {
     "weeklySchedule": {
-      "Monday": "激勵團隊", "Tuesday": "指導新人", "Wednesday": "發表演講", "Thursday": "組織團隊活動", "Friday": "為他人成長喝采", "Saturday": "參加社交活動", "Sunday": "與愛人共度"
+      "Monday": "激勵團隊",
+      "Tuesday": "指導新人",
+      "Wednesday": "發表演講",
+      "Thursday": "組織團隊活動",
+      "Friday": "為他人成長喝采",
+      "Saturday": "參加社交活動",
+      "Sunday": "與愛人共度"
     },
     "dailySchedule": [
-      { "time": "07:00", "action": "起床", "target": "Apartment" },
-      { "time": "08:30", "action": "在辦公室激勵同事", "target": "School" },
-      { "time": "12:00", "action": "與團隊午餐", "target": "Rest" },
-      { "time": "14:00", "action": "在學校進行講座", "target": "School" },
-      { "time": "17:00", "action": "與朋友喝咖啡", "target": "Rest" },
-      { "time": "19:30", "action": "參加晚宴", "target": "Rest" },
-      { "time": "23:00", "action": "睡覺", "target": "Apartment" }
+      {
+        "time": "07:00",
+        "action": "起床",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "08:30",
+        "action": "在辦公室激勵同事",
+        "target": "School"
+      },
+      {
+        "time": "12:00",
+        "action": "與團隊午餐",
+        "target": "Rest"
+      },
+      {
+        "time": "14:00",
+        "action": "在學校進行講座",
+        "target": "School"
+      },
+      {
+        "time": "17:00",
+        "action": "與朋友喝咖啡",
+        "target": "Rest"
+      },
+      {
+        "time": "19:30",
+        "action": "參加晚宴",
+        "target": "Rest"
+      },
+      {
+        "time": "23:00",
+        "action": "睡覺",
+        "target": "Apartment_F1"
+      }
     ]
   },
   "ENTJ": {
     "weeklySchedule": {
-      "Monday": "制定指令", "Tuesday": "領導團隊", "Wednesday": "優化流程", "Thursday": "商業談判", "Friday": "達成目標", "Saturday": "閱讀管理學", "Sunday": "規劃下一步"
+      "Monday": "制定指令",
+      "Tuesday": "領導團隊",
+      "Wednesday": "優化流程",
+      "Thursday": "商業談判",
+      "Friday": "達成目標",
+      "Saturday": "閱讀管理學",
+      "Sunday": "規劃下一步"
     },
     "dailySchedule": [
-      { "time": "06:30", "action": "起床審閱計畫", "target": "Apartment" },
-      { "time": "08:00", "action": "在辦公室主持晨會", "target": "School" },
-      { "time": "12:30", "action": "與客戶午餐", "target": "Rest" },
-      { "time": "14:00", "action": "指揮專案", "target": "School" },
-      { "time": "19:00", "action": "去健身房", "target": "Gym" },
-      { "time": "21:00", "action": "處理戰略問題", "target": "Apartment" },
-      { "time": "00:00", "action": "睡覺", "target": "Apartment" }
+      {
+        "time": "06:30",
+        "action": "起床審閱計畫",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "08:00",
+        "action": "在辦公室主持晨會",
+        "target": "School"
+      },
+      {
+        "time": "12:30",
+        "action": "與客戶午餐",
+        "target": "Rest"
+      },
+      {
+        "time": "14:00",
+        "action": "指揮專案",
+        "target": "School"
+      },
+      {
+        "time": "19:00",
+        "action": "去健身房",
+        "target": "Gym"
+      },
+      {
+        "time": "21:00",
+        "action": "處理戰略問題",
+        "target": "Apartment_F1"
+      },
+      {
+        "time": "00:00",
+        "action": "睡覺",
+        "target": "Apartment_F1"
+      }
     ]
   }
 }

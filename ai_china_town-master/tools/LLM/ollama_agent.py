@@ -9,7 +9,8 @@ class OllamaAgent:
     def __init__(self, model="deepseek-r1:8b", api_url="http://127.0.0.1:11434/api"):
         self.model = model
         self.baseurl = api_url
-        self.session = aiohttp.ClientSession()
+        connector = aiohttp.TCPConnector(limit=1024 * 1024)
+        self.session = aiohttp.ClientSession(connector=connector)
 
     async def close_session(self):
         if self.session and not self.session.closed:

@@ -272,9 +272,37 @@ class TownAgent:
             if 'J' in self.MBTI: reaction_action_key, new_mental_state = "評估周圍環境", "calm"
             else: reaction_action_key, new_mental_state = "尋找遮蔽物", "alert"
         
-        if not self.is_injured and self.cooperation_inclination > 0.6 and reaction_action_key not in ["躲到桌下"]:
-            if any(o.id != self.id and o.health > 0 and o.is_injured and self.Is_nearby(o.get_position()) for o in other_agents_list):
-                reaction_action_key, new_mental_state = "協助受傷的人", "helping"
+        nearby_injured_agents = [
+            o
+            for o in other_agents_list
+            if o.id != self.id and o.health > 0 and o.is_injured and self.Is_nearby(o.get_position())
+        ]
+
+        if not self.is_injured and nearby_injured_agents:
+            cooperation = self.cooperation_inclination
+            help_probability = 0.0
+            if cooperation >= 0.8:
+                help_probability = 0.95
+            elif cooperation >= 0.65:
+                help_probability = 0.75
+            elif cooperation >= 0.5:
+                help_probability = 0.5
+            elif cooperation >= 0.35:
+                help_probability = 0.2
+
+            self_protection_actions = {"尋找遮蔽物", "躲到桌下", "尋找安全出口", "評估周圍環境"}
+            help_action_key = "協助受傷的人"
+
+            if reaction_action_key in self_protection_actions:
+                help_action_key = "確認安全後協助他人"
+                if (self.current_building and self.current_building.integrity > 40) or not self.current_building or intensity < 0.5:
+                    help_probability = min(1.0, help_probability + 0.15)
+                else:
+                    help_probability *= 0.85
+
+            if random.random() < help_probability:
+                reaction_action_key, new_mental_state = help_action_key, "helping"
+
         
         self.mental_state = new_mental_state
         self.curr_action = reaction_action_key
@@ -283,9 +311,20 @@ class TownAgent:
         nearby_injured = [o for o in other_agents if o.id != self.id and o.health > 0 and o.is_injured and self.Is_nearby(o.get_position())]
         if not nearby_injured: return None
         target = min(nearby_injured, key=lambda x: x.health)
-        heal = min(100 - target.health, random.randint(10, 20))
-        target.health += heal
-        return f"協助 {target.name} (+{heal} HP -> {target.health})"
+        original_hp = target.health
+        heal = min(100 - original_hp, random.randint(10, 20))
+        if heal <= 0:
+            return None
+        target.health = min(100, original_hp + heal)
+        target.is_injured = target.health < 50
+        message = f"協助 {target.name} (+{heal} HP -> {target.health})"
+        return {
+            "message": message,
+            "受助者": target.name,
+            "原始HP": original_hp,
+            "治療量": heal,
+            "新HP": target.health,
+        }
 
     def update_current_building(self, buildings_dict):
         self.current_building = buildings_dict.get(self.curr_place)
@@ -421,9 +460,12 @@ class TownAgent:
 
         # 執行幫助行為
         help_log = self.perceive_and_help(agents)
-        if help_log and disaster_logger:
-            # 這裡可以擴充，記錄幫助事件的細節
-            disaster_logger.記錄事件(self.name, "合作", current_time, {"details": help_log})
+        if help_log:
+            message = help_log.get("message")
+            if message:
+                self.disaster_experience_log.append(message)
+            if disaster_logger:
+                disaster_logger.記錄事件(self.name, "合作", current_time, help_log)
 
         return f"{self.name} 正在 {self.curr_action} (HP:{self.health})。想法:『{self.current_thought}』"
 
@@ -438,8 +480,11 @@ class TownAgent:
             help_log = self.perceive_and_help(agents)
             if help_log:
                 self.curr_action = "幫助他人"
+                message = help_log.get("message")
+                if message:
+                    self.disaster_experience_log.append(message)
                 if disaster_logger:
-                     disaster_logger.記錄事件(self.name, "合作", current_time, {"details": help_log})
+                    disaster_logger.記錄事件(self.name, "合作", current_time, help_log)
             else:
                 # 如果沒有人需要幫助，使用 LLM 決定恢復行動
                 self.curr_action = await llm.run_gpt_prompt_get_recovery_action(

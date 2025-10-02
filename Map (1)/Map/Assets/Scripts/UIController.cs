@@ -14,6 +14,11 @@ using UnityEngine.Events;
 /// </summary>
 public class UIController : MonoBehaviour
 {
+    private static readonly Dictionary<string, string> ApartmentLocationAliasMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        { "APARTMENT_F1", "公寓_F1" },
+        { "APARTMENT_F2", "公寓_F2" }
+    };
     [Header("核心依賴 (必須賦值)")]
     [Tooltip("場景中的 CameraManager 實例，用於控制攝影機")]
     public CameraManager cameraManager;
@@ -313,14 +318,36 @@ public class UIController : MonoBehaviour
         }
 
         // 2. 執行傳送，並獲取傳送後的結果
-        TeleportAgentsToApartment(selectedAgents);
-        var initialPositions = selectedAgents.ToDictionary(
-            agent => agent.agentName,
-            agent => agent.transform.position.ToString()
-        );
+        var teleportResults = TeleportAgentsToApartment(selectedAgents);
+        var initialPositions = teleportResults ?? new Dictionary<string, string>();
 
         // 3. 準備其他參數
-        List<string> locationNames = locationRoot.Cast<Transform>().Select(t => t.name).ToList();
+        HashSet<string> locationNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (Transform child in locationRoot)
+        {
+            locationNames.Add(child.name);
+
+            if (string.Equals(child.name, "LocationMarkers", StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (Transform marker in child)
+                {
+                    locationNames.Add(marker.name);
+                }
+            }
+        }
+
+        if (teleportResults != null)
+        {
+            foreach (var kvp in teleportResults)
+            {
+                if (!string.IsNullOrEmpty(kvp.Value))
+                {
+                    locationNames.Add(kvp.Value);
+                }
+            }
+        }
+
+        List<string> locationNameList = locationNames.ToList();
         List<string> selectedMbti = selectedAgents.Select(a => a.agentName).ToList();
         int eqStepValue = 5;
         if (eqStepDropdown != null && eqStepDropdown.options.Count > 0)
@@ -344,7 +371,7 @@ public class UIController : MonoBehaviour
             Hour = int.TryParse(hourInput.text, out int hour) ? hour : 3,
             Minute = int.TryParse(minuteInput.text, out int min) ? min : 0,
             Mbti = selectedMbti,
-            Locations = locationNames,
+            Locations = locationNameList,
             EqEnabled = true,
             EqJson = earthquakeJson,
             EqStep = eqStepValue,
@@ -352,9 +379,6 @@ public class UIController : MonoBehaviour
             InitialPositions = initialPositions
 
         };
-
-        // 現在代理人已經被啟用了，可以安全地呼叫傳送函式
-        TeleportAgentsToApartment(selectedAgents);
 
         HideSettingsPanels();
         simulationClient.StartSimulation(parameters);
@@ -608,6 +632,58 @@ public class UIController : MonoBehaviour
         _followAgentIndex = (_followAgentIndex + 1) % agents.Count;
         cameraManager.SetFollowTarget(agents[_followAgentIndex].transform);
     }
+    private Transform FindLocationMarker(string markerName)
+    {
+        if (locationRoot == null || string.IsNullOrEmpty(markerName)) return null;
+
+        Transform markersRoot = null;
+        foreach (Transform child in locationRoot)
+        {
+            if (string.Equals(child.name, "LocationMarkers", StringComparison.OrdinalIgnoreCase))
+            {
+                markersRoot = child;
+                break;
+            }
+        }
+
+        if (markersRoot != null)
+        {
+            Transform marker = FindChildRecursive(markersRoot, markerName);
+            if (marker != null) return marker;
+        }
+
+        return FindChildRecursive(locationRoot, markerName);
+    }
+
+    private Transform FindChildRecursive(Transform parent, string targetName)
+    {
+        if (parent == null) return null;
+
+        foreach (Transform child in parent)
+        {
+            if (string.Equals(child.name, targetName, StringComparison.OrdinalIgnoreCase))
+            {
+                return child;
+            }
+
+            Transform result = FindChildRecursive(child, targetName);
+            if (result != null) return result;
+        }
+
+        return null;
+    }
+
+    private string ResolveApartmentLocationName(Transform marker, string fallback)
+    {
+        if (marker == null) return fallback;
+
+        if (ApartmentLocationAliasMap.TryGetValue(marker.name, out string alias) && !string.IsNullOrEmpty(alias))
+        {
+            return alias;
+        }
+
+        return marker.name;
+    }
 
     /// <summary>
     /// 在模擬開始時，將選定的代理人傳送到公寓的 F1 或 F2。
@@ -619,19 +695,17 @@ public class UIController : MonoBehaviour
         var positions = new Dictionary<string, string>();
         if (agents == null || agents.Count == 0) return positions;
 
-        // 使用 GameObject.Find 查找場景中的攝影機物件
-        Transform f1 = GameObject.Find("VCam_Apartment_F1")?.transform;
-        Transform f2 = GameObject.Find("VCam_Apartment_F2")?.transform;
-
+        Transform f1 = FindLocationMarker("Apartment_F1");
+        Transform f2 = FindLocationMarker("Apartment_F2");
         // Debug 輔助
         if (f1 == null)
         {
-            Debug.LogError("[傳送失敗] 找不到名為 'VCam_Apartment_F1' 的物件！請檢查 Hierarchy 中的物件名稱。");
+            Debug.LogError("[傳送失敗] 找不到名為 'Apartment_F1' 的地點標記！請檢查 LocationMarkers 下的物件名稱。");
             return positions;
         }
         if (f2 == null)
         {
-            Debug.LogWarning("[傳送警告] 找不到名為 'VCam_Apartment_F2' 的物件。所有代理人都會被傳送到 F1。");
+            Debug.LogWarning("[傳送警告] 找不到名為 'Apartment_F2' 的地點標記。所有代理人都會被傳送到 F1。");
         }
 
         Debug.Log($"[傳送] F1 位置: {f1.position}, F2 位置: {(f2 != null ? f2.position.ToString() : "未找到")}");
@@ -652,17 +726,28 @@ public class UIController : MonoBehaviour
             targetPosition.z = 0; 
             
             // 呼叫代理人自己的 TeleportTo 函式來設定位置
-            agents[i].TeleportTo(
-                targetPosition,
+            string locationLabel = baseTransform == f1
+                ? ResolveApartmentLocationName(f1, "公寓")
+                : ResolveApartmentLocationName(f2, "公寓");
+
+            List<string> aliases = new List<string>
+            {
                 "Apartment",
                 "公寓",
                 "Apartment_F1",
                 "Apartment_F2",
                 "公寓_F1",
-                "公寓_F2");            
-            // 將結果記錄到字典中
-            positions[agents[i].agentName] = "Apartment"; // 後端只需要知道宏觀地點是 "Apartment"
+                "公寓_F2"
+            };
 
+            if (!string.IsNullOrEmpty(locationLabel))
+            {
+                aliases.Add(locationLabel);
+            }
+
+            agents[i].TeleportTo(targetPosition, aliases.ToArray());      
+            // 將結果記錄到字典中
+            positions[agents[i].agentName] = locationLabel;
             Debug.Log($"[傳送] 已將 '{agents[i].name}' 傳送到 {targetPosition}");
         }
         
