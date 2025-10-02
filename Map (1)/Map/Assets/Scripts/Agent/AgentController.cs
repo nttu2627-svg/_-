@@ -25,15 +25,17 @@ public class AgentController : MonoBehaviour
     // 私有变量
     private Transform _transform;
     private Dictionary<string, Transform> _locationTransforms;
+    private readonly Dictionary<string, Collider2D> _locationColliders = new Dictionary<string, Collider2D>();
     private bool _isInitialized = false;
     private Vector3 _targetPosition;
     private float _movementSpeed = 3f;
     private Camera _mainCamera;
     private SimulationClient _simulationClient; 
     private string _targetLocationName;
+    private string _lastValidLocationName;
     private string _currentAction;
     private readonly HashSet<string> _manualLocationOverrides = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
+    private const float CoordinateSnapThreshold = 8f;
     void Awake()
     {
         _transform = transform;
@@ -55,6 +57,19 @@ public class AgentController : MonoBehaviour
     public void Initialize(Dictionary<string, Transform> locations)
     {
         _locationTransforms = locations;
+        _locationColliders.Clear();
+        if (_locationTransforms != null)
+        {
+            foreach (var pair in _locationTransforms)
+            {
+                if (pair.Value == null || _locationColliders.ContainsKey(pair.Key)) continue;
+                Collider2D collider = pair.Value.GetComponentInChildren<Collider2D>();
+                if (collider != null)
+                {
+                    _locationColliders[pair.Key] = collider;
+                }
+            }
+        }
         _isInitialized = true;
         SetManualLocationOverrides();
     }
@@ -154,8 +169,6 @@ public class AgentController : MonoBehaviour
             return;
         }
 
-        _targetLocationName = incomingLocation;
-
         if (ShouldRespectManualOverride(incomingLocation))
         {
             _currentAction = state.CurrentState;
@@ -169,13 +182,23 @@ public class AgentController : MonoBehaviour
 
         if (_locationTransforms != null && _locationTransforms.TryGetValue(incomingLocation, out Transform targetLocation))
         {
-            _targetPosition = targetLocation.position;
+            SetTargetLocation(incomingLocation, targetLocation.position);
         }
         else if (TryParseVector3(incomingLocation, out Vector3 pos))
         {
-            // 如果後端傳回的是座標字串而非地點名稱，直接使用座標
-            _targetPosition = pos;
-            _transform.position = pos;
+            if (TryResolveCoordinateLocation(pos, out string resolvedLocation, out Vector3 resolvedPosition))
+            {
+                SetTargetLocation(resolvedLocation, resolvedPosition);
+            }
+            else
+            {
+                Debug.LogWarning($"[Agent {agentName}] 無法將座標 {incomingLocation} 對應到任何已知地點，保持在 {_lastValidLocationName ?? "原地"}。");
+                _targetPosition = _lastValidLocationName != null &&
+                                   _locationTransforms != null &&
+                                   _locationTransforms.TryGetValue(_lastValidLocationName, out Transform lastTransform)
+                    ? lastTransform.position
+                    : _transform.position;
+            }
         }
         else if (incomingLocation == "公寓")
         {
@@ -188,6 +211,67 @@ public class AgentController : MonoBehaviour
             Debug.LogWarning($"地點 '{state.Location}' 在場景中未找到，代理人 '{agentName}' 將停在原地。");
         }
         _currentAction = state.CurrentState;
+    }
+        private void SetTargetLocation(string locationName, Vector3 position)
+    {
+        _targetLocationName = locationName;
+        _targetPosition = position;
+        _lastValidLocationName = locationName;
+    }
+
+    private bool TryResolveCoordinateLocation(Vector3 coordinate, out string locationName, out Vector3 position)
+    {
+        locationName = null;
+        position = coordinate;
+
+        if (_locationTransforms == null || _locationTransforms.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (var pair in _locationColliders)
+        {
+            Collider2D collider = pair.Value;
+            if (collider == null || !collider.enabled) continue;
+            if (collider.OverlapPoint(coordinate))
+            {
+                locationName = pair.Key;
+                if (_locationTransforms != null && _locationTransforms.TryGetValue(pair.Key, out Transform linkedTransform) && linkedTransform != null)
+                {
+                    position = linkedTransform.position;
+                }
+                else
+                {
+                    position = collider.transform.position;
+                }
+                return true;
+            }
+        }
+
+        float closestDistance = float.MaxValue;
+        string closestName = null;
+        Vector3 closestPosition = Vector3.zero;
+
+        foreach (var pair in _locationTransforms)
+        {
+            if (pair.Value == null) continue;
+            float distance = Vector2.Distance(coordinate, pair.Value.position);
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closestName = pair.Key;
+                closestPosition = pair.Value.position;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(closestName) && closestDistance <= CoordinateSnapThreshold)
+        {
+            locationName = closestName;
+            position = closestPosition;
+            return true;
+        }
+
+        return false;
     }
     private static bool TryParseVector3(string input, out Vector3 result)
     {

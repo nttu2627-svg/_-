@@ -29,6 +29,48 @@ os.makedirs(PROMPT_DIR, exist_ok=True)
 LLM_LOG_BUFFER = []
 MAX_LLM_LOG_LINES = 200
 
+def _limit_repetitive_sequences(text: str, max_repeat: int = 6, max_seq_len: int = 12):
+    """Clamp pathological repetitions caused by LLM streaming glitches."""
+    if not isinstance(text, str) or not text:
+        return text, False
+
+    sanitized = text
+    changed = False
+    for seq_len in range(1, max_seq_len + 1):
+        pattern = re.compile(rf'(.{{{seq_len}}})\1{{{max_repeat},}}', flags=re.DOTALL)
+
+        def _replace(match):
+            nonlocal changed
+            changed = True
+            segment = match.group(1)
+            return segment * max_repeat
+
+        sanitized = pattern.sub(_replace, sanitized)
+    return sanitized, changed
+
+
+def _sanitize_repetitive_output(value):
+    """Recursively clean strings, lists or dicts returned by the LLM."""
+    if isinstance(value, str):
+        return _limit_repetitive_sequences(value)
+    if isinstance(value, list):
+        any_changed = False
+        sanitized_list = []
+        for item in value:
+            sanitized_item, changed = _sanitize_repetitive_output(item)
+            any_changed = any_changed or changed
+            sanitized_list.append(sanitized_item)
+        return sanitized_list, any_changed
+    if isinstance(value, dict):
+        any_changed = False
+        sanitized_dict = {}
+        for key, item in value.items():
+            sanitized_item, changed = _sanitize_repetitive_output(item)
+            any_changed = any_changed or changed
+            sanitized_dict[key] = sanitized_item
+        return sanitized_dict, any_changed
+    return value, False
+
 def log_llm_call(prompt_key, final_prompt, raw_response, final_output):
     global LLM_LOG_BUFFER
     log_entry = (f"--- LLM Call @ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n"
@@ -107,6 +149,9 @@ async def _safe_llm_call(prompt_key: str, prompt_args: list, special_instruction
                 return item
             converted_output = [convert_list_items(i) for i in final_output]
         else: converted_output = final_output
+        converted_output, sanitized = _sanitize_repetitive_output(converted_output)
+        if sanitized:
+            print(f"⚠️ [LLM_OUTPUT_SANITIZED] 偵測到 '{prompt_key}' 回傳大量重複內容，已自動裁切。", file=sys.stderr)
         log_llm_call(prompt_key, prompt, str(raw_response), converted_output)
         return converted_output
     except Exception as e:
