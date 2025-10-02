@@ -60,6 +60,10 @@ PORTAL_CONNECTIONS = {
     "餐廳_室內": "餐廳_室外",
     "餐廳_室外": "餐廳_室內",
 }
+SUBWAY_INTERIOR_PORTALS = {
+    "地鐵左樓梯_室內",
+    "地鐵右樓梯_室內"
+}
 
 # --- 動態載入代理人設定 ---
 BASE_DIR = './agents/'
@@ -142,6 +146,8 @@ class TownAgent:
         self.sleep_time = "23-00"
         self.disaster_experience_log = []
         self._pronunciatio_cache = {}
+        self.quake_has_taken_cover = False
+        self.quake_evacuation_started = False
 
     def is_location_outdoors(self, location_name):
         return "_室外" in str(location_name)
@@ -149,6 +155,11 @@ class TownAgent:
     def find_path(self, destination):
         if not destination or destination == self.curr_place:
             return self.curr_place
+
+        if destination and destination.lower() == "subway":
+            if self.curr_place == "Subway" or (self.curr_place and "地鐵" in self.curr_place):
+                return "Subway"
+            return "地鐵左入口_室外"
         
         is_current_outdoors = self.is_location_outdoors(self.curr_place)
         is_destination_outdoors = self.is_location_outdoors(destination)
@@ -228,11 +239,17 @@ class TownAgent:
             return
 
         if isinstance(destination, list):
-            self.previous_place = self.curr_place
-            self.curr_place = random.choice(destination)
+            chosen = random.choice(destination)
         else:
-            self.previous_place = self.curr_place
-            self.curr_place = destination
+            chosen = destination
+
+        self.previous_place = self.curr_place
+
+        if chosen in SUBWAY_INTERIOR_PORTALS:
+            self.curr_place = "Subway"
+        else:
+            self.curr_place = chosen
+
             
         self.current_thought = f"好了，我到 '{self.curr_place}' 了。"
         print(f"✅ [傳送成功] {self.name} 從 '{target_portal_name}' 傳送到 '{self.curr_place}'")
@@ -355,7 +372,11 @@ class TownAgent:
 
         
         self.mental_state = new_mental_state
-        self.curr_action = reaction_action_key
+        self.quake_has_taken_cover = False
+        self.quake_evacuation_started = False
+        self.target_place = self.curr_place
+        self.curr_action = "尋找遮蔽物"
+        self.disaster_experience_log.append("立即尋找掩護。")
 
     def perceive_and_help(self, other_agents):
         nearby_injured = [o for o in other_agents if o.id != self.id and o.health > 0 and o.is_injured and self.Is_nearby(o.get_position())]
@@ -499,7 +520,31 @@ class TownAgent:
             if self.health <= 0:
                 self.curr_action = "Unconscious"
                 return log_msg + " 代理人已失去意識。"
-        
+
+        if not self.quake_has_taken_cover:
+            self.quake_has_taken_cover = True
+            self.target_place = self.curr_place
+            self.curr_action = "尋找遮蔽物"
+            self.current_thought = "保持冷靜，先就近尋找掩護。"
+            self.disaster_experience_log.append("就地掩護以避免受傷。")
+            return f"{self.name} 正在尋找掩護 (HP:{self.health})。"
+
+        if not self.quake_evacuation_started:
+            self.quake_evacuation_started = True
+            if self.target_place != "Subway":
+                self.previous_place = self.curr_place
+                self.target_place = "Subway"
+                self.curr_place = self.find_path("Subway")
+            self.curr_action = "撤離到地鐵"
+            self.current_thought = "往地鐵避難會更安全。"
+            self.disaster_experience_log.append("開始撤離前往地鐵避難。")
+            return f"{self.name} 正在撤離到地鐵避難 (HP:{self.health})。"
+
+        if self.target_place == "Subway" and self.curr_place != "Subway":
+            self.curr_action = "撤離到地鐵"
+            self.current_thought = "沿著路線前往地鐵避難。"
+            return f"{self.name} 正在前往地鐵避難 (HP:{self.health})。"
+
         # 使用 LLM 決定下一步行動
         new_action, new_thought = await llm.run_gpt_prompt_earthquake_step_action(
             self.persona_summary, self.health, self.mental_state, self.curr_place, intensity, self.disaster_experience_log[-5:]

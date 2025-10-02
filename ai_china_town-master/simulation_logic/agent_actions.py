@@ -109,13 +109,13 @@ async def generate_action_instructions(all_agents):
     for agent in all_agents:
         origin = getattr(agent, 'previous_place', agent.curr_place)
         destination = agent.target_place or agent.curr_place
-        if agent.curr_place and destination and agent.curr_place != destination:
+        if origin and destination and origin != destination:
             instructions.append({
                 "agent": agent.name,
                 "command": "move",
                 "origin": origin,
                 "destination": destination,
-                "next_step": agent.curr_place,
+                "next_step": agent.curr_place or destination,
                 "action": agent.curr_action,
             })
         else:

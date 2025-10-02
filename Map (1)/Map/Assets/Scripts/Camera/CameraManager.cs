@@ -158,7 +158,14 @@ public class CameraManager : MonoBehaviour
         {
             if (target != null)
             {
-                Debug.Log($"[CameraManager] 設定跟隨目標為: {target.name}");
+                string locationLabel = "未知地點";
+                AgentController agentController = target.GetComponent<AgentController>();
+                if (agentController != null)
+                {
+                    locationLabel = agentController.GetDisplayLocationName();
+                }
+
+                Debug.Log($"[CameraManager] 設定跟隨目標為: {target.name}；當前位置：{locationLabel}");
                 // 設定 CinemachineCamera 的 Follow 和 LookAt 屬性
                 followCam.Follow = target;
                 followCam.LookAt = target;

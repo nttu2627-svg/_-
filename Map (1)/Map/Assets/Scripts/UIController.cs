@@ -14,11 +14,6 @@ using UnityEngine.Events;
 /// </summary>
 public class UIController : MonoBehaviour
 {
-    private static readonly Dictionary<string, string> ApartmentLocationAliasMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-    {
-        { "APARTMENT_F1", "公寓_F1" },
-        { "APARTMENT_F2", "公寓_F2" }
-    };
     [Header("核心依賴 (必須賦值)")]
     [Tooltip("場景中的 CameraManager 實例，用於控制攝影機")]
     public CameraManager cameraManager;
@@ -760,14 +755,12 @@ public class UIController : MonoBehaviour
 
     private string ResolveApartmentLocationName(Transform marker, string fallback)
     {
-        if (marker == null) return fallback;
-
-        if (ApartmentLocationAliasMap.TryGetValue(marker.name, out string alias) && !string.IsNullOrEmpty(alias))
+        if (!string.IsNullOrEmpty(marker.name))
         {
-            return alias;
+            return LocationNameLocalizer.ToDisplayName(marker.name);
         }
 
-        return marker.name;
+        return LocationNameLocalizer.ToDisplayName(fallback);
     }
 
     /// <summary>
@@ -829,23 +822,22 @@ public class UIController : MonoBehaviour
 
             string locationLabel = ResolveApartmentLocationName(baseTransform, "公寓");
 
-            List<string> aliases = new List<string>
+            var aliasSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
                 "Apartment",
                 "公寓",
                 "Apartment_F1",
                 "Apartment_F2",
-                "公寓_F1",
-                "公寓_F2"
+
             };
 
-            if (!string.IsNullOrEmpty(locationLabel))
-            {
-                aliases.Add(locationLabel);
-            }
+            LocationNameLocalizer.AppendDisplayAlias(aliasSet, "Apartment");
+            LocationNameLocalizer.AppendDisplayAlias(aliasSet, "Apartment_F1");
+            LocationNameLocalizer.AppendDisplayAlias(aliasSet, "Apartment_F2");
+            LocationNameLocalizer.AppendDisplayAlias(aliasSet, locationLabel);
 
-            controller.TeleportTo(targetPosition, aliases.ToArray());
-            positions[controller.agentName] = locationLabel;
+            controller.TeleportTo(targetPosition, aliasSet.ToArray());
+            positions[controller.agentName] = LocationNameLocalizer.ToDisplayName(locationLabel);
             Debug.Log($"[傳送] 已將 '{controller.name}' 傳送到 {targetPosition}");
         }
         return positions;

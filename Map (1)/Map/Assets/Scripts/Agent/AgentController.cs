@@ -52,6 +52,16 @@ public class AgentController : MonoBehaviour
             agentName = agentName.ToUpper();
         }
         
+        if (bubbleController == null)
+        {
+            bubbleController = GetComponentInChildren<思考氣泡控制器>(true);
+            if (bubbleController == null)
+            {
+                Debug.LogWarning($"[Agent {agentName}] 場景中找不到思考氣泡控制器，將無法顯示行動提示。", this);
+            }
+        }
+
+        
         gameObject.SetActive(false);
     }
     
@@ -405,7 +415,14 @@ public class AgentController : MonoBehaviour
     {
         gameObject.SetActive(isVisible);
     }
+    public string GetDisplayLocationName()
+    {
+        string candidate = !string.IsNullOrWhiteSpace(_lastValidLocationName)
+            ? _lastValidLocationName
+            : _targetLocationName;
 
+        return LocationNameLocalizer.ToDisplayName(candidate);
+    }
     void OnEnable()
     {
         if (nameTextUGUI != null) nameTextUGUI.gameObject.SetActive(false);

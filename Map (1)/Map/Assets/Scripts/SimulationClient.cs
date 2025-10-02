@@ -459,14 +459,21 @@ public class SimulationClient : MonoBehaviour
             Debug.LogWarning("[SimulationClient] 未能找到 Apartment_F1 或 Apartment_F2 的 LocationMarker，改用隨機範圍傳送。");
             foreach (var fallbackController in _activeAgentControllers.Values)
             {
-                fallbackController.TeleportTo(
-                    GetRandomApartmentPosition(),
+                var aliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
                     "Apartment",
                     "公寓",
                     "Apartment_F1",
-                    "Apartment_F2",
-                    "公寓_F1",
-                    "公寓_F2");
+                    "Apartment_F2"
+                };
+
+                LocationNameLocalizer.AppendDisplayAlias(aliases, "Apartment");
+                LocationNameLocalizer.AppendDisplayAlias(aliases, "Apartment_F1");
+                LocationNameLocalizer.AppendDisplayAlias(aliases, "Apartment_F2");
+
+                fallbackController.TeleportTo(
+                    GetRandomApartmentPosition(),
+                    aliases.ToArray());
             }
             return;
         }
@@ -510,16 +517,26 @@ public class SimulationClient : MonoBehaviour
                 baseTransform = firstFloor ?? secondFloor;
                 baseBounds = firstFloorBounds ?? secondFloorBounds;
             }
-            string primaryLabel = baseTransform != null ? baseTransform.name : (baseBounds != null ? baseBounds.gameObject.name : "Apartment");
-            controller.TeleportTo(
-                targetPosition,
+            string primaryLabel = baseTransform != null
+                ? LocationNameLocalizer.ToDisplayName(baseTransform.name)
+                : (baseBounds != null ? LocationNameLocalizer.ToDisplayName(baseBounds.gameObject.name) : "公寓");
+
+            var aliasSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
                 "Apartment",
                 "公寓",
                 "Apartment_F1",
-                "Apartment_F2",
-                "公寓_F1",
-                "公寓_F2",
-                primaryLabel);
+                "Apartment_F2"
+            };
+
+            LocationNameLocalizer.AppendDisplayAlias(aliasSet, "Apartment");
+            LocationNameLocalizer.AppendDisplayAlias(aliasSet, "Apartment_F1");
+            LocationNameLocalizer.AppendDisplayAlias(aliasSet, "Apartment_F2");
+            LocationNameLocalizer.AppendDisplayAlias(aliasSet, primaryLabel);
+
+            controller.TeleportTo(
+                targetPosition,
+                aliasSet.ToArray());
         }
     }
 
