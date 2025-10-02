@@ -172,6 +172,24 @@ class TownAgent:
                     return portal
         
         return destination
+    def resolve_destination(self, action, destination):
+        """Normalize ambiguous destinations to meaningful map locations."""
+        previous_target = getattr(self, "target_place", None)
+        current_location = self.curr_place or previous_target or self.home or ""
+
+        sleep_keywords = ["睡", "sleep", "Sleep"]
+
+        if not destination or destination == action:
+            if any(keyword in str(action) for keyword in sleep_keywords):
+                return self.home or current_location
+            return previous_target or current_location
+
+        destination_str = str(destination)
+        if any(keyword in destination_str for keyword in sleep_keywords):
+            if destination_str not in self.available_locations:
+                return self.home or current_location
+
+        return destination
 
     def get_schedule_item_at(self, current_time_hm_str):
         try:
@@ -239,14 +257,16 @@ class TownAgent:
         return result
 
     async def set_new_action(self, new_action, destination):
-        if self.curr_action == new_action and self.target_place == destination:
+        resolved_destination = self.resolve_destination(new_action, destination)
+
+        if self.curr_action == new_action and self.target_place == resolved_destination:
             return
         self.interrupt_action()
 
         self.curr_action = new_action
-        self.target_place = destination
+        self.target_place = resolved_destination
         self.previous_place = self.curr_place
-        self.curr_place = self.find_path(destination)
+        self.curr_place = self.find_path(resolved_destination)
 
         lightweight = self.get_lightweight_response(new_action)
         if lightweight:

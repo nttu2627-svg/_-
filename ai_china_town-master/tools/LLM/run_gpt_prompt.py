@@ -25,9 +25,20 @@ OLLAMA_URL = "http://127.0.0.1:11434/api"
 MODEL_NAME = "deepseek-r1:14b"
 PROMPT_DIR = os.path.join(os.path.dirname(__file__), 'prompt_template')
 os.makedirs(PROMPT_DIR, exist_ok=True)
-
+COMMON_EMOJIS = {
+    "睡覺": "😴",
+    "休息": "🛋️",
+    "吃飯": "🍕",
+    "聊天": "💬",
+    "工作": "💼",
+    "學習": "📚",
+    "醒來": "☀️",
+    "Unconscious": "😵",
+    "初始化中": "⏳",
+    "移動中": "👟",
+}
 LLM_LOG_BUFFER = []
-MAX_LLM_LOG_LINES = 200
+MAX_LLM_LOG_LINES = 400
 
 def _limit_repetitive_sequences(text: str, max_repeat: int = 6, max_seq_len: int = 12):
     """Clamp pathological repetitions caused by LLM streaming glitches."""
@@ -167,17 +178,42 @@ async def run_gpt_prompt_generate_initial_memory(name, mbti, persona_summary, ho
     memory_result = await _safe_llm_call("generate_initial_memory", [name, mbti, persona_summary, home], '僅返回描述代理人背景故事的純文字字串。', default_memory)
     success = memory_result != default_memory and isinstance(memory_result, str)
     return str(memory_result), success
+def _match_common_emoji(text: str):
+    if not isinstance(text, str):
+        return None
+    for key, emoji in COMMON_EMOJIS.items():
+        if key in text:
+            return emoji
+    return None
 
+
+def _apply_common_emojis(schedule):
+    if not isinstance(schedule, list):
+        return schedule
+    updated_schedule = []
+    for entry in schedule:
+        if isinstance(entry, list) and entry:
+            label = entry[0]
+            emoji = _match_common_emoji(str(label))
+            if emoji:
+                new_entry = entry.copy()
+                new_entry[0] = emoji
+                updated_schedule.append(new_entry)
+                continue
+        updated_schedule.append(entry)
+    return updated_schedule
 async def run_gpt_prompt_generate_weekly_schedule(persona_summary):
-    default_schedule = {day: "自由活動" for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
+    default_schedule = {day: COMMON_EMOJIS["休息"] for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
     schedule = await _safe_llm_call("generate_weekly_schedule", [persona_summary], '返回一個包含七天（Monday-Sunday）鍵的 JSON 物件。', default_schedule)
+    if isinstance(schedule, dict):
+        schedule = {day: (_match_common_emoji(str(activity)) or activity) for day, activity in schedule.items()}
     success = schedule != default_schedule and isinstance(schedule, dict) and len(schedule) == 7
     return schedule, success
 
 async def run_gpt_prompt_generate_hourly_schedule(persona, now_time, today_goal):
-    default_on_error = [["自由活動", 1440]]
-    return await _safe_llm_call("generate_schedule", [persona, now_time, today_goal], '返回一個列表，其中每個子列表包含[活動名稱, 持續分鐘數]。', default_on_error)
-
+    default_on_error = [[COMMON_EMOJIS["休息"], 1440]]
+    schedule = await _safe_llm_call("generate_schedule", [persona, now_time, today_goal], '返回一個列表，其中每個子列表包含[活動名稱, 持續分鐘數]。', default_on_error)
+    return _apply_common_emojis(schedule)
 async def run_gpt_prompt_wake_up_hour(persona, now_time, hourly_schedule):
     schedule_str = json.dumps(hourly_schedule, ensure_ascii=False)
     default_on_error = f"{random.randint(6, 8):02d}-{random.choice(['00', '15', '30'])}"
@@ -186,10 +222,10 @@ async def run_gpt_prompt_wake_up_hour(persona, now_time, hourly_schedule):
     return f"{match.group(1)}-{match.group(2)}" if match else default_on_error
 
 async def run_gpt_prompt_pronunciatio(action_dec):
-    common_emojis = {"睡覺": "😴", "休息": "🛋️", "吃飯": "🍕", "聊天": "💬", "工作": "💼", "學習": "📚", "醒來": "☀️", "Unconscious": "😵", "初始化中": "⏳"}
     action_str = str(action_dec)
-    for key, emoji in common_emojis.items():
-        if key in action_str: return emoji
+    emoji = _match_common_emoji(action_str)
+    if emoji:
+        return emoji
     return await _safe_llm_call("pronunciatio", [action_str], '只返回一個最適合的 emoji 圖標字串。', "❓")
 
 async def generate_action_thought(persona_summary, current_place, new_action):

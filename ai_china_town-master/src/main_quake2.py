@@ -36,7 +36,6 @@ except NameError:
 try:
     from tools.LLM import run_gpt_prompt as llm
     from simulation_logic.agent_classes import TownAgent, Building
-    from simulation_logic.agent_memory import find_agent_current_activity
     from simulation_logic.event_handler import check_and_handle_phase_transitions
     from simulation_logic.agent_actions import handle_social_interactions, generate_action_instructions
     from simulation_logic.disaster_logger import 災難記錄器
@@ -374,9 +373,18 @@ async def agent_update_wrapper(agent, active_agents, current_time_hm_str):
         if agent.last_action in ["睡覺", "Unconscious", "等待初始化"]:
             await agent.set_new_action("醒來", agent.home)
 
-        new_action = find_agent_current_activity(current_time_hm_str, agent.daily_schedule)
-        if new_action and new_action != '時間格式錯誤' and agent.curr_action != new_action:
-            await agent.set_new_action(new_action, new_action)
+        schedule_item = agent.get_schedule_item_at(current_time_hm_str)
+        if schedule_item:
+            if isinstance(schedule_item, (list, tuple)):
+                new_action = schedule_item[0]
+                raw_destination = schedule_item[1] if len(schedule_item) > 1 else schedule_item[0]
+            else:
+                new_action = schedule_item
+                raw_destination = schedule_item
+
+            destination = agent.resolve_destination(new_action, raw_destination)
+            if new_action and (agent.curr_action != new_action or agent.target_place != destination):
+                await agent.set_new_action(new_action, destination)
     else:
         agent.curr_action = "Unconscious" if agent.health <= 0 else "睡覺"
         lightweight = agent.get_lightweight_response(agent.curr_action)
@@ -430,11 +438,10 @@ async def handler(websocket, path):
         close_code = getattr(e, "code", None)
         close_reason = getattr(e, "reason", "")
 
-        # WebSockets 會在對端未於 ping_timeout 內回應時丟出 1011，這種情況屬於預期內的閒置斷線
-        if close_code in (1011, 1006) and "ping timeout" in str(e).lower():
-            print(f"Unity客戶端長時間未回應，已自動關閉連線: {websocket.remote_address}")
+        if close_code or close_reason:
+            print(f"Unity客戶端斷開連接: {websocket.remote_address}, 原因: {close_reason or close_code}")
         else:
-            print(f"Unity客戶端斷開連接: {websocket.remote_address}, 原因: {close_reason or e}")
+            print(f"Unity客戶端斷開連接: {websocket.remote_address}, 原因: {e}")
     finally:
         print("伺服器處理程序結束。")
 
@@ -444,15 +451,14 @@ async def main():
     if not await llm.initialize_llm():
         print("LLM 初始化失敗，程式退出。")
         return
-
-    # 關鍵：提高/取消訊息大小限制 + 開壓縮，避免大包就被斷線
+    # 關鍵：提高/取消訊息大小限制 + 開壓縮，避免大包就被斷線，並取消 ping 限制防止閒置斷線
     server = await websockets.serve(
         handler, "localhost", 8765,
         max_size=None,                # 取消預設 1MiB 限制
         compression='deflate',        # 啟用 permessage-deflate
         max_queue=64,
-        ping_interval=20,
-        ping_timeout=60
+        ping_interval=None,
+        ping_timeout=None
     )
 
     print(f"WebSocket 伺服器正在監聽 ws://localhost:8765")

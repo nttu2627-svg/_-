@@ -20,7 +20,7 @@ class OllamaAgent:
         endpoint = f"{self.baseurl}/generate"
         data = {"model": self.model, "prompt": prompt, "stream": True}
         try:
-            async with self.session.post(endpoint, json=data, timeout=600) as response:
+            async with self.session.post(endpoint, json=data, timeout=900) as response:
                 response.raise_for_status()
                 async for line in response.content:
                     if line:
