@@ -34,6 +34,7 @@ logger = logging.getLogger("unity_socket")
 # ---------------------------
 UNITY_IP = "127.0.0.1"
 UNITY_PORT = 12345
+UI_SOCKET_AVAILABLE = True
 
 # ---------------------------
 # Current Unity scene markers (anchors) & portals
@@ -138,9 +139,52 @@ ENVIRONMENT_OBJECTS = {
     "Gym": ["啞鈴", "跑步機", "瑜珈墊"],
     "Super": ["貨架", "收銀台", "購物籃"],
     "Subway": ["售票機", "候車椅", "路線圖"],
-    "Exterior": ["長椅", "路燈", "噴泉"],
+    "Exterior": ["長椅", "路燈", "公園"],
+}
+ACTION_EMOJI = {
+    "睡覺": "😴",
+    "休息": "🛋️",
+    "吃飯": "🍕",
+    "聊天": "💬",
+    "工作": "💼",
+    "學習": "📚",
+    "醒來": "☀️",
+    "意識不明": "😵",
+    "初始化中": "⏳",
+    "移動中": "👟",
 }
 
+ACTION_KEYWORDS: Dict[str, List[str]] = {
+    "睡覺": ["睡覺", "睡觉", "sleep", "就寝", "打盹", "nap", "休眠"],
+    "休息": ["休息", "relax", "放鬆", "放松", "歇息", "idle", "空檔", "放空"],
+    "吃飯": ["吃飯", "吃饭", "用餐", "餐", "早餐", "午餐", "晚餐", "宵夜", "lunch", "dinner", "breakfast", "meal", "用膳", "進餐", "就餐", "飲食"],
+    "聊天": ["聊天", "交談", "對話", "交流", "聊", "談話", "conversation", "chat", "溝通", "閒聊", "同事交流", "寒暄"],
+    "工作": ["工作", "上班", "辦公", "办公", "meeting", "開會", "協作", "寫報告", "task", "office", "勞動", "labor", "激勵同事", "值班", "服務"],
+    "學習": ["學習", "学习", "上課", "課程", "讀書", "study", "learn", "lecture", "reading", "教學", "備課", "課堂", "研讀"],
+    "醒來": ["醒", "醒來", "醒来", "起床", "wake", "起身", "蘇醒", "苏醒", "早起", "起床號", "rise"],
+    "意識不明": ["昏迷", "暈", "晕", "暈倒", "昏厥", "失神", "迷糊", "混亂", "confused", "unconscious", "dazed"],
+    "初始化中": ["初始化", "loading", "啟動", "启动", "準備", "准备", "start", "等待", "排隊", "boot", "setup", "啟動中", "載入", "load"],
+    "移動中": ["移動", "移动", "行走", "走路", "前往", "趕往", "travel", "commute", "趕路", "路上", "趕去", "奔跑", "轉移", "出發", "出发", "趕赴", "前去", "搭車", "乘車", "通勤"],
+}
+
+
+def classify_activity(raw: str) -> Tuple[str, str]:
+    if not raw:
+        return "初始化中", ACTION_EMOJI["初始化中"]
+
+    candidate = raw.strip()
+    lowered = candidate.lower()
+
+    for canonical, emoji in ACTION_EMOJI.items():
+        if canonical and canonical in candidate:
+            return canonical, emoji
+
+    for canonical, keywords in ACTION_KEYWORDS.items():
+        for keyword in keywords:
+            if keyword.lower() in lowered or keyword in candidate:
+                return canonical, ACTION_EMOJI[canonical]
+
+    return "意識不明", ACTION_EMOJI["意識不明"]
 # ---------------------------
 # Default agents (names = MBTI / or your own agent folder names)
 # ---------------------------
@@ -174,12 +218,17 @@ def send_speak_command(ip: str, port: int, object_id: int, message: str):
         logger.error("send_speak_command error: %s", e)
 
 def send_update_ui_command(ip: str, port: int, element_id: int, new_text: str):
+    global UI_SOCKET_AVAILABLE
+    if not UI_SOCKET_AVAILABLE:
+        return
     try:
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.connect((ip, port))
-        command = f"UPDATE_UI:{element_id}:{new_text}"
-        client.sendall(command.encode("utf-8"))
-        client.close()
+        with socket.create_connection((ip, port), timeout=0.5) as client:
+            command = f"UPDATE_UI:{element_id}:{new_text}"
+            client.sendall(command.encode("utf-8"))
+    except (ConnectionRefusedError, socket.timeout, TimeoutError) as e:
+        if UI_SOCKET_AVAILABLE:
+            UI_SOCKET_AVAILABLE = False
+            logger.warning("UI socket unavailable, stop sending UPDATE_UI commands: %s", e)
     except Exception as e:
         logger.error("send_update_ui_command error: %s", e)
 
@@ -584,15 +633,18 @@ async def _process_agent_activity(agent: Agent, now_time: str, weekday_label: st
     else:
         current_activity = "休息"
 
-    if agent.last_action != current_activity:
-        agent.curr_action_pronunciatio = await LLM.pronunciatio(current_activity)
+    categorized, emoji = classify_activity(current_activity)
+    agent.curr_action_pronunciatio = emoji
+
+    if agent.last_action != categorized:
         # LLM 決定地點；若 LLM 不可用，fallback 會回傳合理地點
         next_place = await LLM.go_map_async(agent.name, agent.home, agent.curr_place, CAN_GO_PLACES, current_activity)
         agent.curr_place = PORTAL_NAME_ALIASES.get(next_place, next_place)
         agent.goto_scene(agent.curr_place, walk=True)
-        send_speak_command(UNITY_IP, UNITY_PORT, agent.index, current_activity)
-        agent.last_action = current_activity
-    agent.curr_action = current_activity
+        send_speak_command(UNITY_IP, UNITY_PORT, agent.index, categorized)
+        agent.last_action = categorized
+
+    agent.curr_action = categorized
     logger.info("%s 当前活动: %s(%s)---所在地点(%s)", agent.name, agent.curr_action, agent.curr_action_pronunciatio, agent.curr_place)
 
 async def _handle_possible_chat(agents: List[Agent], now_time: str, weekday_label: str):
@@ -603,6 +655,9 @@ async def _handle_possible_chat(agents: List[Agent], now_time: str, weekday_labe
     if a.curr_place != b.curr_place:
         return
     a.curr_action = b.curr_action = "聊天"
+    a.curr_action_pronunciatio = ACTION_EMOJI["聊天"]
+    b.curr_action_pronunciatio = ACTION_EMOJI["聊天"]
+    a.last_action = b.last_action = "聊天"
     ctx = _build_chat_context(a, b, now_time, weekday_label)
     thought, dialogue = await LLM.double_chat(ctx)
     if not isinstance(dialogue, list):

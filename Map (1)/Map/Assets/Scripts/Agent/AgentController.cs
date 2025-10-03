@@ -5,6 +5,7 @@ using TMPro;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 
 using DisasterSimulation;
 
@@ -25,6 +26,8 @@ public class AgentController : MonoBehaviour
     // 私有变量
     private Transform _transform;
     private Dictionary<string, Transform> _locationTransforms;
+    private Dictionary<string, Transform> _normalizedLocationLookup;
+
     private readonly Dictionary<string, Collider2D> _locationColliders = new Dictionary<string, Collider2D>();
     private bool _isInitialized = false;
     private Vector3 _targetPosition;
@@ -37,6 +40,18 @@ public class AgentController : MonoBehaviour
     private readonly HashSet<string> _manualLocationOverrides = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private const float CoordinateSnapThreshold = 8f;
     private string _lastInstructionDestination;
+    private static readonly (string english, string localized)[] LocationPrefixAliases = new (string, string)[]
+    {
+        ("Apartment", "公寓"),
+        ("Apartment_F1", "公寓一樓"),
+        ("Apartment_F2", "公寓二樓"),
+        ("School", "學校"),
+        ("Gym", "健身房"),
+        ("Rest", "餐廳"),
+        ("Super", "超市"),
+        ("Subway", "地鐵"),
+        ("Exterior", "室外")
+    };
     void Awake()
     {
         _transform = transform;
@@ -68,12 +83,17 @@ public class AgentController : MonoBehaviour
     public void Initialize(Dictionary<string, Transform> locations)
     {
         _locationTransforms = locations;
+        _normalizedLocationLookup = new Dictionary<string, Transform>(StringComparer.OrdinalIgnoreCase);
         _locationColliders.Clear();
         if (_locationTransforms != null)
         {
             foreach (var pair in _locationTransforms)
             {
-                if (pair.Value == null || _locationColliders.ContainsKey(pair.Key)) continue;
+                if (pair.Value == null) continue;
+
+                AddNormalizedLocationKey(pair.Key, pair.Value);
+
+                if (_locationColliders.ContainsKey(pair.Key)) continue;
                 Collider2D collider = pair.Value.GetComponentInChildren<Collider2D>();
                 if (collider != null)
                 {
@@ -165,7 +185,177 @@ public class AgentController : MonoBehaviour
 
         return false;
     }
+    private static string NormalizeLocationKey(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
 
+        var builder = new StringBuilder(value.Length);
+        foreach (char c in value)
+        {
+            if (char.IsWhiteSpace(c) || c == '_' || c == '-' || c == '（' || c == '）')
+            {
+                continue;
+            }
+
+            builder.Append(char.ToUpperInvariant(c));
+        }
+
+        return builder.ToString();
+    }
+
+    private void AddNormalizedLocationKey(string key, Transform transform)
+    {
+        if (_normalizedLocationLookup == null || string.IsNullOrWhiteSpace(key) || transform == null)
+        {
+            return;
+        }
+
+        string normalized = NormalizeLocationKey(key);
+        if (!string.IsNullOrEmpty(normalized) && !_normalizedLocationLookup.ContainsKey(normalized))
+        {
+            _normalizedLocationLookup[normalized] = transform;
+        }
+    }
+
+    private bool TryGetNormalizedLocation(string normalizedKey, out Transform transform)
+    {
+        transform = null;
+        if (_normalizedLocationLookup == null || string.IsNullOrEmpty(normalizedKey))
+        {
+            return false;
+        }
+
+        if (_normalizedLocationLookup.TryGetValue(normalizedKey, out Transform cached) && cached != null)
+        {
+            transform = cached;
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool TryFindLocationTransform(string locationName, out Transform transform)
+    {
+        transform = null;
+        if (_locationTransforms == null || string.IsNullOrWhiteSpace(locationName))
+        {
+            return false;
+        }
+
+        if (_locationTransforms.TryGetValue(locationName, out Transform direct) && direct != null)
+        {
+            transform = direct;
+            return true;
+        }
+
+        string trimmed = locationName.Trim();
+        if (!string.Equals(trimmed, locationName, StringComparison.Ordinal) &&
+            _locationTransforms.TryGetValue(trimmed, out Transform trimmedMatch) && trimmedMatch != null)
+        {
+            transform = trimmedMatch;
+            return true;
+        }
+
+        foreach (var (english, localized) in LocationPrefixAliases)
+        {
+            if (trimmed.StartsWith(english, StringComparison.OrdinalIgnoreCase))
+            {
+                string alias = localized + trimmed.Substring(english.Length);
+                if (_locationTransforms.TryGetValue(alias, out Transform mapped) && mapped != null)
+                {
+                    transform = mapped;
+                    return true;
+                }
+
+                string aliasNormalized = NormalizeLocationKey(alias);
+                if (TryGetNormalizedLocation(aliasNormalized, out Transform normalizedMatch))
+                {
+                    transform = normalizedMatch;
+                    return true;
+                }
+
+                alias = localized + trimmed.Substring(english.Length).TrimStart('_');
+                if (_locationTransforms.TryGetValue(alias, out mapped) && mapped != null)
+                {
+                    transform = mapped;
+                    return true;
+                }
+
+                aliasNormalized = NormalizeLocationKey(alias);
+                if (TryGetNormalizedLocation(aliasNormalized, out normalizedMatch))
+                {
+                    transform = normalizedMatch;
+                    return true;
+                }
+            }
+
+            if (trimmed.StartsWith(localized, StringComparison.OrdinalIgnoreCase))
+            {
+                string alias = english + trimmed.Substring(localized.Length);
+                if (_locationTransforms.TryGetValue(alias, out Transform mapped) && mapped != null)
+                {
+                    transform = mapped;
+                    return true;
+                }
+
+                string aliasNormalized = NormalizeLocationKey(alias);
+                if (TryGetNormalizedLocation(aliasNormalized, out Transform normalizedMatch))
+                {
+                    transform = normalizedMatch;
+                    return true;
+                }
+
+                alias = english + trimmed.Substring(localized.Length).TrimStart('_');
+                if (_locationTransforms.TryGetValue(alias, out mapped) && mapped != null)
+                {
+                    transform = mapped;
+                    return true;
+                }
+
+                aliasNormalized = NormalizeLocationKey(alias);
+                if (TryGetNormalizedLocation(aliasNormalized, out normalizedMatch))
+                {
+                    transform = normalizedMatch;
+                    return true;
+                }
+            }
+        }
+
+        string normalizedKey = NormalizeLocationKey(trimmed);
+        if (TryGetNormalizedLocation(normalizedKey, out Transform normalizedTransform))
+        {
+            transform = normalizedTransform;
+            return true;
+        }
+
+        foreach (var pair in _locationTransforms)
+        {
+            if (pair.Value == null || string.IsNullOrEmpty(pair.Key)) continue;
+
+            if (pair.Key.IndexOf(trimmed, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                trimmed.IndexOf(pair.Key, StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                transform = pair.Value;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private string ResolveLocationKey(string requestedName, Transform transform)
+    {
+        if (_locationTransforms != null && !string.IsNullOrWhiteSpace(requestedName) &&
+            _locationTransforms.ContainsKey(requestedName))
+        {
+            return requestedName;
+        }
+
+        return transform != null ? transform.name : requestedName;
+    }
     public void UpdateState(AgentState state)
     {
         if (!_isInitialized) return;
@@ -191,9 +381,10 @@ public class AgentController : MonoBehaviour
             _manualLocationOverrides.Clear();
         }
 
-        if (_locationTransforms != null && _locationTransforms.TryGetValue(incomingLocation, out Transform targetLocation))
+        if (TryFindLocationTransform(incomingLocation, out Transform targetLocation) && targetLocation != null)
         {
-            SetTargetLocation(incomingLocation, targetLocation.position);
+            string resolvedKey = ResolveLocationKey(incomingLocation, targetLocation);
+            SetTargetLocation(resolvedKey, targetLocation.position);
         }
         else if (TryParseVector3(incomingLocation, out Vector3 pos))
         {
@@ -223,13 +414,13 @@ public class AgentController : MonoBehaviour
         }
         _currentAction = state.CurrentState;
     }
-        private void SetTargetLocation(string locationName, Vector3 position)
+    private void SetTargetLocation(string locationName, Vector3 position)
     {
         _targetLocationName = locationName;
         _targetPosition = position;
         _lastValidLocationName = locationName;
     }
-   private bool TryGetLocationPosition(string locationName, out Vector3 position)
+    private bool TryGetLocationPosition(string locationName, out Vector3 position)
     {
         position = Vector3.zero;
         if (string.IsNullOrWhiteSpace(locationName) || _locationTransforms == null)
@@ -237,22 +428,11 @@ public class AgentController : MonoBehaviour
             return false;
         }
 
-        if (_locationTransforms.TryGetValue(locationName, out Transform directTransform) && directTransform != null)
+        if (TryFindLocationTransform(locationName, out Transform directTransform) && directTransform != null)
         {
             position = directTransform.position;
             return true;
         }
-
-        foreach (var pair in _locationTransforms)
-        {
-            if (pair.Value == null) continue;
-            if (string.Equals(pair.Key, locationName, StringComparison.OrdinalIgnoreCase))
-            {
-                position = pair.Value.position;
-                return true;
-            }
-        }
-
         return false;
     }
 

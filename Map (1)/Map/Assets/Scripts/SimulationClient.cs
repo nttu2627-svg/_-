@@ -4,6 +4,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using NativeWebSocket;
 using Newtonsoft.Json;
@@ -18,13 +19,14 @@ public class SimulationClient : MonoBehaviour
     public Transform characterRoot;
     public Transform locationRoot;
     public Transform buildingRoot;
-    
+    [Tooltip("額外的地點根節點 (例如 '傳送點' 群組)，會一併掃描加入位置查找表。")]
+    public Transform[] additionalLocationRoots;
     // 私有變數
     private WebSocket websocket;
     private readonly Queue<Action> _mainThreadActions = new Queue<Action>();
     private readonly Dictionary<string, AgentController> _sceneAgentControllers = new Dictionary<string, AgentController>();
     private readonly Dictionary<string, AgentController> _activeAgentControllers = new Dictionary<string, AgentController>();
-    private readonly Dictionary<string, Transform> _locationTransforms = new Dictionary<string, Transform>();
+    private readonly Dictionary<string, Transform> _locationTransforms = new Dictionary<string, Transform>(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, BuildingController> _buildingControllers = new Dictionary<string, BuildingController>();
     private readonly Dictionary<string, Collider2D> _interiorBoundsLookup = new Dictionary<string, Collider2D>(StringComparer.OrdinalIgnoreCase);
     private readonly List<Collider2D> _boundsColliders = new List<Collider2D>();
@@ -110,20 +112,98 @@ public class SimulationClient : MonoBehaviour
             _ = websocket.Close();
         }
     }
-
+    private static readonly (string english, string localized)[] LocationPrefixAliases = new (string, string)[]
+    {
+        ("Apartment", "公寓"),
+        ("Apartment_F1", "公寓一樓"),
+        ("Apartment_F2", "公寓二樓"),
+        ("School", "學校"),
+        ("Gym", "健身房"),
+        ("Rest", "餐廳"),
+        ("Super", "超市"),
+        ("Subway", "地鐵"),
+        ("Exterior", "室外")
+    };
     private void RegisterLocationTransforms(Transform parent)
     {
         if (parent == null) return;
 
         foreach (Transform child in parent)
         {
-            if (!_locationTransforms.ContainsKey(child.name))
-            {
-                _locationTransforms[child.name] = child;
-            }
+            RegisterLocationTransform(child.name, child);
             RegisterLocationTransforms(child);
         }
     }
+
+    private void RegisterLocationTransform(string key, Transform transform)
+    {
+        if (string.IsNullOrWhiteSpace(key) || transform == null)
+        {
+            return;
+        }
+
+        string trimmed = key.Trim();
+        AddLocationAlias(trimmed, transform);
+
+        foreach (var (english, localized) in LocationPrefixAliases)
+        {
+            if (trimmed.StartsWith(english, StringComparison.OrdinalIgnoreCase))
+            {
+                string alias = localized + trimmed.Substring(english.Length);
+                AddLocationAlias(alias, transform);
+                string aliasWithoutSeparator = localized + trimmed.Substring(english.Length).TrimStart('_');
+                AddLocationAlias(aliasWithoutSeparator, transform);
+            }
+            if (trimmed.StartsWith(localized, StringComparison.OrdinalIgnoreCase))
+            {
+                string alias = english + trimmed.Substring(localized.Length);
+                AddLocationAlias(alias, transform);
+                string aliasWithoutSeparator = english + trimmed.Substring(localized.Length).TrimStart('_');
+                AddLocationAlias(aliasWithoutSeparator, transform);
+            }
+        }
+    }
+
+    private void AddLocationAlias(string aliasKey, Transform transform)
+    {
+        if (string.IsNullOrWhiteSpace(aliasKey) || transform == null)
+        {
+            return;
+        }
+
+        if (!_locationTransforms.ContainsKey(aliasKey))
+        {
+            _locationTransforms[aliasKey] = transform;
+        }
+
+        string normalized = NormalizeLocationKey(aliasKey);
+        if (!string.IsNullOrEmpty(normalized) && !_locationTransforms.ContainsKey(normalized))
+        {
+            _locationTransforms[normalized] = transform;
+        }
+    }
+
+    private static string NormalizeLocationKey(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var builder = new StringBuilder(value.Length);
+        foreach (char c in value)
+        {
+            if (char.IsWhiteSpace(c) || c == '_' || c == '-' || c == '（' || c == '）')
+            {
+                continue;
+            }
+
+            builder.Append(char.ToUpperInvariant(c));
+        }
+
+        return builder.ToString();
+    }
+
 
     private Transform FindLocationTransform(string locationName)
     {
@@ -139,7 +219,7 @@ public class SimulationClient : MonoBehaviour
         Transform found = FindChildRecursive(locationRoot, locationName);
         if (found != null)
         {
-            _locationTransforms[locationName] = found;
+            RegisterLocationTransform(locationName, found);
         }
         return found;
     }
@@ -303,12 +383,19 @@ public class SimulationClient : MonoBehaviour
     [Obsolete]
     private void InitializeSceneReferences()
     {
-        // ... (這部分與您提供的程式碼完全相同，無需修改)
         Debug.Log("[SimulationClient] Initializing scene references...");
         if (locationRoot != null)
         {
             RegisterLocationTransforms(locationRoot);
             Debug.Log($"[SimulationClient] Registered {_locationTransforms.Count} locations.");
+        }
+        if (additionalLocationRoots != null)
+        {
+            foreach (Transform extraRoot in additionalLocationRoots)
+            {
+                RegisterLocationTransforms(extraRoot);
+            }
+            Debug.Log($"[SimulationClient] Registered {_locationTransforms.Count} locations after scanning extra roots.");
         }
         if (characterRoot != null)
         {
