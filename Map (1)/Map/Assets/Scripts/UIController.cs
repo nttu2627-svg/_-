@@ -252,7 +252,7 @@ public class UIController : MonoBehaviour
     /// </summary>
     private void SetDefaultValues()
     {
-        if (durationInput != null) durationInput.text = "1200";
+        if (durationInput != null) durationInput.text = "960";
         if (stepInput != null) stepInput.text = "30";
         if (yearInput != null) yearInput.text = "2024";
         if (monthInput != null) monthInput.text = "11";
@@ -358,7 +358,7 @@ public class UIController : MonoBehaviour
 
         var parameters = new SimulationParameters
         {
-            Duration = int.TryParse(durationInput.text, out int dur) ? dur : 1200,
+            Duration = int.TryParse(durationInput.text, out int dur) ? dur : 960,
             Step = int.TryParse(stepInput.text, out int step) ? step : 30,
             Year = int.TryParse(yearInput.text, out int year) ? year : 2024,
             Month = int.TryParse(monthInput.text, out int month) ? month : 11,
