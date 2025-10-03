@@ -1,3 +1,5 @@
+# /src/unity_socket_main.py
+
 import math
 import random
 import time
@@ -5,13 +7,14 @@ from datetime import datetime, timedelta
 import gradio as gr
 import numpy as np
 from sklearn.cluster import DBSCAN
+from ai_china_town.tools.LLM.run_gpt_prompt import go_map, modify_schedule, summarize
 from tools.LLM.run_gpt_prompt import *
 import os
 import socket
 
 
 
-def send_move_command(ip, port, object_positions):
+def send_move_command(ip, port, object_positions, delay: float = 0.5):
     """
     发送多个角色的目标坐标到Unity。
     object_positions: [(object_id, x, y), (object_id, x, y), ...]
@@ -28,7 +31,8 @@ def send_move_command(ip, port, object_positions):
 
         # 关闭连接
         client.close()
-        time.sleep(3)
+        if delay and delay > 0:
+            time.sleep(delay)
     except Exception as e:
         print(f"Error: {e}")
 
@@ -73,45 +77,175 @@ def send_update_ui_command(ip, port, element_id, new_text):
     except Exception as e:
         print(f"Error: {e}")
 
+def broadcast_walk_paths(ip, port, agents, step_delay: float = 0.55, idle_delay: float = 0.15):
+    if not agents:
+        return
+    active = any(agent.has_pending_walk() for agent in agents if hasattr(agent, "has_pending_walk"))
+    if not active:
+        object_positions = []
+        for agent in agents:
+            if isinstance(agent.position, tuple):
+                object_positions.append((int(agents_name.index(agent.name)), float(agent.position[0]), float(agent.position[1])))
+        if object_positions:
+            send_move_command(ip, port, object_positions, delay=idle_delay)
+        return
+
+    while any(agent.has_pending_walk() for agent in agents if hasattr(agent, "has_pending_walk")):
+        batch_positions = []
+        for agent in agents:
+            next_pos = agent.pop_next_walk_step() if hasattr(agent, "pop_next_walk_step") else None
+            current = next_pos if isinstance(next_pos, tuple) else (agent.position if isinstance(agent.position, tuple) else None)
+            if current:
+                batch_positions.append((int(agents_name.index(agent.name)), float(current[0]), float(current[1])))
+        if batch_positions:
+            send_move_command(ip, port, batch_positions, delay=step_delay)
+
+    final_positions = []
+    for agent in agents:
+        if isinstance(agent.position, tuple):
+            final_positions.append((int(agents_name.index(agent.name)), float(agent.position[0]), float(agent.position[1])))
+    if final_positions:
+        send_move_command(ip, port, final_positions, delay=idle_delay)
 unity_ip = "127.0.0.1"  # Unity 运行的 IP 地址
 unity_port = 12345  # Unity 使用的端口号
+# === Unity 前端場景定義 ===
+UNITY_SCENE_NAME = "CityScene"
 
-
-
-# # 小镇基本设施地图
-# MAP =    [['医院', '咖啡店', '#', '蜜雪冰城', '学校', '#', '#', '小芳家', '#', '#', '火锅店', '#', '#'],
-#           ['#', '#', '绿道', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'],
-#           ['#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'],
-#           ['#', '#', '#', '#', '#', '#', '小明家', '#', '小王家', '#', '#', '#', '#'],
-#           ['#', '#', '肯德基', '乡村基', '#', '#', '#', '#', '#', '#', '#', '健身房', '#'],
-#           ['电影院', '#', '#', '#', '#', '商场', '#', '#', '#', '#', '#', '#', '#'],
-#           ['#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'],
-#           ['#', '#', '#', '#', '#', '#', '#', '海边', '#', '#', '#', '#', '#']]
-
-MAP_plus = {
-    '医院':(-1.78,0),
-    '咖啡店':(8.6,0),
-    '蜜雪冰城':(20.13,-0.44),
-    '学校':(31.35,-1.52),
-    '小芳家':(64.79,0.99),
-    '火锅店':(76.44,0.99),
-    '绿道':(18.36,-13.07),
-    '小明家':(49.09,-15.4),
-    '小王家':(76.23,-16.25),
-    '肯德基':(29.5,-30.81),
-    '乡村基':(43.65,-30.81),
-    '健身房':(82.9,-27.52),
-    '电影院':(-1.32,-18.5),
-    '商场':(64.97,-36.24),
-    '海边':(34.14,-47.97)
+UNITY_LOCATION_MARKERS = {
+    "Apartment_F1": {
+        "anchor": (-83.5, -50.6),
+        "aliases": ["Apartment", "公寓", "公寓一樓", "公寓F1"]
+    },
+    "Apartment_F2": {
+        "anchor": (-184.7, -57.0),
+        "aliases": ["公寓二樓", "Apartment_Floor2"]
+    },
+    "School": {
+        "anchor": (-1.0, -109.7),
+        "aliases": ["學校", "教室", "校園", "校园"]
+    },
+    "Rest": {
+        "anchor": (-98.0, 10.5),
+        "aliases": ["餐廳", "餐厅", "咖啡店", "Cafe"]
+    },
+    "Gym": {
+        "anchor": (-86.8, 42.9),
+        "aliases": ["健身房", "Gymnasium"]
+    },
+    "Super": {
+        "anchor": (52.2, 92.9),
+        "aliases": ["超市", "商場", "商场", "便利店"]
+    },
+    "Subway": {
+        "anchor": (166.7, -97.1),
+        "aliases": ["地鐵", "地铁", "Metro"]
+    },
+    "Exterior": {
+        "anchor": (174.8, 1.9),
+        "aliases": ["室外", "戶外", "户外", "公園", "Park"]
+    }
 }
 
-can_go_place = ['医院','咖啡店','蜜雪冰城', '学校','小芳家', '火锅店','绿道','小明家', '小王家','肯德基', '乡村基', '健身房','电影院', '商场','海边' ]
+RAW_PORTAL_MARKERS = [
+    {"name": "健身房_室內", "position": (-66.92, 17.73), "targets": ["健身房_室外"]},
+    {"name": "健身房_室外", "position": (97.5, 15.17), "targets": ["健身房_室內"]},
+    {"name": "公寓一樓_室內", "position": (-67.92, -13.82), "targets": ["公寓二樓_室內"]},
+    {"name": "公寓二樓_室內", "position": (-117.08, -46.82), "targets": ["公寓頂樓_室內", "公寓一樓_室內"]},
+    {"name": "公寓側門_室內", "position": (-57.92, -44.995003), "targets": ["公寓側門_室外"]},
+    {"name": "公寓側門_室外", "position": (6.06, -10.34), "targets": ["公寓側門_室內"]},
+    {"name": "公寓大門_室內", "position": (-77.008, -44.995003), "targets": ["公寓大門_室外"]},
+    {"name": "公寓大門_室外", "position": (-3.4, -9.01), "targets": ["公寓大門_室內"]},
+    {"name": "公寓頂樓_室內", "position": (-117.08, -13.62), "targets": ["公寓頂樓_室外", "公寓二樓_室內"]},
+    {"name": "公寓頂樓_室外", "position": (-2.4, 4.42), "targets": ["公寓頂樓_室內"]},
+    {"name": "地鐵上入口_室外", "position": (42.46, -30.38), "targets": ["地鐵左樓梯_室內"]},
+    {"name": "地鐵下入口_室外", "position": (42.46, -36.45), "targets": ["地鐵右樓梯_室內"]},
+    {"name": "地鐵右入口_室外", "position": (45.46, -33.47), "targets": ["地鐵右樓梯_室內"]},
+    {"name": "地鐵右樓梯_室內", "position": (78.03999, -32.58), "targets": ["地鐵右入口_室外", "地鐵下入口_室外"]},
+    {"name": "地鐵左入口_室外", "position": (39.4, -33.5), "targets": ["地鐵左樓梯_室內"]},
+    {"name": "地鐵左樓梯_室內", "position": (55.970005, -48.980003), "targets": ["地鐵左入口_室外", "地鐵上入口_室外"]},
+    {"name": "學校門口_室內", "position": (-26.504, -63.017), "targets": ["學校門口_室外"]},
+    {"name": "學校門口_室外", "position": (106.4, -33.0), "targets": ["學校門口_室內"]},
+    {"name": "超市側門_室內", "position": (8.98, 55.15), "targets": ["超市側門_室外"]},
+    {"name": "超市側門_室外", "position": (12.1, 19.830002), "targets": ["超市側門_室內"]},
+    {"name": "超市右門_室內", "position": (5.98, 38.07), "targets": ["超市右門_室外"]},
+    {"name": "超市左門_室內", "position": (-3.91, 38.07), "targets": ["超市左門_室外"]},
+    {"name": "超市左門_室外", "position": (1.87, 15.88), "targets": ["超市左門_室內"]},
+    {"name": "超市左門_室外", "position": (8.03, 15.88), "targets": ["超市左門_室內"]},
+    {"name": "餐廳_室內", "position": (-73.00139, 0.972929), "targets": ["餐廳_室外"]},
+    {"name": "餐廳_室外", "position": (96.95, -5.1), "targets": ["餐廳_室內"]}
+]
 
+PORTAL_NAME_ALIASES = {
+    "公寓": "Apartment_F1",
+    "公寓F1": "Apartment_F1",
+    "公寓F2": "Apartment_F2",
+    "Apartment": "Apartment_F1",
+    "Apartment_Floor2": "Apartment_F2",
+    "公寓二樓": "Apartment_F2",
+    "公寓一樓": "Apartment_F1",
+    "公寓二樓_室內_上": "公寓頂樓_室內",
+    "公寓頂樓_室內_下": "公寓二樓_室內"
+}
+
+
+def _build_coordinate_lookup():
+    coordinate_map = {}
+    alias_map = {}
+
+    for name, meta in UNITY_LOCATION_MARKERS.items():
+        anchor = meta.get("anchor")
+        if anchor:
+            coordinate_map[name] = (anchor[0], anchor[1])
+        for alias in meta.get("aliases", []):
+            alias_map[alias] = name
+
+    portal_map = {}
+    for entry in RAW_PORTAL_MARKERS:
+        pos = entry["position"]
+        anchor = (round(pos[0], 4), round(pos[1], 4))
+        payload = portal_map.setdefault(entry["name"], {"anchors": [], "targets": set()})
+        if anchor not in payload["anchors"]:
+            payload["anchors"].append(anchor)
+        payload["targets"].update(entry.get("targets", []))
+
+    for alias, canonical in PORTAL_NAME_ALIASES.items():
+        alias_map[alias] = canonical
+
+    for name, payload in portal_map.items():
+        anchors = payload["anchors"]
+        if len(anchors) == 1:
+            coordinate_map[name] = anchors[0]
+        else:
+            coordinate_map[name] = anchors
+        payload["targets"] = sorted(payload["targets"])
+
+    for alias, canonical in alias_map.items():
+        if canonical in coordinate_map:
+            coordinate_map[alias] = coordinate_map[canonical]
+
+    return coordinate_map, portal_map
+
+
+COORDINATE_MAP, UNITY_PORTAL_MARKERS = _build_coordinate_lookup()
+
+can_go_place = list(UNITY_LOCATION_MARKERS.keys())
 # TODO 暂时不考虑环境周围物品
-objs = {
-    "医院" : ["药","医生"],
-    "咖啡店" : ["咖啡机","猫","咖啡","凳子"],
+ENVIRONMENT_OBJECTS = {
+    "Apartment_F1": ["床", "沙發", "書桌"],
+    "Apartment_F2": ["床", "書架", "陽台椅"],
+    "School": ["黑板", "課桌椅", "講台"],
+    "Rest": ["咖啡機", "甜點櫃", "沙發椅"],
+    "Gym": ["啞鈴", "跑步機", "瑜珈墊"],
+    "Super": ["貨架", "收銀台", "購物籃"],
+    "Subway": ["售票機", "候車椅", "路線圖"],
+    "Exterior": ["長椅", "路燈", "噴泉"]
+}
+
+DEFAULT_AGENT_ORDER = ["ISTJ", "ISFJ", "INFJ"]
+DEFAULT_AGENT_HOMES = {
+    "ISTJ": "Apartment_F1",
+    "ISFJ": "Apartment_F1",
+    "INFJ": "Apartment_F2"
 }
 
 # 世界的规则
@@ -119,17 +253,18 @@ objs = {
 world_rule = ""
 
 # 角色
-agents_name =  ["小明","小芳","小王"]
+agents_name = DEFAULT_AGENT_ORDER[:]
 
 class agent_v:
-    def __init__(self,name,MAP):
+    def __init__(self, name, coordinate_map):
         self.name = name
-        self.MAP = MAP
+        self.MAP = coordinate_map
         self.schedule = []
         self.Visual_Range = 1
         self.home = ""
         self.curr_place  = ""
         self.position = (0,0)
+        self.walk_path = []
         self.schedule_time = []
         self.last_action = ""
         self.memory = ""
@@ -139,20 +274,70 @@ class agent_v:
         self.curr_action_pronunciatio  = ""
         self.ziliao = open(f"./agents/{self.name}/1.txt",encoding="utf-8").readlines()
 
-    def agent_init(self,home):
-        agent = agent_v(self.name, MAP_plus)
-        agent.home = home
-        agent.goto_scene(agent.home)
-        return agent
+    def agent_init(self, home):
+        self.home = home
+        self.goto_scene(self.home)
+        return self
 
     def getpositon(self):
         return self.position
 
 
-    def goto_scene(self,scene_name):
-        self.position = add_random_noise(scene_name,self.MAP)
+    def goto_scene(self,scene_name, walk: bool = False):
+        destination = add_random_noise(scene_name,self.MAP)
         self.curr_place =  scene_name
+        if not isinstance(destination, tuple):
+            self.walk_path = []
+            self.position = destination
+            return self.position
 
+        if walk and isinstance(self.position, tuple):
+            path = generate_walk_path(self.position, destination)
+            if path:
+                self.walk_path = path
+                return destination
+
+        self.walk_path = []
+        self.position = destination
+        return self.position
+
+    def has_pending_walk(self) -> bool:
+        return bool(self.walk_path)
+
+    def pop_next_walk_step(self):
+        if not self.walk_path:
+            return None
+        next_pos = self.walk_path.pop(0)
+        if isinstance(next_pos, tuple):
+            self.position = next_pos
+        return self.position
+
+    def plan_idle_wander(self, radius: float = 3.5) -> bool:
+        if self.walk_path:
+            return False
+        if not isinstance(self.position, tuple):
+            return False
+        anchor = self.MAP.get(self.curr_place)
+        if not isinstance(anchor, tuple):
+            anchor = self.position
+        target = (
+            anchor[0] + random.uniform(-radius, radius),
+            anchor[1] + random.uniform(-radius, radius)
+        )
+        if math.hypot(target[0] - self.position[0], target[1] - self.position[1]) < 0.5:
+            target = (
+                anchor[0] + random.choice([-radius, radius]) * 0.5,
+                anchor[1] + random.choice([-radius, radius]) * 0.5
+            )
+        path_out = generate_walk_path(self.position, target, step_size=1.6, jitter=0.25)
+        pivot = path_out[-1] if path_out else self.position
+        back_anchor = add_random_noise(self.curr_place, self.MAP)
+        path_back = generate_walk_path(pivot, back_anchor, step_size=1.6, jitter=0.25)
+        combined = [p for p in path_out + path_back if isinstance(p, tuple)]
+        if combined:
+            self.walk_path.extend(combined)
+            return True
+        return False
     def Is_nearby(self,position):
         x1=self.position[0]
         x2=position[0]
@@ -167,21 +352,55 @@ class agent_v:
 
 # 给场景增加噪声
 def add_random_noise(location, map_dict):
-    # 获取原始坐标
-    original_coords = map_dict.get(location, None)
-
-    if original_coords is None:
+    anchor = map_dict.get(location)
+    if anchor is None:
         return "Location not found in the dictionary."
 
+    if isinstance(anchor, dict):
+        anchor = anchor.get("anchor") or anchor.get("anchors")
+
+    if isinstance(anchor, list):
+        if not anchor:
+            return "Location not found in the dictionary."
+        base = random.choice(anchor)
+    else:
+        base = anchor
+
+    if isinstance(base, (tuple, list)) and len(base) >= 2:
+        x, y = float(base[0]), float(base[1])
+    else:
+        return "Location not found in the dictionary."
     # 为每个坐标添加随机噪声
-    x, y = original_coords
     x_with_noise = x + random.uniform(-3, 3)
     y_with_noise = y + random.uniform(-3, 3)
 
     return (x_with_noise, y_with_noise)
 
+def generate_walk_path(start, end, step_size: float = 2.8, jitter: float = 0.4):
+    if not (isinstance(start, tuple) and isinstance(end, tuple)):
+        return [end] if isinstance(end, tuple) else []
+    dx = end[0] - start[0]
+    dy = end[1] - start[1]
+    distance = math.hypot(dx, dy)
+    if distance < 1e-3:
+        return []
+    segments = max(1, int(math.ceil(distance / max(step_size, 1e-3))))
+    path = []
+    for idx in range(1, segments + 1):
+        ratio = idx / segments
+        if idx == segments:
+            path.append(end)
+        else:
+            path.append(
+                (
+                    start[0] + dx * ratio + random.uniform(-jitter, jitter),
+                    start[1] + dy * ratio + random.uniform(-jitter, jitter)
+                )
+            )
+    return path
 
 # DBSCAN聚类方式感知聊天
+
 def DBSCAN_chat(agents):
     result = []
     points_list =  []
@@ -371,10 +590,11 @@ def weekday2START_TIME(weekday_dropdown):
 def simulate_town_simulation(steps, min_per_step,weekday_dropdown):
     output_gradio = []
 
-    agent1 = agent_v('小明', MAP_plus).agent_init("小明家")
-    agent2 = agent_v('小芳', MAP_plus).agent_init("小芳家")
-    agent3 = agent_v('小王', MAP_plus).agent_init("小王家")
-    agents = [agent1, agent2, agent3]
+    agents = []
+    for name in DEFAULT_AGENT_ORDER:
+        home = DEFAULT_AGENT_HOMES.get(name, "Apartment_F1")
+        agent = agent_v(name, COORDINATE_MAP).agent_init(home)
+        agents.append(agent)
     step = 0
     START_TIME = weekday2START_TIME(weekday_dropdown)
     now_time = START_TIME
@@ -432,8 +652,11 @@ def simulate_town_simulation(steps, min_per_step,weekday_dropdown):
             for i in agents:
                 if compare_times(now_time[-5:], i.wake):
                     i.curr_action = "睡觉"
+                    if i.curr_place != i.home:
+                        i.goto_scene(i.home, walk=True)
+                    else:
+                        i.curr_place = i.home
                     i.last_action = "睡觉"
-                    i.curr_place = i.home
                     output_gradio.append(f'{i.name}当前活动:{i.curr_action}(😴💤)---所在地点({i.curr_place})')
 
                 else:
@@ -445,7 +668,7 @@ def simulate_town_simulation(steps, min_per_step,weekday_dropdown):
                         i.curr_action_pronunciatio = run_gpt_prompt_pronunciatio(i.curr_action)[:2]
                         i.last_action = i.curr_action
                         i.curr_place = go_map(i.name, i.home, i.curr_place, can_go_place, i.curr_action)
-                        i.goto_scene(i.curr_place)
+                        i.goto_scene(i.curr_place, walk=True)
                         # TODO
                         send_speak_command(unity_ip, unity_port, int(agents_name.index(i.name)), i.curr_action)
                         output_gradio.append(
@@ -453,13 +676,12 @@ def simulate_town_simulation(steps, min_per_step,weekday_dropdown):
                     else:
                         # TODO
                         send_speak_command(unity_ip, unity_port, int(agents_name.index(i.name)),i.curr_action)
+                        if random.random() < 0.35:
+                            i.plan_idle_wander()
                         output_gradio.append(
                             f'{i.name}当前活动:{i.curr_action}({i.curr_action_pronunciatio})---所在地点({i.curr_place})')
                 yield "\n".join(output_gradio)
-            object_positions = []
-            for l in agents:
-                object_positions.append((int(agents_name.index(l.name)), float(l.position[0]), float(l.position[1])))
-            send_move_command(unity_ip, unity_port, object_positions)
+            broadcast_walk_paths(unity_ip, unity_port, agents)
 
             # 感知周围其他角色决策行动
                 # 主视角查看全地图，获取角色坐标
