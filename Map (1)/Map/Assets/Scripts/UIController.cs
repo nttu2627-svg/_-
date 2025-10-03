@@ -663,7 +663,7 @@ public class UIController : MonoBehaviour
         string nameOnly = normalized.Split('/').LastOrDefault();
         if (string.IsNullOrEmpty(nameOnly)) return null;
 
-        foreach (var col in FindObjectsOfType<Collider2D>())
+        foreach (var col in FindObjectsByType<Collider2D>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
         {
             if (col != null && string.Equals(col.gameObject.name, nameOnly, StringComparison.OrdinalIgnoreCase))
             {

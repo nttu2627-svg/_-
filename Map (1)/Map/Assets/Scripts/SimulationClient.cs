@@ -32,7 +32,8 @@ public class SimulationClient : MonoBehaviour
     private const float AgentCollisionRadius = 0.45f;
     private const float MinDistanceBetweenAgents = 1.4f;
     private readonly Collider2D[] _spawnOverlapBuffer = new Collider2D[16];
-
+    private ContactFilter2D _spawnContactFilter;
+    private bool _spawnContactFilterConfigured;
     private static readonly Dictionary<string, string[]> InteriorAliasOverrides = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
     {
         {"公寓_一樓", new[] {"Apartment_F1", "Apartment", "公寓"}},
@@ -65,10 +66,24 @@ public class SimulationClient : MonoBehaviour
     void Start()
     {
         Debug.Log("[SimulationClient] Starting...");
+        ConfigureSpawnContactFilter();
         InitializeSceneReferences();
         _ = ConnectToServer();
     }
-    
+
+    private void ConfigureSpawnContactFilter()
+    {
+        _spawnContactFilter = new ContactFilter2D
+        {
+            useTriggers = false,
+            useLayerMask = false,
+            useDepth = false,
+            useOutsideDepth = false,
+            useNormalAngle = false,
+            useOutsideNormalAngle = false
+        };
+        _spawnContactFilterConfigured = true;
+    }
     void Update()
     {
         // 在主線程中執行來自網路線程的任務
@@ -266,7 +281,12 @@ public class SimulationClient : MonoBehaviour
             }
         }
 
-        int hitCount = Physics2D.OverlapCircleNonAlloc(candidate, AgentCollisionRadius, _spawnOverlapBuffer);
+        if (!_spawnContactFilterConfigured)
+        {
+            ConfigureSpawnContactFilter();
+        }
+
+        int hitCount = Physics2D.OverlapCircle(candidate, AgentCollisionRadius, _spawnContactFilter, _spawnOverlapBuffer);
         for (int i = 0; i < hitCount; i++)
         {
             var hit = _spawnOverlapBuffer[i];
@@ -658,7 +678,7 @@ public class SimulationClient : MonoBehaviour
         _interiorBoundsLookup.Clear();
         _houseCollisionColliders.Clear();
 
-        Collider2D[] allColliders = FindObjectsOfType<Collider2D>(true);
+        Collider2D[] allColliders = FindObjectsByType<Collider2D>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         foreach (Collider2D col in allColliders)
         {
             if (col == null || !col.enabled) continue;
