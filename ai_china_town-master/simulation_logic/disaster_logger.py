@@ -108,10 +108,34 @@ class 災難記錄器:
         """產出包含各代理人分數細項的報表。"""
         評分結果 = self.計算評分(代理人最終狀態)
         行數 = ["--- 災難模擬評分報表 ---"]
+        # 建立表頭與資料列，並計算欄寬以利排版
+        表頭 = ["代理人", "總分", "損失", "反應", "合作"]
+        資料列: List[List[str]] = []
+        欄寬 = [len(欄) for 欄 in 表頭]
+
         for agent_id, scores in 評分結果.items():
-            行數.append(
-                f"{agent_id}: 總分 {scores['total_score']} (損失 {scores['loss_score']}, 反應 {scores['response_score']}, 合作 {scores['coop_score']})"
-            )
-            行數.append(f"  {scores['notes']}")
+            列資料 = [
+                str(agent_id),
+                f"{scores['total_score']:.2f}",
+                f"{scores['loss_score']:.2f}",
+                f"{scores['response_score']:.2f}",
+                f"{scores['coop_score']:.2f}",
+            ]
+            資料列.append(列資料)
+            欄寬 = [max(欄寬[i], len(列資料[i])) for i in range(len(表頭))]
+
+        if 資料列:
+            # 表頭
+            表頭列 = "  ".join(表頭[i].ljust(欄寬[i]) for i in range(len(表頭)))
+            分隔線 = "-" * (sum(欄寬) + 2 * (len(表頭) - 1))
+            行數.append(表頭列)
+            行數.append(分隔線)
+
+            for 列資料, (agent_id, scores) in zip(資料列, 評分結果.items()):
+                排版列 = "  ".join(列資料[i].ljust(欄寬[i]) for i in range(len(列資料)))
+                行數.append(排版列)
+                if scores.get("notes"):
+                    行數.append(f"  • {scores['notes']}")
+
         報表文字 = "\n".join(行數)
         return {"scores": 評分結果, "text": 報表文字}

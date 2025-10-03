@@ -26,11 +26,33 @@ public class SimulationClient : MonoBehaviour
     private readonly Dictionary<string, AgentController> _activeAgentControllers = new Dictionary<string, AgentController>();
     private readonly Dictionary<string, Transform> _locationTransforms = new Dictionary<string, Transform>();
     private readonly Dictionary<string, BuildingController> _buildingControllers = new Dictionary<string, BuildingController>();
-    private List<Collider2D> _boundsColliders = new List<Collider2D>();
+    private readonly Dictionary<string, Collider2D> _interiorBoundsLookup = new Dictionary<string, Collider2D>(StringComparer.OrdinalIgnoreCase);
+    private readonly List<Collider2D> _boundsColliders = new List<Collider2D>();
+    private readonly List<Collider2D> _houseCollisionColliders = new List<Collider2D>();
     private const float AgentCollisionRadius = 0.45f;
     private const float MinDistanceBetweenAgents = 1.4f;
     private readonly Collider2D[] _spawnOverlapBuffer = new Collider2D[16];
 
+    private static readonly Dictionary<string, string[]> InteriorAliasOverrides = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+    {
+        {"公寓_一樓", new[] {"Apartment_F1", "Apartment", "公寓"}},
+        {"公寓_二樓", new[] {"Apartment_F2", "Apartment", "公寓"}},
+        {"Apartment_F1", new[] {"公寓_一樓", "公寓"}},
+        {"Apartment_F2", new[] {"公寓_二樓", "公寓"}},
+        {"Apartment", new[] {"公寓", "公寓_一樓", "公寓_二樓"}},
+        {"公寓", new[] {"Apartment", "Apartment_F1", "Apartment_F2"}},
+        {"健身房", new[] {"Gym"}},
+        {"Gym", new[] {"健身房"}},
+        {"超市", new[] {"Super"}},
+        {"Super", new[] {"超市"}},
+        {"餐廳", new[] {"Rest", "Cafe"}},
+        {"Rest", new[] {"餐廳"}},
+        {"Cafe", new[] {"餐廳"}},
+        {"地鐵", new[] {"Subway"}},
+        {"Subway", new[] {"地鐵"}},
+        {"學校", new[] {"School"}},
+        {"School", new[] {"學校"}}
+    };
 
     // --- 全局靜態事件 ---
     // 外部腳本 (如 UIController) 可以訂閱這些事件來接收更新
@@ -134,11 +156,24 @@ public class SimulationClient : MonoBehaviour
     private Collider2D FindBoundsColliderByName(string boundsName)
     {
         if (string.IsNullOrWhiteSpace(boundsName)) return null;
+        if (_interiorBoundsLookup.TryGetValue(boundsName.Trim(), out Collider2D direct) && direct != null)
+        {
+            return direct;
+        }
+
+        string normalized = NormalizeBoundsKey(boundsName);
+        if (!string.IsNullOrEmpty(normalized) && _interiorBoundsLookup.TryGetValue(normalized, out Collider2D normalizedMatch) && normalizedMatch != null)
+        {
+            return normalizedMatch;
+        }
 
         foreach (var col in _boundsColliders)
         {
             if (col == null) continue;
-            if (string.Equals(col.gameObject.name, boundsName, StringComparison.OrdinalIgnoreCase))
+
+            string colliderKey = NormalizeBoundsKey(col.gameObject.name);
+            if (string.Equals(colliderKey, normalized, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(col.gameObject.name, boundsName, StringComparison.OrdinalIgnoreCase))
             {
                 return col;
             }
@@ -164,13 +199,21 @@ public class SimulationClient : MonoBehaviour
         while (positions.Count < count && attempts < maxAttempts)
         {
             attempts++;
-            Vector2 candidate = areaCollider != null
-                ? new Vector2(
-                    UnityEngine.Random.Range(bounds.min.x, bounds.max.x),
-                    UnityEngine.Random.Range(bounds.min.y, bounds.max.y))
-                : (Vector2)locationTransform.position + UnityEngine.Random.insideUnitCircle * Mathf.Max(bounds.extents.x, bounds.extents.y);
+            Vector2 candidate;
 
-            if (areaCollider != null && !areaCollider.OverlapPoint(candidate)) continue;
+            if (areaCollider != null)
+            {
+                if (!TryGetRandomPointInsideCollider(areaCollider, out Vector3 sampledPoint))
+                {
+                    continue;
+                }
+                candidate = new Vector2(sampledPoint.x, sampledPoint.y);
+            }
+            else
+            {
+                candidate = (Vector2)locationTransform.position + UnityEngine.Random.insideUnitCircle * Mathf.Max(bounds.extents.x, bounds.extents.y);
+            }
+
             if (!IsSpawnCandidateValid(candidate, positions, areaCollider)) continue;
 
             float zValue = locationTransform != null ? locationTransform.position.z : referencePosition.z;
@@ -193,7 +236,6 @@ public class SimulationClient : MonoBehaviour
                     (col - (gridSize - 1) * 0.5f) * spacing,
                     (row - (gridSize - 1) * 0.5f) * spacing);
 
-                if (areaCollider != null && !areaCollider.OverlapPoint(candidate)) continue;
                 if (!IsSpawnCandidateValid(candidate, positions, areaCollider)) continue;
 
                 positions.Add(new Vector3(candidate.x, candidate.y, locationTransform.position.z));
@@ -205,7 +247,16 @@ public class SimulationClient : MonoBehaviour
 
     private bool IsSpawnCandidateValid(Vector2 candidate, List<Vector3> existingPositions, Collider2D areaCollider)
     {
-        if (_boundsColliders.Count > 0 && !IsInsideBounds(new Vector3(candidate.x, candidate.y, 0f))) return false;
+        if (areaCollider != null)
+        {
+            if (!areaCollider.OverlapPoint(candidate)) return false;
+        }
+        else if (_boundsColliders.Count > 0 && !IsInsideInteriorBounds(candidate))
+        {
+            return false;
+        }
+
+        if (IsInsideHouseCollision(candidate)) return false;
 
         foreach (var pos in existingPositions)
         {
@@ -221,6 +272,7 @@ public class SimulationClient : MonoBehaviour
             var hit = _spawnOverlapBuffer[i];
             if (hit == null) continue;
             if (areaCollider != null && (hit == areaCollider || hit.transform.IsChildOf(areaCollider.transform))) continue;
+            if (_boundsColliders.Contains(hit)) continue;
             if (hit.GetComponentInParent<AgentController>() != null) continue;
             if (hit.isTrigger) continue;
             return false;
@@ -259,16 +311,10 @@ public class SimulationClient : MonoBehaviour
                 if (!string.IsNullOrEmpty(building.buildingName)) { _buildingControllers[building.buildingName] = building; }
             }
             Debug.Log($"[SimulationClient] Registered {_buildingControllers.Count} building controllers.");
-        }        
-        // 收集場景中所有名稱包含 "Bounds" 的 Collider2D，避免隨機傳送到不可到達區域。
-        _boundsColliders.Clear();
-        foreach (Collider2D col in FindObjectsOfType<Collider2D>())
-        {
-            if (col.gameObject.name.Contains("Bounds"))
-            {
-                _boundsColliders.Add(col);
-            }
         }
+        // 收集場景中所有名稱包含 "Bounds" 的 Collider2D，避免隨機傳送到不可到達區域。
+        CachePhysicsColliders();
+    
     }
 
     private async Task ConnectToServer()
@@ -394,21 +440,36 @@ public class SimulationClient : MonoBehaviour
     }
     private bool IsInsideBounds(Vector3 position)
     {
-        foreach (var col in _boundsColliders)
-        {
-            if (col.bounds.Contains(position)) return true;
-        }
-        return false;
+        return IsInsideInteriorBounds(new Vector2(position.x, position.y));
     }
 
     private Vector3 GetRandomApartmentPosition()
     {
+        var preferredBounds = new List<Collider2D>();
+
+        Collider2D firstFloor = FindBoundsColliderByName("公寓_一樓");
+        if (firstFloor != null && !preferredBounds.Contains(firstFloor)) preferredBounds.Add(firstFloor);
+        Collider2D secondFloor = FindBoundsColliderByName("公寓_二樓");
+        if (secondFloor != null && !preferredBounds.Contains(secondFloor)) preferredBounds.Add(secondFloor);
+        Collider2D apartmentF1 = FindBoundsColliderByName("Apartment_F1");
+        if (apartmentF1 != null && !preferredBounds.Contains(apartmentF1)) preferredBounds.Add(apartmentF1);
+        Collider2D apartmentF2 = FindBoundsColliderByName("Apartment_F2");
+        if (apartmentF2 != null && !preferredBounds.Contains(apartmentF2)) preferredBounds.Add(apartmentF2);
+
+        foreach (var bounds in preferredBounds)
+        {
+            if (TryGetRandomPointInsideCollider(bounds, out Vector3 interiorPoint))
+            {
+                return interiorPoint;
+            }
+        }
+
         for (int attempt = 0; attempt < 30; attempt++)
         {
-            bool secondFloor = UnityEngine.Random.value > 0.5f;
+            bool spawnOnSecondFloor = UnityEngine.Random.value > 0.5f;
             bool singleRoom = UnityEngine.Random.value > 0.5f;
             float x, y;
-            if (!secondFloor)
+            if (!spawnOnSecondFloor)
             {
                 if (singleRoom)
                 {
@@ -435,11 +496,11 @@ public class SimulationClient : MonoBehaviour
                 }
             }
 
-            Vector3 candidate = new Vector3(x, y, 0f);
-            if (!IsInsideBounds(candidate))
-            {
-                return candidate;
-            }
+            Vector2 candidate = new Vector2(x, y);
+            if (!IsInsideInteriorBounds(candidate)) continue;
+            if (IsInsideHouseCollision(candidate)) continue;
+
+            return new Vector3(candidate.x, candidate.y, 0f);
         }
         return Vector3.zero;
     }
@@ -589,5 +650,196 @@ public class SimulationClient : MonoBehaviour
         string jsonCommand = JsonConvert.SerializeObject(command);
         Debug.Log($"[SimulationClient] Sending teleport request: {jsonCommand}");
         await websocket.SendText(jsonCommand);
+    }
+
+    private void CachePhysicsColliders()
+    {
+        _boundsColliders.Clear();
+        _interiorBoundsLookup.Clear();
+        _houseCollisionColliders.Clear();
+
+        Collider2D[] allColliders = FindObjectsOfType<Collider2D>(true);
+        foreach (Collider2D col in allColliders)
+        {
+            if (col == null || !col.enabled) continue;
+
+            string hierarchyPath = GetHierarchyPath(col.transform);
+            bool isInterior = hierarchyPath.IndexOf("InteriorBounds", StringComparison.OrdinalIgnoreCase) >= 0;
+
+            if (isInterior)
+            {
+                if (!_boundsColliders.Contains(col))
+                {
+                    _boundsColliders.Add(col);
+                }
+                RegisterInteriorAlias(col.gameObject.name, col);
+                RegisterInteriorAlias(hierarchyPath, col);
+                continue;
+            }
+
+            bool belongsToHouse = hierarchyPath.IndexOf("/House", StringComparison.OrdinalIgnoreCase) >= 0;
+            if (belongsToHouse && !_houseCollisionColliders.Contains(col))
+            {
+                _houseCollisionColliders.Add(col);
+            }
+        }
+
+        if (_locationTransforms != null && _locationTransforms.Count > 0 && _boundsColliders.Count > 0)
+        {
+            foreach (var pair in _locationTransforms)
+            {
+                Transform locationTransform = pair.Value;
+                if (locationTransform == null) continue;
+
+                Vector2 locationPoint = locationTransform.position;
+                foreach (Collider2D interior in _boundsColliders)
+                {
+                    if (interior == null) continue;
+                    if (interior.OverlapPoint(locationPoint))
+                    {
+                        RegisterInteriorAlias(pair.Key, interior);
+                        break;
+                    }
+                }
+            }
+        }
+
+        Debug.Log($"[SimulationClient] Cached {_boundsColliders.Count} interior bounds and {_houseCollisionColliders.Count} house collision colliders.");
+    }
+
+    private void RegisterInteriorAlias(string alias, Collider2D collider)
+    {
+        if (string.IsNullOrWhiteSpace(alias) || collider == null) return;
+
+        var collected = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        void Collect(string candidate)
+        {
+            if (string.IsNullOrWhiteSpace(candidate)) return;
+            string trimmed = candidate.Trim();
+            if (!collected.Add(trimmed)) return;
+
+            string normalized = NormalizeBoundsKey(trimmed);
+            if (!string.IsNullOrEmpty(normalized) && !string.Equals(normalized, trimmed, StringComparison.OrdinalIgnoreCase))
+            {
+                Collect(normalized);
+            }
+
+            if (!string.IsNullOrEmpty(normalized))
+            {
+                string collapsed = normalized.Replace("_", string.Empty).Replace(" ", string.Empty);
+                if (!string.IsNullOrEmpty(collapsed) && !string.Equals(collapsed, normalized, StringComparison.OrdinalIgnoreCase))
+                {
+                    Collect(collapsed);
+                }
+            }
+
+            string display = LocationNameLocalizer.ToDisplayName(trimmed);
+            if (!string.IsNullOrEmpty(display) && !string.Equals(display, trimmed, StringComparison.OrdinalIgnoreCase))
+            {
+                Collect(display);
+            }
+
+            if (InteriorAliasOverrides.TryGetValue(trimmed, out var extras))
+            {
+                foreach (var extra in extras)
+                {
+                    Collect(extra);
+                }
+            }
+        }
+
+        Collect(alias);
+
+        foreach (var key in collected)
+        {
+            if (string.IsNullOrWhiteSpace(key)) continue;
+            _interiorBoundsLookup[key.Trim()] = collider;
+        }
+    }
+
+    private static string NormalizeBoundsKey(string rawName)
+    {
+        if (string.IsNullOrWhiteSpace(rawName)) return string.Empty;
+
+        string trimmed = rawName.Trim().Replace("\\", "/");
+        int lastSlash = trimmed.LastIndexOf('/');
+        if (lastSlash >= 0 && lastSlash < trimmed.Length - 1)
+        {
+            trimmed = trimmed.Substring(lastSlash + 1);
+        }
+
+        const string suffix = "Bounds";
+        if (trimmed.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+        {
+            trimmed = trimmed.Substring(0, trimmed.Length - suffix.Length);
+        }
+
+        return trimmed.Trim();
+    }
+
+    private static string GetHierarchyPath(Transform transform)
+    {
+        if (transform == null) return string.Empty;
+
+        var stack = new Stack<string>();
+        Transform current = transform;
+        while (current != null)
+        {
+            stack.Push(current.name);
+            current = current.parent;
+        }
+
+        return string.Join("/", stack);
+    }
+
+    private bool IsInsideInteriorBounds(Vector2 position)
+    {
+        foreach (var collider in _boundsColliders)
+        {
+            if (collider == null) continue;
+            if (collider.OverlapPoint(position))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool IsInsideHouseCollision(Vector2 position)
+    {
+        foreach (var collider in _houseCollisionColliders)
+        {
+            if (collider == null) continue;
+            if (collider.OverlapPoint(position))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool TryGetRandomPointInsideCollider(Collider2D collider, out Vector3 result, int maxAttempts = 48)
+    {
+        result = Vector3.zero;
+        if (collider == null) return false;
+
+        Bounds bounds = collider.bounds;
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            float x = UnityEngine.Random.Range(bounds.min.x, bounds.max.x);
+            float y = UnityEngine.Random.Range(bounds.min.y, bounds.max.y);
+            Vector2 candidate = new Vector2(x, y);
+
+            if (!collider.OverlapPoint(candidate)) continue;
+            if (IsInsideHouseCollision(candidate)) continue;
+
+            result = new Vector3(candidate.x, candidate.y, collider.transform.position.z);
+            return true;
+        }
+
+        return false;
     }
 }

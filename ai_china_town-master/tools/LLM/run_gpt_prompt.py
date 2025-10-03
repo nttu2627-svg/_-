@@ -36,7 +36,9 @@ COMMON_EMOJIS = {
     "Unconscious": "😵",
     "初始化中": "⏳",
     "移動中": "👟",
+    "未知": "❓",
 }
+ALLOWED_EMOJIS = set(COMMON_EMOJIS.values())
 LLM_LOG_BUFFER = []
 MAX_LLM_LOG_LINES = 400
 
@@ -79,8 +81,19 @@ def _sanitize_repetitive_output(value):
             sanitized_item, changed = _sanitize_repetitive_output(item)
             any_changed = any_changed or changed
             sanitized_dict[key] = sanitized_item
-        return sanitized_dict, any_changed
+    return sanitized_dict, any_changed
     return value, False
+_EMOJI_PATTERN = re.compile('[\U0001F300-\U0001FAFF\U00002600-\U000026FF\U00002700-\U000027BF]')
+
+
+def _sanitize_label_to_common_emoji(label: str):
+    if not isinstance(label, str):
+        return label
+    if label in ALLOWED_EMOJIS:
+        return label
+    if _EMOJI_PATTERN.search(label):
+        return COMMON_EMOJIS["未知"]
+    return label
 
 def log_llm_call(prompt_key, final_prompt, raw_response, final_output):
     global LLM_LOG_BUFFER
@@ -195,18 +208,23 @@ def _apply_common_emojis(schedule):
         if isinstance(entry, list) and entry:
             label = entry[0]
             emoji = _match_common_emoji(str(label))
+            new_entry = entry.copy()
             if emoji:
-                new_entry = entry.copy()
                 new_entry[0] = emoji
-                updated_schedule.append(new_entry)
-                continue
-        updated_schedule.append(entry)
+            else:
+                new_entry[0] = _sanitize_label_to_common_emoji(str(label))
+            updated_schedule.append(new_entry)
+            continue
+        updated_schedule.append(_sanitize_label_to_common_emoji(entry) if isinstance(entry, str) else entry)
     return updated_schedule
 async def run_gpt_prompt_generate_weekly_schedule(persona_summary):
     default_schedule = {day: COMMON_EMOJIS["休息"] for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
     schedule = await _safe_llm_call("generate_weekly_schedule", [persona_summary], '返回一個包含七天（Monday-Sunday）鍵的 JSON 物件。', default_schedule)
     if isinstance(schedule, dict):
-        schedule = {day: (_match_common_emoji(str(activity)) or activity) for day, activity in schedule.items()}
+        schedule = {
+            day: (_match_common_emoji(str(activity)) or _sanitize_label_to_common_emoji(str(activity)))
+            for day, activity in schedule.items()
+        }
     success = schedule != default_schedule and isinstance(schedule, dict) and len(schedule) == 7
     return schedule, success
 
@@ -226,7 +244,8 @@ async def run_gpt_prompt_pronunciatio(action_dec):
     emoji = _match_common_emoji(action_str)
     if emoji:
         return emoji
-    return await _safe_llm_call("pronunciatio", [action_str], '只返回一個最適合的 emoji 圖標字串。', "❓")
+    result = await _safe_llm_call("pronunciatio", [action_str], '只返回一個最適合的 emoji 圖標字串。', COMMON_EMOJIS["未知"])
+    return _sanitize_label_to_common_emoji(result)
 
 async def generate_action_thought(persona_summary, current_place, new_action):
     return await _safe_llm_call("generate_action_thought", [persona_summary, current_place, new_action], '返回一句約20字的簡短內心想法字串。', "")
@@ -272,3 +291,75 @@ async def run_gpt_prompt_summarize_disaster(agent_name, mbti, health, experience
 
 async def run_gpt_prompt_get_recovery_action(persona, mental_state, curr_place):
     return await _safe_llm_call("get_recovery_action", [persona, mental_state, curr_place], '返回建議的恢復行動短語字串。', "原地休息")
+
+
+async def go_map_async(agent_name, home, curr_place, can_go_list, curr_task):
+    can_go_str = ", ".join(can_go_list)
+    destination = await _safe_llm_call(
+        "go_map",
+        [agent_name, home, curr_place, can_go_str, curr_task],
+        '只返回目標地點名稱的純文字。',
+        home,
+    )
+    if isinstance(destination, str) and destination in can_go_list:
+        return destination
+    return home
+
+
+async def modify_schedule_async(old_sched, now_time, memory, wake_time, role):
+    old_sched = old_sched or []
+    try:
+        old_sched_str = json.dumps(old_sched, ensure_ascii=False)
+    except TypeError:
+        old_sched_str = str(old_sched)
+    parsed_output = await _safe_llm_call(
+        "modify_schedule",
+        [old_sched_str, now_time, memory, wake_time, role],
+        '返回調整後的日程列表，每個元素為[活動名稱, 持續分鐘數]。',
+        old_sched,
+    )
+    if isinstance(parsed_output, list) and all(isinstance(item, (list, tuple)) and len(item) >= 2 for item in parsed_output):
+        return _apply_common_emojis([list(item[:2]) for item in parsed_output])
+    return old_sched
+
+
+async def summarize_async(memory, now_time, name):
+    default_summary = "今天沒有特別的對話。"
+    summary = await _safe_llm_call(
+        "summarize_chat",
+        [memory, now_time, name],
+        '只返回簡短的聊天總結。',
+        default_summary,
+    )
+    return summary if isinstance(summary, str) else default_summary
+
+
+def _run_async(coro):
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+    if loop and loop.is_running():
+        return asyncio.ensure_future(coro)
+    return asyncio.run(coro)
+
+
+def go_map(agent_name, home, curr_place, can_go_list, curr_task):
+    result = _run_async(go_map_async(agent_name, home, curr_place, can_go_list, curr_task))
+    if asyncio.isfuture(result):
+        raise RuntimeError("go_map() was called inside an active event loop. Please await go_map_async() instead.")
+    return result
+
+
+def modify_schedule(old_sched, now_time, memory, wake_time, role):
+    result = _run_async(modify_schedule_async(old_sched, now_time, memory, wake_time, role))
+    if asyncio.isfuture(result):
+        raise RuntimeError("modify_schedule() was called inside an active event loop. Please await modify_schedule_async() instead.")
+    return result
+
+
+def summarize(memory, now_time, name):
+    result = _run_async(summarize_async(memory, now_time, name))
+    if asyncio.isfuture(result):
+        raise RuntimeError("summarize() was called inside an active event loop. Please await summarize_async() instead.")
+    return result
