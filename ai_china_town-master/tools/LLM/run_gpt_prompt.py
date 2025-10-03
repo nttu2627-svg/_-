@@ -81,7 +81,7 @@ def _sanitize_repetitive_output(value):
             sanitized_item, changed = _sanitize_repetitive_output(item)
             any_changed = any_changed or changed
             sanitized_dict[key] = sanitized_item
-    return sanitized_dict, any_changed
+        return sanitized_dict, any_changed
     return value, False
 _EMOJI_PATTERN = re.compile('[\U0001F300-\U0001FAFF\U00002600-\U000026FF\U00002700-\U000027BF]')
 

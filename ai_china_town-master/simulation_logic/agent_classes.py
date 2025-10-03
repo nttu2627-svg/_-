@@ -14,7 +14,7 @@ LIGHTWEIGHT_ACTION_RESPONSES = {
     "睡覺": ("", "💤"),
     "醒來": ("新的一天開始了！", "☀️"),
     "等待初始化": ("稍等，我正在確認今日的安排。", "⏳"),
-    "Unconscious": ("", "😴"),
+    "意識不明": ("", "😴"),
 }
 # --- 核心：定義場景中的傳送門連接關係 ---
 # 鍵(Key): 代理人當前所在的傳送點 GameObject 名稱。
@@ -59,6 +59,16 @@ PORTAL_CONNECTIONS = {
     "健身房_室外": "健身房_室內",
     "餐廳_室內": "餐廳_室外",
     "餐廳_室外": "餐廳_室內",
+}
+LOCATION_ENTRY_PORTALS = {
+    "Apartment": "公寓大門_室外",
+    "Apartment_F1": "公寓大門_室外",
+    "Apartment_F2": "公寓大門_室外",
+    "School": "學校門口_室外",
+    "Rest": "餐廳_室外",
+    "Gym": "健身房_室外",
+    "Super": "超市右門_室外",
+    "Subway": "地鐵左入口_室外",
 }
 SUBWAY_INTERIOR_PORTALS = {
     "地鐵左樓梯_室內",
@@ -156,19 +166,28 @@ class TownAgent:
         if not destination or destination == self.curr_place:
             return self.curr_place
 
-        if destination and destination.lower() == "subway":
+        destination_str = str(destination)
+
+        if destination_str and destination_str.lower() == "subway":
             if self.curr_place == "Subway" or (self.curr_place and "地鐵" in self.curr_place):
                 return "Subway"
             return "地鐵左入口_室外"
         
         is_current_outdoors = self.is_location_outdoors(self.curr_place)
-        is_destination_outdoors = self.is_location_outdoors(destination)
+        is_destination_outdoors = self.is_location_outdoors(destination_str)
 
         if is_current_outdoors == is_destination_outdoors:
-            return destination
+            return destination_str
         
         elif is_current_outdoors and not is_destination_outdoors:
-            return f"{destination}_門口_室外"
+            entry_portal = LOCATION_ENTRY_PORTALS.get(destination_str)
+            if not entry_portal:
+                base_key = destination_str.split('_')[0]
+                entry_portal = LOCATION_ENTRY_PORTALS.get(base_key, destination_str)
+            if entry_portal in PORTAL_CONNECTIONS or entry_portal in self.available_locations:
+                return entry_portal
+            return destination_str
+
             
         else:
             if self.curr_place in PORTAL_CONNECTIONS:
