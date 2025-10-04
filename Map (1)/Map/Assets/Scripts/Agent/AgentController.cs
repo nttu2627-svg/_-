@@ -31,15 +31,28 @@ public class AgentController : MonoBehaviour
     private readonly Dictionary<string, Collider2D> _locationColliders = new Dictionary<string, Collider2D>();
     private bool _isInitialized = false;
     private Vector3 _targetPosition;
-    private float _movementSpeed = 3f;
+    [SerializeField] private float _movementSpeed = 4.5f;
+    [SerializeField] private float _arrivalThreshold = 0.05f;
+    [SerializeField] private float _movingBobAmplitude = 0.18f;
+    [SerializeField] private float _movingBobFrequency = 4f;
+    [SerializeField] private float _idleBobAmplitude = 0.08f;
+    [SerializeField] private float _idleBobFrequency = 1.5f;
+    private Vector3 _visualOffset = Vector3.zero;
+    private float _bobSeed;
     private Camera _mainCamera;
-    private SimulationClient _simulationClient; 
+    private SimulationClient _simulationClient;
     private string _targetLocationName;
     private string _lastValidLocationName;
     private string _currentAction;
     private readonly HashSet<string> _manualLocationOverrides = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private const float CoordinateSnapThreshold = 8f;
     private string _lastInstructionDestination;
+    private static readonly List<AgentController> ActiveAgents = new List<AgentController>();
+    private const float SeparationRadius = 1.1f;
+    private const float SeparationStrength = 0.85f;
+    private const float MaxSeparationOffset = 0.6f;
+    private const float PortalEscapeDistance = 0.75f;
+    private static readonly Collider2D[] PortalOverlapBuffer = new Collider2D[8];
     private static readonly (string english, string localized)[] LocationPrefixAliases = new (string, string)[]
     {
         ("Apartment", "公寓"),
@@ -57,7 +70,8 @@ public class AgentController : MonoBehaviour
         _transform = transform;
         _mainCamera = Camera.main;
         _simulationClient = FindFirstObjectByType<SimulationClient>();
-
+        _bobSeed = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
+        _targetPosition = _transform.position;
         if (string.IsNullOrEmpty(agentName))
         {
             agentName = gameObject.name.ToUpper();
@@ -516,21 +530,24 @@ public class AgentController : MonoBehaviour
         _targetPosition = position;
         SetManualLocationOverrides(locationAliases);
         _lastInstructionDestination = null;
+        NudgeAwayFromPortals();
+        _visualOffset = Vector3.zero;
 
+    }
+
+    public void SyncTargetToCurrentPosition()
+    {
+        _targetPosition = _transform.position;
+        _visualOffset = Vector3.zero;
     }
 
     public void SetActionState(string action)
     {
         _currentAction = action;
-        string bubbleText = null;
-        if (!string.IsNullOrEmpty(action))
-        {
-            string lower = action.ToLower();
-            if (lower.Contains("chat") || lower.Contains("聊天")) bubbleText = "・・・";
-            else if (lower.Contains("rest") || lower.Contains("休息")) bubbleText = "😴";
-            else if (lower.Contains("move") || lower.Contains("移動")) bubbleText = "🏃";
-        }
-        if (!string.IsNullOrEmpty(bubbleText) && bubbleController != null)
+        if (bubbleController == null) return;
+
+        string bubbleText = BuildBubbleText(action);
+        if (!string.IsNullOrEmpty(bubbleText))
         {
             bubbleController.顯示氣泡(bubbleText, _transform);
         }
@@ -605,12 +622,118 @@ public class AgentController : MonoBehaviour
     }
     void OnEnable()
     {
+        if (!ActiveAgents.Contains(this))
+        {
+            ActiveAgents.Add(this);
+        }
+
+        _visualOffset = Vector3.zero;
+        _targetPosition = _transform.position;
+        _bobSeed = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
+
         if (nameTextUGUI != null) nameTextUGUI.gameObject.SetActive(false);
     }
 
     void OnDisable()
     {
+        ActiveAgents.Remove(this);
         if (nameTextUGUI != null) nameTextUGUI.gameObject.SetActive(false);
         SetManualLocationOverrides();
+        _visualOffset = Vector3.zero;
+    }
+
+    private Vector3 ComputeSeparation(Vector3 candidatePosition)
+    {
+        if (ActiveAgents.Count <= 1)
+        {
+            return Vector3.zero;
+        }
+
+        Vector2 accumulated = Vector2.zero;
+        int neighbourCount = 0;
+
+        foreach (var agent in ActiveAgents)
+        {
+            if (agent == null || agent == this || !agent.gameObject.activeSelf) continue;
+
+            Vector3 otherBase = agent._transform.position - agent._visualOffset;
+            Vector2 toOther = (Vector2)(candidatePosition - otherBase);
+            float sqrMagnitude = toOther.sqrMagnitude;
+            if (sqrMagnitude < 0.0001f || sqrMagnitude > SeparationRadius * SeparationRadius) continue;
+
+            float distance = Mathf.Sqrt(sqrMagnitude);
+            float weight = (SeparationRadius - distance) / SeparationRadius;
+            accumulated += toOther.normalized * weight;
+            neighbourCount++;
+        }
+
+        if (neighbourCount == 0)
+        {
+            return Vector3.zero;
+        }
+
+        Vector2 separation = accumulated * SeparationStrength;
+        float magnitude = separation.magnitude;
+        if (magnitude > MaxSeparationOffset)
+        {
+            separation = separation.normalized * MaxSeparationOffset;
+        }
+
+        return new Vector3(separation.x, separation.y, 0f);
+    }
+
+    private void NudgeAwayFromPortals()
+    {
+        Collider2D[] hitPortals = Physics2D.OverlapCircleAll(_transform.position, PortalEscapeDistance);
+        if (hitPortals == null || hitPortals.Length == 0)
+        {
+            return;
+        }
+
+        Vector2 cumulative = Vector2.zero;
+        int portalCount = 0;
+
+        foreach (Collider2D collider in hitPortals)
+        {
+            if (collider == null || collider.GetComponent<PortalController>() == null) continue;
+
+            Vector2 away = (Vector2)_transform.position - (Vector2)collider.bounds.center;
+            if (away.sqrMagnitude < 0.0001f)
+            {
+                away = Vector2.up;
+            }
+
+            cumulative += away.normalized;
+            portalCount++;
+        }
+
+        if (portalCount == 0)
+        {
+            return;
+        }
+
+        Vector2 offset = cumulative.normalized * PortalEscapeDistance;
+        Vector3 adjusted = _transform.position + new Vector3(offset.x, offset.y, 0f);
+        _transform.position = adjusted;
+        _targetPosition = adjusted;
+    }
+
+    private string BuildBubbleText(string action)
+    {
+        if (string.IsNullOrWhiteSpace(action))
+        {
+            return null;
+        }
+
+        string trimmed = action.Trim();
+        string lower = trimmed.ToLowerInvariant();
+
+        if (lower.Contains("chat") || lower.Contains("聊天")) return "💬 " + trimmed;
+        if (lower.Contains("rest") || lower.Contains("休息")) return "😴 " + trimmed;
+        if (lower.Contains("move") || lower.Contains("移動")) return "🏃 " + trimmed;
+        if (lower.Contains("hide") || lower.Contains("掩護") || lower.Contains("duck")) return "🛡️ " + trimmed;
+        if (lower.Contains("evacuate") || lower.Contains("避難") || lower.Contains("subway")) return "🚇 " + trimmed;
+
+        return trimmed;
     }
 }

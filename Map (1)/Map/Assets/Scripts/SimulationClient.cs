@@ -726,12 +726,15 @@ public class SimulationClient : MonoBehaviour
                 controller.gameObject.SetActive(true);
                 _activeAgentControllers[standardizedMbti] = controller;
             }
-            else 
+            else
             {
                 Debug.LogWarning($"[SimulationClient] Selected agent '{standardizedMbti}' not found in scene controllers.");
             }
         }
-        TeleportActiveAgentsToApartmentArea();
+        if (parameters.InitialPositions == null || parameters.InitialPositions.Count == 0)
+        {
+            TeleportActiveAgentsToApartmentArea();
+        }
         var command = new SimulationStartCommand { Params = parameters };
         string jsonCommand = JsonConvert.SerializeObject(command, Formatting.Indented);
         OnStatusUpdate?.Invoke("已發送模擬指令，等待後端響應...");

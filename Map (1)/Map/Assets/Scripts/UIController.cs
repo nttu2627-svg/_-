@@ -305,16 +305,18 @@ public class UIController : MonoBehaviour
             .Where(pair => pair.Key != null && pair.Key.isOn)
             .Select(pair => pair.Value)
             .ToList();
+        var initialPositions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-
-       foreach (var agent in selectedAgents)
+        foreach (var agent in selectedAgents)
         {
             agent.gameObject.SetActive(true);
-        }
 
-        // 2. 執行傳送，並獲取傳送後的結果
-        var teleportResults = TeleportAgentsToApartment(selectedAgents);
-        var initialPositions = teleportResults ?? new Dictionary<string, string>();
+            string initialLocation = agent.GetDisplayLocationName();
+            if (!string.IsNullOrEmpty(initialLocation))
+            {
+                initialPositions[agent.agentName] = initialLocation;
+            }
+        }
 
         // 3. 準備其他參數
         HashSet<string> locationNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -331,9 +333,9 @@ public class UIController : MonoBehaviour
             }
         }
 
-        if (teleportResults != null)
+        if (initialPositions.Count > 0)
         {
-            foreach (var kvp in teleportResults)
+            foreach (var kvp in initialPositions)
             {
                 if (!string.IsNullOrEmpty(kvp.Value))
                 {
