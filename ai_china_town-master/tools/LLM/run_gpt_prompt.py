@@ -36,7 +36,6 @@ COMMON_EMOJIS = {
     "意識不明": "😵",
     "初始化中": "⏳",
     "移動中": "👟",
-    "未知": "❓",
 }
 ALLOWED_EMOJIS = set(COMMON_EMOJIS.values())
 LLM_LOG_BUFFER = []
@@ -86,14 +85,45 @@ def _sanitize_repetitive_output(value):
 _EMOJI_PATTERN = re.compile('[\U0001F300-\U0001FAFF\U00002600-\U000026FF\U00002700-\U000027BF]')
 
 
-def _sanitize_label_to_common_emoji(label: str):
-    if not isinstance(label, str):
-        return label
-    if label in ALLOWED_EMOJIS:
-        return label
-    if _EMOJI_PATTERN.search(label):
-        return COMMON_EMOJIS["未知"]
-    return label
+ACTIVITY_KEYWORDS = {
+    "睡覺": ["睡覺", "睡觉", "sleep", "就寝", "打盹", "nap", "休眠"],
+    "休息": ["休息", "relax", "放鬆", "放松", "歇息", "idle", "空檔", "放空"],
+    "吃飯": ["吃飯", "吃饭", "用餐", "餐", "早餐", "午餐", "晚餐", "宵夜", "lunch", "dinner", "breakfast", "meal", "用膳", "進餐", "就餐", "飲食"],
+    "聊天": ["聊天", "交談", "對話", "交流", "聊", "談話", "conversation", "chat", "溝通", "閒聊", "同事交流", "寒暄"],
+    "工作": ["工作", "上班", "辦公", "办公", "meeting", "開會", "協作", "寫報告", "task", "office", "勞動", "labor", "激勵同事", "值班", "服務"],
+    "學習": ["學習", "学习", "上課", "課程", "讀書", "study", "learn", "lecture", "reading", "教學", "備課", "課堂", "研讀"],
+    "醒來": ["醒", "醒來", "醒来", "起床", "wake", "起身", "蘇醒", "苏醒", "早起", "起床號", "rise"],
+    "意識不明": ["昏迷", "暈", "晕", "暈倒", "昏厥", "失神", "迷糊", "混亂", "confused", "unconscious", "dazed"],
+    "初始化中": ["初始化", "loading", "啟動", "启动", "準備", "准备", "start", "等待", "排隊", "boot", "setup", "啟動中", "載入", "load"],
+    "移動中": ["移動", "移动", "行走", "走路", "前往", "趕往", "travel", "commute", "趕路", "路上", "趕去", "奔跑", "轉移", "出發", "出发", "趕赴", "前去", "搭車", "乘車", "通勤"],
+}
+
+
+def _classify_activity_label(raw: str):
+    if not isinstance(raw, str) or not raw.strip():
+        return "初始化中", COMMON_EMOJIS["初始化中"]
+
+    candidate = raw.strip()
+    lowered = candidate.lower()
+
+    for canonical, emoji in COMMON_EMOJIS.items():
+        if canonical and canonical in candidate:
+            return canonical, emoji
+
+    for canonical, keywords in ACTIVITY_KEYWORDS.items():
+        for keyword in keywords:
+            if keyword.lower() in lowered or keyword in candidate:
+                return canonical, COMMON_EMOJIS[canonical]
+
+    if _EMOJI_PATTERN.search(candidate):
+        return "意識不明", COMMON_EMOJIS["意識不明"]
+
+    return "意識不明", COMMON_EMOJIS["意識不明"]
+
+
+def _normalize_activity_label(raw: str) -> str:
+    canonical, _ = _classify_activity_label(str(raw))
+    return canonical
 
 def log_llm_call(prompt_key, final_prompt, raw_response, final_output):
     global LLM_LOG_BUFFER
@@ -193,45 +223,40 @@ async def run_gpt_prompt_generate_initial_memory(name, mbti, persona_summary, ho
     return str(memory_result), success
 def _match_common_emoji(text: str):
     if not isinstance(text, str):
-        return None
-    for key, emoji in COMMON_EMOJIS.items():
-        if key in text:
-            return emoji
-    return None
+        return COMMON_EMOJIS["意識不明"]
+    _, emoji = _classify_activity_label(text)
+    return emoji
 
 
-def _apply_common_emojis(schedule):
+def _normalize_schedule(schedule):
     if not isinstance(schedule, list):
         return schedule
     updated_schedule = []
     for entry in schedule:
         if isinstance(entry, list) and entry:
             label = entry[0]
-            emoji = _match_common_emoji(str(label))
+            canonical = _normalize_activity_label(str(label))
             new_entry = entry.copy()
-            if emoji:
-                new_entry[0] = emoji
-            else:
-                new_entry[0] = _sanitize_label_to_common_emoji(str(label))
+            new_entry[0] = canonical
             updated_schedule.append(new_entry)
             continue
-        updated_schedule.append(_sanitize_label_to_common_emoji(entry) if isinstance(entry, str) else entry)
+        if isinstance(entry, str):
+            updated_schedule.append(_normalize_activity_label(entry))
+        else:
+            updated_schedule.append(entry)
     return updated_schedule
 async def run_gpt_prompt_generate_weekly_schedule(persona_summary):
-    default_schedule = {day: COMMON_EMOJIS["休息"] for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
+    default_schedule = {day: "休息" for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
     schedule = await _safe_llm_call("generate_weekly_schedule", [persona_summary], '返回一個包含七天（Monday-Sunday）鍵的 JSON 物件。', default_schedule)
     if isinstance(schedule, dict):
-        schedule = {
-            day: (_match_common_emoji(str(activity)) or _sanitize_label_to_common_emoji(str(activity)))
-            for day, activity in schedule.items()
-        }
+        schedule = {day: _normalize_activity_label(str(activity)) for day, activity in schedule.items()}
     success = schedule != default_schedule and isinstance(schedule, dict) and len(schedule) == 7
     return schedule, success
 
 async def run_gpt_prompt_generate_hourly_schedule(persona, now_time, today_goal):
-    default_on_error = [[COMMON_EMOJIS["休息"], 1440]]
+    default_on_error = [["休息", 1440]]
     schedule = await _safe_llm_call("generate_schedule", [persona, now_time, today_goal], '返回一個列表，其中每個子列表包含[活動名稱, 持續分鐘數]。', default_on_error)
-    return _apply_common_emojis(schedule)
+    return _normalize_schedule(schedule)
 async def run_gpt_prompt_wake_up_hour(persona, now_time, hourly_schedule):
     schedule_str = json.dumps(hourly_schedule, ensure_ascii=False)
     default_on_error = f"{random.randint(6, 8):02d}-{random.choice(['00', '15', '30'])}"
@@ -241,12 +266,11 @@ async def run_gpt_prompt_wake_up_hour(persona, now_time, hourly_schedule):
 
 async def run_gpt_prompt_pronunciatio(action_dec):
     action_str = str(action_dec)
-    emoji = _match_common_emoji(action_str)
-    if emoji:
+    canonical, emoji = _classify_activity_label(action_str)
+    if canonical != "意識不明":
         return emoji
-    result = await _safe_llm_call("pronunciatio", [action_str], '只返回一個最適合的 emoji 圖標字串。', COMMON_EMOJIS["未知"])
-    return _sanitize_label_to_common_emoji(result)
-
+    result = await _safe_llm_call("pronunciatio", [action_str], '只返回一個最適合的 emoji 圖標字串。', COMMON_EMOJIS["意識不明"])
+    return _match_common_emoji(str(result))
 async def generate_action_thought(persona_summary, current_place, new_action):
     return await _safe_llm_call("generate_action_thought", [persona_summary, current_place, new_action], '返回一句約20字的簡短內心想法字串。', "")
 
@@ -319,7 +343,7 @@ async def modify_schedule_async(old_sched, now_time, memory, wake_time, role):
         old_sched,
     )
     if isinstance(parsed_output, list) and all(isinstance(item, (list, tuple)) and len(item) >= 2 for item in parsed_output):
-        return _apply_common_emojis([list(item[:2]) for item in parsed_output])
+        return _normalize_schedule([list(item[:2]) for item in parsed_output])
     return old_sched
 
 

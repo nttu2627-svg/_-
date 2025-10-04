@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# unity_socket_main.py
 """
 Unity socket bridge (cleaned for current Unity front-end)
 - Removes legacy town map & Gradio UI
@@ -28,6 +28,7 @@ from sklearn.cluster import DBSCAN
 # ---------------------------
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 logger = logging.getLogger("unity_socket")
+MOVEMENT_MANAGER: Optional["MovementController"] = None  # Forward declaration placeholder
 
 # ---------------------------
 # Unity socket config
@@ -206,6 +207,84 @@ def send_move_command(ip: str, port: int, object_positions: List[Tuple[int, floa
             time.sleep(delay)
     except Exception as e:
         logger.error("send_move_command error: %s", e)
+
+async def send_move_command_async(ip: str, port: int, object_positions: List[Tuple[int, float, float]], delay: float = 0.5):
+    if not object_positions:
+        return
+    await asyncio.to_thread(send_move_command, ip, port, object_positions, delay)
+
+
+class MovementController:
+    def __init__(self, ip: str, port: int, agents: List["Agent"], step_delay: float = 0.55, idle_delay: float = 0.2):
+        self.ip = ip
+        self.port = port
+        self._agents = agents
+        self.step_delay = step_delay
+        self.idle_delay = idle_delay
+        self._stop_event = asyncio.Event()
+        self._trigger_event = asyncio.Event()
+
+    @property
+    def agents(self) -> List["Agent"]:
+        return self._agents
+
+    @agents.setter
+    def agents(self, value: List["Agent"]):
+        self._agents = value
+        self.request_push()
+
+    def request_push(self):
+        self._trigger_event.set()
+
+    async def stop(self):
+        self._stop_event.set()
+        self._trigger_event.set()
+
+    async def run(self):
+        try:
+            while not self._stop_event.is_set():
+                try:
+                    await asyncio.wait_for(self._trigger_event.wait(), timeout=self.idle_delay)
+                except asyncio.TimeoutError:
+                    pass
+                self._trigger_event.clear()
+                await self._flush_paths()
+        finally:
+            await self._flush_paths(force=True)
+
+    async def _flush_paths(self, force: bool = False):
+        agents = self._agents
+        if not agents:
+            return
+
+        sent_any = False
+        while True:
+            step_batch: List[Tuple[int, float, float]] = []
+            for agent in agents:
+                if getattr(agent, "is_thinking", False) and not agent.walk_path:
+                    agent.plan_thinking_motion(notify=False)
+                nxt = agent.pop_next_walk_step()
+                if nxt:
+                    step_batch.append((agent.index, float(nxt[0]), float(nxt[1])))
+
+            if not step_batch:
+                break
+
+            sent_any = True
+            await send_move_command_async(self.ip, self.port, step_batch, delay=0)
+            if self._stop_event.is_set():
+                await asyncio.sleep(self.idle_delay)
+            else:
+                await asyncio.sleep(self.step_delay)
+
+        if force:
+            final_batch = []
+            for agent in agents:
+                pos = agent.position if isinstance(agent.position, tuple) else None
+                if pos:
+                    final_batch.append((agent.index, float(pos[0]), float(pos[1])))
+            if final_batch and not sent_any:
+                await send_move_command_async(self.ip, self.port, final_batch, delay=0)
 
 def send_speak_command(ip: str, port: int, object_id: int, message: str):
     try:
@@ -493,7 +572,8 @@ class Agent:
         self.position: Tuple[float, float] = (0.0, 0.0)
 
         self.walk_path: List[Tuple[float, float]] = []
-
+        self.last_destination: Optional[Tuple[float, float]] = None
+        self.is_thinking: bool = False
         self.schedule: List[List[Any]] = []
         self.wake: str = "07-00"
         self.schedule_time: List[List[str]] = []
@@ -518,18 +598,38 @@ class Agent:
         except Exception:
             return f"{self.name} 是模擬代理人。"
 
+    def _notify_movement(self):
+        global MOVEMENT_MANAGER
+        if MOVEMENT_MANAGER:
+            MOVEMENT_MANAGER.request_push()
+
+    def _resolve_anchor_point(self, location: Optional[str]) -> Optional[Tuple[float, float]]:
+        if not location:
+            return None
+        anchor = self.MAP.get(location)
+        if isinstance(anchor, dict):
+            anchor = anchor.get("anchor") or anchor.get("anchors")
+        if isinstance(anchor, list) and anchor:
+            anchor = random.choice(anchor)
+        if isinstance(anchor, (list, tuple)) and len(anchor) >= 2:
+            return float(anchor[0]), float(anchor[1])
+        return None
+
     # --- movement ---
     def goto_scene(self, scene_name: str, walk: bool = False):
         scene_name = PORTAL_NAME_ALIASES.get(scene_name, scene_name)
         dest = add_random_noise(scene_name, self.MAP)
         self.curr_place = scene_name
+        self.last_destination = dest
         if walk and isinstance(self.position, tuple):
             path = generate_walk_path(self.position, dest)
             if path:
                 self.walk_path = path
+                self._notify_movement()
                 return
         self.walk_path = []
         self.position = dest
+        self._notify_movement()
 
     def has_pending_walk(self) -> bool:
         return bool(self.walk_path)
@@ -541,7 +641,7 @@ class Agent:
         self.position = nxt
         return nxt
 
-    def plan_idle_wander(self, radius: float = 3.5) -> bool:
+    def plan_idle_wander(self, radius: float = 3.5, notify: bool = True) -> bool:
         if self.walk_path:
             return False
         anchor = self.MAP.get(self.curr_place)
@@ -557,8 +657,64 @@ class Agent:
         seq = [p for p in go + back if isinstance(p, tuple)]
         if seq:
             self.walk_path.extend(seq)
+            if notify:
+                self._notify_movement()
             return True
         return False
+
+    def plan_micro_adjustment(self, radius: float = 1.4, notify: bool = True) -> bool:
+        if self.walk_path or not isinstance(self.position, tuple):
+            return False
+        target = (
+            self.position[0] + random.uniform(-radius, radius),
+            self.position[1] + random.uniform(-radius, radius),
+        )
+        path = generate_walk_path(self.position, target, step_size=1.0, jitter=0.2)
+        if path:
+            self.walk_path.extend(path)
+            if notify:
+                self._notify_movement()
+            return True
+        return False
+
+    def _plan_slow_move_to_anchor(self, notify: bool = True) -> bool:
+        if self.walk_path or not isinstance(self.position, tuple):
+            return False
+        anchor = self.last_destination or self._resolve_anchor_point(self.curr_place) or self._resolve_anchor_point(self.home)
+        if not anchor:
+            return False
+        if math.hypot(anchor[0] - self.position[0], anchor[1] - self.position[1]) < 0.6:
+            return False
+        path = generate_walk_path(self.position, anchor, step_size=1.2, jitter=0.2)
+        if path:
+            self.walk_path.extend(path)
+            if notify:
+                self._notify_movement()
+            return True
+        return False
+
+    def plan_thinking_motion(self, notify: bool = True) -> bool:
+        if self.walk_path:
+            return False
+        strategies = [
+            lambda: self._plan_slow_move_to_anchor(notify=notify),
+            lambda: self.plan_idle_wander(radius=2.5, notify=notify),
+            lambda: self.plan_micro_adjustment(radius=1.1, notify=notify),
+        ]
+        random.shuffle(strategies)
+        for strat in strategies:
+            if strat():
+                return True
+        return False
+
+    def begin_thinking(self):
+        self.is_thinking = True
+        if not self.walk_path:
+            self.plan_thinking_motion()
+
+    def finish_thinking(self):
+        self.is_thinking = False
+
 
 # ---------------------------
 # High-level sim helpers
@@ -637,8 +793,11 @@ async def _process_agent_activity(agent: Agent, now_time: str, weekday_label: st
     agent.curr_action_pronunciatio = emoji
 
     if agent.last_action != categorized:
-        # LLM 決定地點；若 LLM 不可用，fallback 會回傳合理地點
-        next_place = await LLM.go_map_async(agent.name, agent.home, agent.curr_place, CAN_GO_PLACES, current_activity)
+        agent.begin_thinking()
+        try:
+            next_place = await LLM.go_map_async(agent.name, agent.home, agent.curr_place, CAN_GO_PLACES, current_activity)
+        finally:
+            agent.finish_thinking()
         agent.curr_place = PORTAL_NAME_ALIASES.get(next_place, next_place)
         agent.goto_scene(agent.curr_place, walk=True)
         send_speak_command(UNITY_IP, UNITY_PORT, agent.index, categorized)
@@ -694,33 +853,43 @@ async def run_simulation(steps: int, min_per_step: int, weekday: str):
 
     now_time = weekday2START_TIME(weekday)
     send_update_ui_command(UNITY_IP, UNITY_PORT, 0, f"当前时间：{now_time}")
-
+    movement_manager = MovementController(UNITY_IP, UNITY_PORT, agents)
+    global MOVEMENT_MANAGER
+    MOVEMENT_MANAGER = movement_manager
+    movement_task = asyncio.create_task(movement_manager.run())
+    movement_manager.request_push()
     # 每天重置的步數間隔
     day_step_interval = max(1, int(1440 / max(min_per_step, 1)))
-    for step in range(steps):
-        weekday_label = get_weekday(now_time)
-        formatted_time = format_date_time(now_time)
-        send_update_ui_command(UNITY_IP, UNITY_PORT, 0, f"当前时间：{formatted_time}({weekday_label})")
-
-        if step % day_step_interval == 0:
-            logger.info("新的一天：%s(%s)", formatted_time, weekday_label)
-            for a in agents:
-                await _update_daily_plan(a, now_time, weekday_label)
-        else:
-            for a in agents:
-                await _process_agent_activity(a, now_time, weekday_label)
-            # 送路徑/定位
-            broadcast_walk_paths(UNITY_IP, UNITY_PORT, agents)
-            # 嘗試觸發聊天
-            await _handle_possible_chat(agents, now_time, weekday_label)
-
-        now_time = get_now_time(now_time, 1, min_per_step)
-
-    logger.info("模擬結束。")
     try:
-        await LLM.close_session()
-    except Exception:
-        pass
+        for step in range(steps):
+            weekday_label = get_weekday(now_time)
+            formatted_time = format_date_time(now_time)
+            send_update_ui_command(UNITY_IP, UNITY_PORT, 0, f"当前时间：{formatted_time}({weekday_label})")
+
+            if step % day_step_interval == 0:
+                logger.info("新的一天：%s(%s)", formatted_time, weekday_label)
+                for a in agents:
+                    await _update_daily_plan(a, now_time, weekday_label)
+            else:
+                for a in agents:
+                    await _process_agent_activity(a, now_time, weekday_label)
+                # 嘗試觸發聊天
+                await _handle_possible_chat(agents, now_time, weekday_label)
+
+            now_time = get_now_time(now_time, 1, min_per_step)
+
+        logger.info("模擬結束。")
+    finally:
+        try:
+            await movement_manager.stop()
+        finally:
+            await movement_task
+            if MOVEMENT_MANAGER is movement_manager:
+                MOVEMENT_MANAGER = None
+        try:
+            await LLM.close_session()
+        except Exception:
+            pass
 
 # ---------------------------
 # CLI
