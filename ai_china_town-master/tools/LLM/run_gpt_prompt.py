@@ -10,7 +10,12 @@ from datetime import datetime
 from .ollama_agent import OllamaAgent
 import asyncio
 from opencc import OpenCC
-
+from .emoji_rules import (
+    allowed_emojis,
+    classify_activity,
+    match_known_emoji,
+    normalize_label,
+)
 # --- 全局配置与日志 ---
 try:
     cc = OpenCC('s2twp')
@@ -25,19 +30,8 @@ OLLAMA_URL = "http://127.0.0.1:11434/api"
 MODEL_NAME = "deepseek-r1:14b"
 PROMPT_DIR = os.path.join(os.path.dirname(__file__), 'prompt_template')
 os.makedirs(PROMPT_DIR, exist_ok=True)
-COMMON_EMOJIS = {
-    "睡覺": "😴",
-    "休息": "🛋️",
-    "吃飯": "🍕",
-    "聊天": "💬",
-    "工作": "💼",
-    "學習": "📚",
-    "醒來": "☀️",
-    "意識不明": "😵",
-    "初始化中": "⏳",
-    "移動中": "👟",
-}
-ALLOWED_EMOJIS = set(COMMON_EMOJIS.values())
+ALLOWED_EMOJIS = set(allowed_emojis())
+DEFAULT_LABEL, DEFAULT_EMOJI = classify_activity("")
 LLM_LOG_BUFFER = []
 MAX_LLM_LOG_LINES = 400
 
@@ -82,48 +76,19 @@ def _sanitize_repetitive_output(value):
             sanitized_dict[key] = sanitized_item
         return sanitized_dict, any_changed
     return value, False
-_EMOJI_PATTERN = re.compile('[\U0001F300-\U0001FAFF\U00002600-\U000026FF\U00002700-\U000027BF]')
 
-
-ACTIVITY_KEYWORDS = {
-    "睡覺": ["睡覺", "睡觉", "sleep", "就寝", "打盹", "nap", "休眠"],
-    "休息": ["休息", "relax", "放鬆", "放松", "歇息", "idle", "空檔", "放空"],
-    "吃飯": ["吃飯", "吃饭", "用餐", "餐", "早餐", "午餐", "晚餐", "宵夜", "lunch", "dinner", "breakfast", "meal", "用膳", "進餐", "就餐", "飲食"],
-    "聊天": ["聊天", "交談", "對話", "交流", "聊", "談話", "conversation", "chat", "溝通", "閒聊", "同事交流", "寒暄"],
-    "工作": ["工作", "上班", "辦公", "办公", "meeting", "開會", "協作", "寫報告", "task", "office", "勞動", "labor", "激勵同事", "值班", "服務"],
-    "學習": ["學習", "学习", "上課", "課程", "讀書", "study", "learn", "lecture", "reading", "教學", "備課", "課堂", "研讀"],
-    "醒來": ["醒", "醒來", "醒来", "起床", "wake", "起身", "蘇醒", "苏醒", "早起", "起床號", "rise"],
-    "意識不明": ["昏迷", "暈", "晕", "暈倒", "昏厥", "失神", "迷糊", "混亂", "confused", "unconscious", "dazed"],
-    "初始化中": ["初始化", "loading", "啟動", "启动", "準備", "准备", "start", "等待", "排隊", "boot", "setup", "啟動中", "載入", "load"],
-    "移動中": ["移動", "移动", "行走", "走路", "前往", "趕往", "travel", "commute", "趕路", "路上", "趕去", "奔跑", "轉移", "出發", "出发", "趕赴", "前去", "搭車", "乘車", "通勤"],
-}
 
 
 def _classify_activity_label(raw: str):
     if not isinstance(raw, str) or not raw.strip():
-        return "初始化中", COMMON_EMOJIS["初始化中"]
-
+        return DEFAULT_LABEL, DEFAULT_EMOJI
     candidate = raw.strip()
-    lowered = candidate.lower()
-
-    for canonical, emoji in COMMON_EMOJIS.items():
-        if canonical and canonical in candidate:
-            return canonical, emoji
-
-    for canonical, keywords in ACTIVITY_KEYWORDS.items():
-        for keyword in keywords:
-            if keyword.lower() in lowered or keyword in candidate:
-                return canonical, COMMON_EMOJIS[canonical]
-
-    if _EMOJI_PATTERN.search(candidate):
-        return "意識不明", COMMON_EMOJIS["意識不明"]
-
-    return "意識不明", COMMON_EMOJIS["意識不明"]
+    canonical, emoji = classify_activity(candidate)
+    return canonical, emoji
 
 
 def _normalize_activity_label(raw: str) -> str:
-    canonical, _ = _classify_activity_label(str(raw))
-    return canonical
+    return normalize_label(str(raw))
 
 def log_llm_call(prompt_key, final_prompt, raw_response, final_output):
     global LLM_LOG_BUFFER
@@ -223,9 +188,8 @@ async def run_gpt_prompt_generate_initial_memory(name, mbti, persona_summary, ho
     return str(memory_result), success
 def _match_common_emoji(text: str):
     if not isinstance(text, str):
-        return COMMON_EMOJIS["意識不明"]
-    _, emoji = _classify_activity_label(text)
-    return emoji
+        return DEFAULT_EMOJI
+    return match_known_emoji(text)
 
 
 def _normalize_schedule(schedule):
@@ -246,7 +210,8 @@ def _normalize_schedule(schedule):
             updated_schedule.append(entry)
     return updated_schedule
 async def run_gpt_prompt_generate_weekly_schedule(persona_summary):
-    default_schedule = {day: "休息" for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
+    default_label = normalize_label("休息")
+    default_schedule = {day: default_label for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
     schedule = await _safe_llm_call("generate_weekly_schedule", [persona_summary], '返回一個包含七天（Monday-Sunday）鍵的 JSON 物件。', default_schedule)
     if isinstance(schedule, dict):
         schedule = {day: _normalize_activity_label(str(activity)) for day, activity in schedule.items()}
@@ -254,7 +219,7 @@ async def run_gpt_prompt_generate_weekly_schedule(persona_summary):
     return schedule, success
 
 async def run_gpt_prompt_generate_hourly_schedule(persona, now_time, today_goal):
-    default_on_error = [["休息", 1440]]
+    default_on_error = [[normalize_label("休息"), 1440]]
     schedule = await _safe_llm_call("generate_schedule", [persona, now_time, today_goal], '返回一個列表，其中每個子列表包含[活動名稱, 持續分鐘數]。', default_on_error)
     return _normalize_schedule(schedule)
 async def run_gpt_prompt_wake_up_hour(persona, now_time, hourly_schedule):
@@ -269,7 +234,7 @@ async def run_gpt_prompt_pronunciatio(action_dec):
     canonical, emoji = _classify_activity_label(action_str)
     if canonical != "意識不明":
         return emoji
-    result = await _safe_llm_call("pronunciatio", [action_str], '只返回一個最適合的 emoji 圖標字串。', COMMON_EMOJIS["意識不明"])
+    result = await _safe_llm_call("pronunciatio", [action_str], '只返回一個最適合的 emoji 圖標字串。', DEFAULT_EMOJI)
     return _match_common_emoji(str(result))
 async def generate_action_thought(persona_summary, current_place, new_action):
     return await _safe_llm_call("generate_action_thought", [persona_summary, current_place, new_action], '返回一句約20字的簡短內心想法字串。', "")

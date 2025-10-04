@@ -1,4 +1,3 @@
-# src/unity_socket_main.py
 # 以你提供的 src/main_quake2.py 為基底，加入：
 # 1) 「思考中微移動」的即時回傳通道（motion_loop），與原本模擬主循環分離，確保非阻塞。
 # 2) WebSocket 訊息協議新增 type:"motion"，Unity 端可在思考期間驅動巡邏/微移動/環顧。

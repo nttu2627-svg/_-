@@ -22,7 +22,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from sklearn.cluster import DBSCAN
-
+from tools.LLM.emoji_rules import classify_activity as classify_activity_label
 # ---------------------------
 # Logging
 # ---------------------------
@@ -142,50 +142,14 @@ ENVIRONMENT_OBJECTS = {
     "Subway": ["售票機", "候車椅", "路線圖"],
     "Exterior": ["長椅", "路燈", "公園"],
 }
-ACTION_EMOJI = {
-    "睡覺": "😴",
-    "休息": "🛋️",
-    "吃飯": "🍕",
-    "聊天": "💬",
-    "工作": "💼",
-    "學習": "📚",
-    "醒來": "☀️",
-    "意識不明": "😵",
-    "初始化中": "⏳",
-    "移動中": "👟",
-}
-
-ACTION_KEYWORDS: Dict[str, List[str]] = {
-    "睡覺": ["睡覺", "睡觉", "sleep", "就寝", "打盹", "nap", "休眠"],
-    "休息": ["休息", "relax", "放鬆", "放松", "歇息", "idle", "空檔", "放空"],
-    "吃飯": ["吃飯", "吃饭", "用餐", "餐", "早餐", "午餐", "晚餐", "宵夜", "lunch", "dinner", "breakfast", "meal", "用膳", "進餐", "就餐", "飲食"],
-    "聊天": ["聊天", "交談", "對話", "交流", "聊", "談話", "conversation", "chat", "溝通", "閒聊", "同事交流", "寒暄"],
-    "工作": ["工作", "上班", "辦公", "办公", "meeting", "開會", "協作", "寫報告", "task", "office", "勞動", "labor", "激勵同事", "值班", "服務"],
-    "學習": ["學習", "学习", "上課", "課程", "讀書", "study", "learn", "lecture", "reading", "教學", "備課", "課堂", "研讀"],
-    "醒來": ["醒", "醒來", "醒来", "起床", "wake", "起身", "蘇醒", "苏醒", "早起", "起床號", "rise"],
-    "意識不明": ["昏迷", "暈", "晕", "暈倒", "昏厥", "失神", "迷糊", "混亂", "confused", "unconscious", "dazed"],
-    "初始化中": ["初始化", "loading", "啟動", "启动", "準備", "准备", "start", "等待", "排隊", "boot", "setup", "啟動中", "載入", "load"],
-    "移動中": ["移動", "移动", "行走", "走路", "前往", "趕往", "travel", "commute", "趕路", "路上", "趕去", "奔跑", "轉移", "出發", "出发", "趕赴", "前去", "搭車", "乘車", "通勤"],
-}
+_DEFAULT_ACTIVITY_LABEL, _DEFAULT_ACTIVITY_EMOJI = classify_activity_label("")
 
 
 def classify_activity(raw: str) -> Tuple[str, str]:
     if not raw:
-        return "初始化中", ACTION_EMOJI["初始化中"]
-
-    candidate = raw.strip()
-    lowered = candidate.lower()
-
-    for canonical, emoji in ACTION_EMOJI.items():
-        if canonical and canonical in candidate:
-            return canonical, emoji
-
-    for canonical, keywords in ACTION_KEYWORDS.items():
-        for keyword in keywords:
-            if keyword.lower() in lowered or keyword in candidate:
-                return canonical, ACTION_EMOJI[canonical]
-
-    return "意識不明", ACTION_EMOJI["意識不明"]
+        return _DEFAULT_ACTIVITY_LABEL, _DEFAULT_ACTIVITY_EMOJI
+    label, emoji = classify_activity_label(str(raw))
+    return label, emoji
 # ---------------------------
 # Default agents (names = MBTI / or your own agent folder names)
 # ---------------------------
@@ -813,10 +777,11 @@ async def _handle_possible_chat(agents: List[Agent], now_time: str, weekday_labe
     a, b = pair[0], pair[1]
     if a.curr_place != b.curr_place:
         return
-    a.curr_action = b.curr_action = "聊天"
-    a.curr_action_pronunciatio = ACTION_EMOJI["聊天"]
-    b.curr_action_pronunciatio = ACTION_EMOJI["聊天"]
-    a.last_action = b.last_action = "聊天"
+    chat_label, chat_emoji = classify_activity("聊天")
+    a.curr_action = b.curr_action = chat_label
+    a.curr_action_pronunciatio = chat_emoji
+    b.curr_action_pronunciatio = chat_emoji
+    a.last_action = b.last_action = chat_label
     ctx = _build_chat_context(a, b, now_time, weekday_label)
     thought, dialogue = await LLM.double_chat(ctx)
     if not isinstance(dialogue, list):

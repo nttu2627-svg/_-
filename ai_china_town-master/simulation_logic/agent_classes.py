@@ -12,9 +12,9 @@ from .schedule_manager import 從檔案載入行程表
 # --- 輕量化時使用的預設回應 ---
 LIGHTWEIGHT_ACTION_RESPONSES = {
     "睡覺": ("", "💤"),
-    "醒來": ("新的一天開始了！", "☀️"),
-    "等待初始化": ("稍等，我正在確認今日的安排。", "⏳"),
-    "意識不明": ("", "😴"),
+    "醒來": ("新的一天開始了！", "🌅"),
+    "等待初始化": ("稍等，我正在確認今日的安排。", "☕"),
+    "意識不明": ("", "💤"),
 }
 # --- 核心：定義場景中的傳送門連接關係 ---
 # 鍵(Key): 代理人當前所在的傳送點 GameObject 名稱。
@@ -73,6 +73,34 @@ LOCATION_ENTRY_PORTALS = {
 SUBWAY_INTERIOR_PORTALS = {
     "地鐵左樓梯_室內",
     "地鐵右樓梯_室內"
+}
+PORTAL_DESTINATION_ALIASES = {
+    "公寓大門_室內": "Apartment_F1",
+    "公寓側門_室內": "Apartment_F1",
+    "公寓一樓_室內": "Apartment_F1",
+    "公寓二樓_室內": "Apartment_F2",
+    "公寓頂樓_室內": "Apartment_F2",
+    "公寓大門_室外": "Exterior",
+    "公寓側門_室外": "Exterior",
+    "公寓頂樓_室外": "Exterior",
+    "健身房_室內": "Gym",
+    "健身房_室外": "Exterior",
+    "學校門口_室內": "School",
+    "學校門口_室外": "Exterior",
+    "餐廳_室內": "Rest",
+    "餐廳_室外": "Exterior",
+    "超市側門_室內": "Super",
+    "超市左門_室內": "Super",
+    "超市右門_室內": "Super",
+    "超市側門_室外": "Exterior",
+    "超市左門_室外": "Exterior",
+    "超市右門_室外": "Exterior",
+    "地鐵左樓梯_室內": "Subway",
+    "地鐵右樓梯_室內": "Subway",
+    "地鐵左入口_室外": "Exterior",
+    "地鐵右入口_室外": "Exterior",
+    "地鐵上入口_室外": "Exterior",
+    "地鐵下入口_室外": "Exterior",
 }
 
 # --- 動態載入代理人設定 ---
@@ -265,7 +293,7 @@ class TownAgent:
 
     def teleport(self, target_portal_name: str):
         destination = PORTAL_CONNECTIONS.get(target_portal_name)
-        
+
         if not destination:
             print(f"⚠️ [傳送警告] 在 PORTAL_CONNECTIONS 中找不到 '{target_portal_name}' 的對應目標。")
             self.current_thought = f"嗯？這扇門好像是壞的... ({target_portal_name})"
@@ -279,13 +307,19 @@ class TownAgent:
         self.previous_place = self.curr_place
 
         if chosen in SUBWAY_INTERIOR_PORTALS:
-            self.curr_place = "Subway"
+            canonical_place = "Subway"
+        else:
+            canonical_place = PORTAL_DESTINATION_ALIASES.get(chosen, chosen)
+
+        if canonical_place in self.available_locations:
+            self.curr_place = canonical_place
         else:
             self.curr_place = chosen
-
-            
+        if self.curr_place in self.available_locations:
+            self.target_place = self.curr_place
+       
         self.current_thought = f"好了，我到 '{self.curr_place}' 了。"
-        print(f"✅ [傳送成功] {self.name} 從 '{target_portal_name}' 傳送到 '{self.curr_place}'")
+        print(f"✅ [傳送成功] {self.name} 從 '{target_portal_name}' 傳送到 '{self.curr_place}' (出口: {chosen})")
 
     def get_lightweight_response(self, action):
         return LIGHTWEIGHT_ACTION_RESPONSES.get(action)
