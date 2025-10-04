@@ -158,9 +158,23 @@ class TownAgent:
         self._pronunciatio_cache = {}
         self.quake_has_taken_cover = False
         self.quake_evacuation_started = False
+        self.quake_cooperation_inclination = min(1.0, self.cooperation_inclination + self._compute_quake_bonus())
+        self.quake_support_committed = False
 
     def is_location_outdoors(self, location_name):
         return "_室外" in str(location_name)
+    
+    def _compute_quake_bonus(self) -> float:
+        bonus = 0.25
+        if 'F' in self.MBTI:
+            bonus += 0.2
+        if 'E' in self.MBTI:
+            bonus += 0.1
+        if 'J' in self.MBTI:
+            bonus += 0.05
+        if self.MBTI.startswith('IN'):
+            bonus += 0.05
+        return bonus
 
     def find_path(self, destination):
         if not destination or destination == self.curr_place:
@@ -365,16 +379,16 @@ class TownAgent:
         ]
 
         if not self.is_injured and nearby_injured_agents:
-            cooperation = self.cooperation_inclination
-            help_probability = 0.0
-            if cooperation >= 0.8:
-                help_probability = 0.95
-            elif cooperation >= 0.65:
-                help_probability = 0.75
-            elif cooperation >= 0.5:
-                help_probability = 0.5
-            elif cooperation >= 0.35:
-                help_probability = 0.2
+            cooperation = self.quake_cooperation_inclination
+            help_probability = 0.35
+            if cooperation >= 0.9:
+                help_probability = 0.97
+            elif cooperation >= 0.75:
+                help_probability = 0.85
+            elif cooperation >= 0.6:
+                help_probability = 0.7
+            elif cooperation >= 0.45:
+                help_probability = 0.55
 
             self_protection_actions = {"尋找遮蔽物", "躲到桌下", "尋找安全出口", "評估周圍環境"}
             help_action_key = "協助受傷的人"
@@ -398,16 +412,46 @@ class TownAgent:
         self.disaster_experience_log.append("立即尋找掩護。")
 
     def perceive_and_help(self, other_agents):
-        nearby_injured = [o for o in other_agents if o.id != self.id and o.health > 0 and o.is_injured and self.Is_nearby(o.get_position())]
-        if not nearby_injured: return None
-        target = min(nearby_injured, key=lambda x: x.health)
+        nearby_candidates = [
+            o
+            for o in other_agents
+            if o.id != self.id and o.health > 0 and (o.is_injured or o.health < 90) and self.Is_nearby(o.get_position())
+        ]
+        if nearby_candidates:
+            target = min(nearby_candidates, key=lambda x: x.health)
+            original_hp = target.health
+            heal = min(100 - original_hp, max(6, random.randint(8, 20)))
+            if heal <= 0:
+                heal = 3
+            if heal <= 0:
+                return None
+            target.health = min(100, original_hp + heal)
+            target.is_injured = target.health < 60
+            message = f"協助 {target.name} (+{heal} HP -> {target.health})"
+            return {
+                "message": message,
+                "受助者": target.name,
+                "原始HP": original_hp,
+                "治療量": heal,
+                "新HP": target.health,
+            }
+
+        if self.quake_support_committed:
+            return None
+
+        potential_allies = [o for o in other_agents if o.id != self.id and o.health > 0]
+        if not potential_allies:
+            return None
+
+        target = random.choice(potential_allies)
         original_hp = target.health
-        heal = min(100 - original_hp, random.randint(10, 20))
+        heal = min(100 - original_hp, max(2, random.randint(4, 10)))
         if heal <= 0:
             return None
         target.health = min(100, original_hp + heal)
-        target.is_injured = target.health < 50
-        message = f"協助 {target.name} (+{heal} HP -> {target.health})"
+        target.is_injured = target.health < 60
+        self.quake_support_committed = True
+        message = f"協助 {target.name} 穩定狀態 (+{heal} HP -> {target.health})"
         return {
             "message": message,
             "受助者": target.name,
@@ -607,4 +651,4 @@ class TownAgent:
         
         log_msg = f"{self.name} 正在 {self.curr_action} (HP:{self.health})。"
         self.disaster_experience_log.append(log_msg)
-        return log_msg    
+        return log_msg

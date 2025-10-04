@@ -13,37 +13,44 @@
       {
         "time": "06:30",
         "action": "起床並晨跑",
-        "target": "Exterior"
+        "target": "Exterior",
+        "emoji": "🌅"
       },
       {
         "time": "08:00",
         "action": "開始工作",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "12:00",
         "action": "午餐",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "🍽️"
       },
       {
         "time": "13:00",
         "action": "繼續工作",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "18:00",
         "action": "下班並去健身房",
-        "target": "Gym"
+        "target": "Gym",
+        "emoji": "🏋️"
       },
       {
         "time": "20:00",
         "action": "晚餐並回家",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🍱"
       },
       {
         "time": "22:30",
         "action": "準備睡覺",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💤"
       }
     ]
   },
@@ -61,37 +68,44 @@
       {
         "time": "07:00",
         "action": "起床準備早餐",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🌅"
       },
       {
         "time": "09:00",
         "action": "上班",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "12:30",
         "action": "與同事共進午餐",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "🍽️"
       },
       {
         "time": "13:30",
         "action": "下午的工作",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "18:30",
         "action": "去超市購物",
-        "target": "Super"
+        "target": "Super",
+        "emoji": "🏬"
       },
       {
         "time": "20:00",
         "action": "回家做飯並看劇",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🧺"
       },
       {
         "time": "23:00",
         "action": "睡覺",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💤"
       }
     ]
   },
@@ -109,37 +123,44 @@
       {
         "time": "07:30",
         "action": "起床冥想",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🌅"
       },
       {
         "time": "09:30",
         "action": "在咖啡店寫作",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "☕"
       },
       {
         "time": "13:00",
         "action": "簡單的午餐",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "🍽️"
       },
       {
         "time": "14:00",
         "action": "去圖書館查資料",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "18:00",
         "action": "回家準備晚餐",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🍱"
       },
       {
         "time": "21:00",
         "action": "與朋友線上聊天",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💬"
       },
       {
         "time": "23:30",
         "action": "睡覺",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💤"
       }
     ]
   },
@@ -157,37 +178,44 @@
       {
         "time": "08:00",
         "action": "起床並規劃一天",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🌅"
       },
       {
         "time": "09:00",
         "action": "深度工作",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "13:00",
         "action": "獨自快速午餐",
-        "target": "School"
+        "target": "School",
+        "emoji": "🍱"
       },
       {
         "time": "13:30",
         "action": "繼續解決核心問題",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "19:00",
         "action": "去健身房",
-        "target": "Gym"
+        "target": "Gym",
+        "emoji": "🏋️"
       },
       {
         "time": "21:00",
         "action": "回家進行晚間閱讀",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🏠"
       },
       {
         "time": "00:00",
         "action": "睡覺",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💤"
       }
     ]
   },
@@ -205,37 +233,44 @@
       {
         "time": "09:00",
         "action": "起床",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🌅"
       },
       {
         "time": "10:00",
         "action": "在工作室忙活",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🏫"
       },
       {
         "time": "14:00",
         "action": "出門解決午餐",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "🍽️"
       },
       {
         "time": "15:00",
         "action": "去健身房活動",
-        "target": "Gym"
+        "target": "Gym",
+        "emoji": "🏋️"
       },
       {
         "time": "18:00",
         "action": "騎車在城市穿梭",
-        "target": "Exterior"
+        "target": "Exterior",
+        "emoji": "🌳"
       },
       {
         "time": "20:00",
         "action": "回家玩遊戲",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🏠"
       },
       {
         "time": "01:00",
         "action": "睡覺",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💤"
       }
     ]
   },
@@ -253,37 +288,44 @@
       {
         "time": "09:30",
         "action": "自然醒",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🏠"
       },
       {
         "time": "10:30",
         "action": "進行藝術創作",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🏠"
       },
       {
         "time": "13:00",
         "action": "午餐",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🍱"
       },
       {
         "time": "14:30",
         "action": "帶寵物去公園散步",
-        "target": "Exterior"
+        "target": "Exterior",
+        "emoji": "🌳"
       },
       {
         "time": "17:00",
         "action": "去咖啡店喝東西",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "☕"
       },
       {
         "time": "19:00",
         "action": "回家準備晚餐",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🍱"
       },
       {
         "time": "23:00",
         "action": "睡覺",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💤"
       }
     ]
   },
@@ -301,37 +343,44 @@
       {
         "time": "10:00",
         "action": "起床寫日記",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🌅"
       },
       {
         "time": "11:00",
         "action": "閱讀或寫作",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "☕"
       },
       {
         "time": "13:30",
         "action": "午餐",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🍱"
       },
       {
         "time": "15:00",
         "action": "在咖啡店尋找靈感",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "☕"
       },
       {
         "time": "18:00",
         "action": "在公園發呆",
-        "target": "Exterior"
+        "target": "Exterior",
+        "emoji": "🌳"
       },
       {
         "time": "20:00",
         "action": "回家看電影",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🏠"
       },
       {
         "time": "00:30",
         "action": "睡覺",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💤"
       }
     ]
   },
@@ -349,37 +398,44 @@
       {
         "time": "11:00",
         "action": "起床",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🌅"
       },
       {
         "time": "12:00",
         "action": "瀏覽技術論壇",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🏠"
       },
       {
         "time": "14:00",
         "action": "叫外賣午餐",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🍱"
       },
       {
         "time": "15:00",
         "action": "個人專案研究",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🏠"
       },
       {
         "time": "20:00",
         "action": "玩策略遊戲",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🏠"
       },
       {
         "time": "02:00",
         "action": "深夜思考",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🏠"
       },
       {
         "time": "03:00",
         "action": "睡覺",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💤"
       }
     ]
   },
@@ -397,37 +453,44 @@
       {
         "time": "08:00",
         "action": "起床去健身房",
-        "target": "Gym"
+        "target": "Gym",
+        "emoji": "🌅"
       },
       {
         "time": "10:00",
         "action": "處理機動工作",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "13:00",
         "action": "和朋友吃午餐",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "🍽️"
       },
       {
         "time": "14:30",
         "action": "在城市兜風",
-        "target": "Exterior"
+        "target": "Exterior",
+        "emoji": "🌳"
       },
       {
         "time": "17:00",
         "action": "去商場逛逛",
-        "target": "Super"
+        "target": "Super",
+        "emoji": "🏬"
       },
       {
         "time": "20:00",
         "action": "參加聚會",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "💬"
       },
       {
         "time": "01:00",
         "action": "回家睡覺",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💤"
       }
     ]
   },
@@ -445,37 +508,44 @@
       {
         "time": "10:00",
         "action": "起床打扮",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🌅"
       },
       {
         "time": "11:30",
         "action": "去咖啡店和朋友碰面",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "☕"
       },
       {
         "time": "13:00",
         "action": "午餐",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "🍽️"
       },
       {
         "time": "15:00",
         "action": "逛街購物",
-        "target": "Super"
+        "target": "Super",
+        "emoji": "🏬"
       },
       {
         "time": "18:00",
         "action": "準備派對",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🏠"
       },
       {
         "time": "20:00",
         "action": "派對時間",
-        "target": "Exterior"
+        "target": "Exterior",
+        "emoji": "🌳"
       },
       {
         "time": "00:00",
         "action": "睡覺",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💤"
       }
     ]
   },
@@ -493,37 +563,44 @@
       {
         "time": "09:00",
         "action": "起床",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🌅"
       },
       {
         "time": "10:00",
         "action": "在咖啡店與人交流",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "☕"
       },
       {
         "time": "13:00",
         "action": "和新朋友吃午餐",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "🍽️"
       },
       {
         "time": "15:00",
         "action": "參加創意工作坊",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "18:00",
         "action": "去公園即興表演",
-        "target": "Exterior"
+        "target": "Exterior",
+        "emoji": "🌳"
       },
       {
         "time": "20:30",
         "action": "和朋友晚餐",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "🍽️"
       },
       {
         "time": "23:30",
         "action": "睡覺",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💤"
       }
     ]
   },
@@ -541,37 +618,44 @@
       {
         "time": "09:30",
         "action": "起床思考",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🌅"
       },
       {
         "time": "11:00",
         "action": "在網上辯論",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🏠"
       },
       {
         "time": "13:00",
         "action": "午餐",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🍱"
       },
       {
         "time": "14:00",
         "action": "去學校圖書館查資料",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "17:00",
         "action": "討論創業專案",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "🍽️"
       },
       {
         "time": "20:00",
         "action": "研究新科技",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🏠"
       },
       {
         "time": "02:00",
         "action": "睡覺",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💤"
       }
     ]
   },
@@ -589,37 +673,44 @@
       {
         "time": "06:00",
         "action": "起床規劃一天",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🌅"
       },
       {
         "time": "07:30",
         "action": "在辦公室工作",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "12:00",
         "action": "工作午餐",
-        "target": "School"
+        "target": "School",
+        "emoji": "🍱"
       },
       {
         "time": "13:00",
         "action": "監督專案",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "18:00",
         "action": "下班",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "19:00",
         "action": "參加社區會議",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "22:00",
         "action": "回家準備睡覺",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💤"
       }
     ]
   },
@@ -637,37 +728,44 @@
       {
         "time": "07:00",
         "action": "起床準備早餐",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🌅"
       },
       {
         "time": "09:00",
         "action": "開始工作",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "12:30",
         "action": "組織午餐",
-        "target": "School"
+        "target": "School",
+        "emoji": "🍱"
       },
       {
         "time": "13:30",
         "action": "幫助同事",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "18:30",
         "action": "去超市採購",
-        "target": "Super"
+        "target": "Super",
+        "emoji": "🏬"
       },
       {
         "time": "20:00",
         "action": "和家人晚餐",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🍱"
       },
       {
         "time": "23:00",
         "action": "睡覺",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💤"
       }
     ]
   },
@@ -685,37 +783,44 @@
       {
         "time": "07:00",
         "action": "起床",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🌅"
       },
       {
         "time": "08:30",
         "action": "在辦公室激勵同事",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "12:00",
         "action": "與團隊午餐",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "🍽️"
       },
       {
         "time": "14:00",
         "action": "在學校進行講座",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "17:00",
         "action": "與朋友喝咖啡",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "☕"
       },
       {
         "time": "19:30",
         "action": "參加晚宴",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "🍽️"
       },
       {
         "time": "23:00",
         "action": "睡覺",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💤"
       }
     ]
   },
@@ -733,37 +838,44 @@
       {
         "time": "06:30",
         "action": "起床審閱計畫",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🌅"
       },
       {
         "time": "08:00",
         "action": "在辦公室主持晨會",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "12:30",
         "action": "與客戶午餐",
-        "target": "Rest"
+        "target": "Rest",
+        "emoji": "🍽️"
       },
       {
         "time": "14:00",
         "action": "指揮專案",
-        "target": "School"
+        "target": "School",
+        "emoji": "🏫"
       },
       {
         "time": "19:00",
         "action": "去健身房",
-        "target": "Gym"
+        "target": "Gym",
+        "emoji": "🏋️"
       },
       {
         "time": "21:00",
         "action": "處理戰略問題",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "🏠"
       },
       {
         "time": "00:00",
         "action": "睡覺",
-        "target": "Apartment_F1"
+        "target": "Apartment_F1",
+        "emoji": "💤"
       }
     ]
   }

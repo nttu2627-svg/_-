@@ -1,4 +1,10 @@
-# src/main_quake2.py (強化分片傳送 & 錯誤防護版)
+# src/unity_socket_main.py
+# 以你提供的 src/main_quake2.py 為基底，加入：
+# 1) 「思考中微移動」的即時回傳通道（motion_loop），與原本模擬主循環分離，確保非阻塞。
+# 2) WebSocket 訊息協議新增 type:"motion"，Unity 端可在思考期間驅動巡邏/微移動/環顧。
+# 3) 思考偵測 detect_thinking()（以行為名稱/關鍵詞判定），無需改動 Agent 類別。
+# 4) 可選指令：start_thinking/stop_thinking（若之後你從 Unity 顯式標記思考期）。
+# 5) 大包 JSON 分片傳送、長字串截斷、防斷線與關閉保護等仍保留。
 
 import json
 import os
@@ -7,22 +13,22 @@ import traceback
 from datetime import datetime, timedelta
 import random
 import asyncio
+import contextlib
+from typing import Optional, Dict, Set
 import websockets
 
 # ====== 傳輸/長度控制參數 ======
-# 單次 WebSocket 文字分片大小（字元數），視前端可承受調整
 WS_CHUNK_SIZE = 200_000
-# JSON 內長字串欄位截斷長度（字元數）
 LONG_TEXT_LIMIT = 8_000
-# history/llm log 併接時的總長度上限（字元數）
 LOG_TAIL_LIMIT = 50_000
+
+# 思考中微移動的推播頻率（秒）
+MICRO_MOTION_INTERVAL = 0.15  # 約 6~8 Hz，視前端效能可調
 
 # --- 專案路徑配置 ---
 try:
     this_file_path = os.path.abspath(__file__)
-    # src_dir 是 .../ai_china_town-master/src/
     src_dir = os.path.dirname(this_file_path)
-    # project_root 是 .../ai_china_town-master/
     project_root = os.path.dirname(src_dir)
     if project_root not in sys.path:
         sys.path.insert(0, project_root)
@@ -53,40 +59,31 @@ except ImportError as e:
 
 # --- 全局配置 ---
 DEFAULT_HOME_LOCATION = "公寓"
-
-# 根據你專案結構，schedules.json 在 src/data/
 SCHEDULE_FILE_PATH = os.path.join(src_dir, "data", "schedules.json")
-simulation_agents = []
 
+# 連線期間的代理人列表（供 teleport/motion_loop 使用）
+simulation_agents = []  # type: list[TownAgent]
+
+# 從 Unity 顯式標記的「思考中」表（可選用，若不用會走自動偵測）
+explicit_thinking: Set[str] = set()
 
 # ====== 公用工具：安全傳送 / 截斷長欄位 / 取尾端 ======
 async def safe_send_text(ws, text: str, chunk_size: int = WS_CHUNK_SIZE):
-    """
-    將長字串分片傳送到 WebSocket，並對連線關閉做容錯。
-    """
     from websockets.exceptions import ConnectionClosed, ConnectionClosedOK, ConnectionClosedError
-
     if not ws.open:
         return
     for i in range(0, len(text), chunk_size):
         try:
             await ws.send(text[i:i+chunk_size])
         except (ConnectionClosedOK, ConnectionClosedError, ConnectionClosed):
-            # 對方已關閉或連線異常，結束傳送即可
             break
 
-
 async def safe_send_json(ws, data, chunk_size: int = WS_CHUNK_SIZE):
-    """
-    將資料轉為 JSON 後，以分片方式送出。
-    """
     try:
         text = json.dumps(data, ensure_ascii=False)
     except Exception as e:
-        # 若序列化失敗，嘗試退化為簡易錯誤包
         text = json.dumps({"type": "error", "message": f"JSON 序列化失敗: {e}"}, ensure_ascii=False)
     await safe_send_text(ws, text, chunk_size=chunk_size)
-
 
 def _truncate_str(s: str, limit: int = LONG_TEXT_LIMIT) -> str:
     if s is None:
@@ -95,17 +92,10 @@ def _truncate_str(s: str, limit: int = LONG_TEXT_LIMIT) -> str:
         return s
     return s[:limit] + f"...(truncated {len(s) - limit} chars)"
 
-
 def shrink_update(obj, text_limit: int = LONG_TEXT_LIMIT):
-    """
-    對將要送出的 dict 進行「就地」瘦身，截斷常見長字串欄位，或縮小大型列表。
-    """
     if obj is None:
         return obj
-
-    # 常見長字串欄位名稱
     LONG_KEYS = {"content", "reasoning", "raw", "message", "mainLog", "historyLog", "dialogue", "llmLog", "status"}
-
     def _shrink(x):
         if isinstance(x, dict):
             for k, v in list(x.items()):
@@ -114,7 +104,6 @@ def shrink_update(obj, text_limit: int = LONG_TEXT_LIMIT):
                 elif isinstance(v, (dict, list)):
                     _shrink(v)
         elif isinstance(x, list):
-            # 若列表極大可在此做上限（例如 300 筆）
             MAX_LIST = 300
             if len(x) > MAX_LIST:
                 del x[MAX_LIST:]
@@ -124,15 +113,10 @@ def shrink_update(obj, text_limit: int = LONG_TEXT_LIMIT):
                     x[i] = _truncate_str(v, text_limit)
                 elif isinstance(v, (dict, list)):
                     _shrink(v)
-
     _shrink(obj)
     return obj
 
-
 def tail_join(lines, sep="\n\n", max_chars: int = LOG_TAIL_LIMIT) -> str:
-    """
-    僅取 lines 的尾端，拼接後總長不超過 max_chars。
-    """
     out = []
     total = 0
     for line in reversed(lines):
@@ -142,20 +126,81 @@ def tail_join(lines, sep="\n\n", max_chars: int = LOG_TAIL_LIMIT) -> str:
         out.append(add)
         total += len(add)
     s = "".join(reversed(out))
-    # 若被截斷，補上提示
     if len(s) < sum(len(l) for l in lines) + (len(lines) - 1) * len(sep):
         s = f"...(history truncated, showing last ~{max_chars} chars)\n" + s
     return s
 
+# ====== 思考偵測與「思考中微移動」產生 ======
+THINKING_KEYWORDS = [
+    "思考", "決策", "決定中", "等候決策", "thinking", "deciding", "idle(思考)", "Idle(思考)", "Idle-Think"
+]
 
-# ====== 模擬主流程 ======
+def detect_thinking(agent: "TownAgent") -> bool:
+    """無侵入式偵測：
+    1) 若 Unity 端有顯式 start_thinking/stop_thinking，優先使用 explicit_thinking。
+    2) 否則依 curr_action 名稱關鍵字判定。
+    """
+    if agent.name in explicit_thinking:
+        return True
+    act = (agent.curr_action or "").lower()
+    return any(k.lower() in act for k in THINKING_KEYWORDS)
+
+# 微移動模式：wander / lookaround / slow_walk_to_temp
+MICRO_MOTION_MODES = ["wander", "lookaround", "slow_walk_to_temp"]
+
+_last_temp_targets: Dict[str, str] = {}  # agent.name -> 暫定靠近地標名稱
+
+def _pick_micro_mode() -> str:
+    r = random.random()
+    if r < 0.6:
+        return "wander"
+    if r < 0.85:
+        return "lookaround"
+    return "slow_walk_to_temp"
+
+def build_micro_motion_payload(agents: list["TownAgent"], buildings: Dict[str, "Building"]):
+    motions = []
+    for agent in agents:
+        if agent.health <= 0:
+            continue
+        if not detect_thinking(agent):
+            continue
+
+        mode = _pick_micro_mode()
+        payload: Dict = {
+            "agent": agent.name,
+            "mode": mode,
+            # Unity 端可用 radius/period 參數驅動動畫或 NavMesh 內的小範圍移動
+            "radius": round(random.uniform(0.6, 1.8), 2),
+            "period": round(random.uniform(1.2, 2.4), 2),
+            "speed": round(random.uniform(0.6, 1.2), 2),
+        }
+
+        if mode == "slow_walk_to_temp":
+            # 選一個就近地標作為臨時目標（若已有則沿用），僅給語義名稱，具體座標由 Unity 端地圖表決定
+            curr = agent.curr_place
+            # 優先：Park/Exterior/Gym/Super/Rest 類地標
+            candidates = [
+                x for x in ["Park", "Exterior", "Gym", "Super", "Rest", "School", "Subway"]
+                if x in buildings
+            ]
+            if not candidates:
+                candidates = list(buildings.keys())
+            if candidates:
+                prev = _last_temp_targets.get(agent.name)
+                target = prev if (prev and prev in candidates) else random.choice(candidates)
+                _last_temp_targets[agent.name] = target
+                payload["tempTarget"] = target
+                payload["arriveTolerance"] = 0.8
+        motions.append(payload)
+    return {"type": "motion", "data": {"microMotions": motions}}
+
+# ====== 模擬主流程（與 main_quake2.py 相同骨架，少量增補） ======
 async def initialize_and_simulate(params):
     global simulation_agents
     print(f"後端收到來自 Unity 的參數: {json.dumps(params, indent=2, ensure_ascii=False)}")
 
-    # 讀取前端傳來的初始位置（無則用預設）
     initial_positions = params.get('initial_positions', {})
-
     use_preset = params.get('use_default_calendar', False)
     schedule_mode = 'preset' if use_preset else 'llm'
     print(f"日曆模式已設定為: '{schedule_mode}' (來自 use_default_calendar: {use_preset})")
@@ -288,9 +333,9 @@ async def initialize_and_simulate(params):
         'update_log': lambda msg, lvl: _history_log_buffer.append(f"[{lvl}] {msg}"),
         'chat_buffer': _chat_buffer,
         'event_log_buffer': _event_log_buffer,
-        'disaster_logger': disaster_logger,
+        'disaster_logger': 災難記錄器(),
         'max_chat_groups': configured_max_chat
-        }
+    }
 
     while sim_state['time'] < sim_end_time_dt:
         current_time_dt = sim_state['time']
@@ -307,26 +352,22 @@ async def initialize_and_simulate(params):
 
         if not all_asleep and sim_state['phase'] in ["Normal", "PostQuakeDiscussion"]:
             update_tasks = []
-            # 每日 03:00 正常模式重新產生日程
             if current_time_dt.hour == 3 and current_time_dt.minute == 0 and sim_state['phase'] == "Normal":
                 for agent in agents:
                     if agent.health > 0:
-                        update_tasks.append(agent.update_daily_schedule(current_time_dt, schedule_mode, SCHEDULE_FILE_PATH))
-
+                        update_tasks.append(agent.update_daily_schedule(current_time_dt, 'preset' if params.get('use_default_calendar', False) else 'llm', SCHEDULE_FILE_PATH))
             for agent in agents:
                 update_tasks.append(agent_update_wrapper(agent, active_agents, current_time_dt.strftime('%H-%M')))
-
             await asyncio.gather(*update_tasks)
-
             if len(active_agents) > 1:
                 await handle_social_interactions(active_agents, llm_context, LLM_FUNCTIONS)
+
         agent_action_plan = await generate_action_instructions(agents)
         current_log = format_log(current_time_dt, sim_state['phase'], all_asleep)
         _history_log_buffer.append(current_log)
 
         status_data = get_full_status(buildings)
 
-        # 控制 llmLog / historyLog 長度，避免單筆更新過大
         llm_log_raw = ""
         try:
             llm_log_raw = llm.get_llm_log()
@@ -346,14 +387,12 @@ async def initialize_and_simulate(params):
             }
         }
 
-        # 在產生器層級先瘦身（雙保險）
         shrink_update(update_payload, LONG_TEXT_LIMIT)
         yield update_payload
 
-        # 依階段調整步階
-        step_minutes = int(min_per_step_normal_ui)
+        step_minutes = int(params.get('step', 30))
         if sim_state.get('phase') == "Earthquake":
-            step_minutes = int(eq_step_minutes_ui)
+            step_minutes = int(params.get('eq_step', 5))
         elif sim_state.get('phase') in ["Recovery"]:
             step_minutes = 10
 
@@ -361,18 +400,44 @@ async def initialize_and_simulate(params):
         await asyncio.sleep(0.1)
 
     final_agent_states = {agent.name: {"hp": agent.health} for agent in agents}
-    report = disaster_logger.生成報表(final_agent_states)
+    report = 災難記錄器().生成報表(final_agent_states)
+    scores = report.get("scores", {})
+    if scores:
+        formatted_lines = ["{"]
+        for idx, (agent_id, score_detail) in enumerate(scores.items()):
+            formatted_lines.append(f"'{agent_id}': {score_detail}")
+            if idx != len(scores) - 1:
+                formatted_lines.append("")
+        formatted_lines.append("}")
+        formatted_scores = "\n".join(formatted_lines)
+    else:
+        formatted_scores = "{}"
 
-    print(f"模擬結束，災後評分: {report['scores']}")
+    print("模擬結束，災後評分: ")
+    print(formatted_scores)
     yield {"type": "evaluation", "data": report}
     yield {"type": "end", "message": "模擬結束"}
 
+async def stream_simulation_to_client(websocket, params, send_lock: asyncio.Lock, buildings_ref: Dict[str, "Building"]):
+    try:
+        async for update_data in initialize_and_simulate(params):
+            shrink_update(update_data, LONG_TEXT_LIMIT)
+            if not websocket.open:
+                break
+            async with send_lock:
+                await safe_send_json(websocket, update_data, chunk_size=WS_CHUNK_SIZE)
+    except asyncio.CancelledError:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        if websocket.open:
+            async with send_lock:
+                await safe_send_json(websocket, {"type": "error", "message": f"後端錯誤: {e}"}, chunk_size=WS_CHUNK_SIZE)
 
 async def agent_update_wrapper(agent, active_agents, current_time_hm_str):
     if agent in active_agents:
         if agent.last_action in ["睡覺", "Unconscious", "等待初始化"]:
             await agent.set_new_action("醒來", agent.home)
-
         schedule_item = agent.get_schedule_item_at(current_time_hm_str)
         if schedule_item:
             if isinstance(schedule_item, (list, tuple)):
@@ -381,7 +446,6 @@ async def agent_update_wrapper(agent, active_agents, current_time_hm_str):
             else:
                 new_action = schedule_item
                 raw_destination = schedule_item
-
             destination = agent.resolve_destination(new_action, raw_destination)
             if new_action and (agent.curr_action != new_action or agent.target_place != destination):
                 await agent.set_new_action(new_action, destination)
@@ -393,13 +457,52 @@ async def agent_update_wrapper(agent, active_agents, current_time_hm_str):
         else:
             agent.current_thought = ""
             agent.curr_action_pronunciatio = await agent.get_pronunciatio(agent.curr_action)
-
     agent.last_action = agent.curr_action
 
+# ====== 新增：思考中微移動推播迴圈（非阻塞） ======
+async def motion_loop(websocket, send_lock: asyncio.Lock, buildings_provider):
+    """獨立於模擬步進的高頻微移動推播。
+    buildings_provider: callable() -> Dict[str, Building]
+    """
+    try:
+        while websocket.open:
+            buildings = buildings_provider() or {}
+            payload = build_micro_motion_payload(simulation_agents, buildings)
+            if payload["data"]["microMotions"]:
+                async with send_lock:
+                    await safe_send_json(websocket, payload, chunk_size=WS_CHUNK_SIZE)
+            await asyncio.sleep(MICRO_MOTION_INTERVAL)
+    except asyncio.CancelledError:
+        raise
+    except Exception as e:
+        if websocket.open:
+            async with send_lock:
+                await safe_send_json(websocket, {"type": "error", "message": f"motion_loop 錯誤: {e}"})
 
+# ====== WebSocket Handler ======
 async def handler(websocket, path):
     print(f"Unity客戶端已連接: {websocket.remote_address}")
     from websockets.exceptions import ConnectionClosed, ConnectionClosedOK, ConnectionClosedError
+
+    send_lock = asyncio.Lock()
+    simulation_task: Optional[asyncio.Task] = None
+    motion_task: Optional[asyncio.Task] = None
+
+    # 供 motion_loop 讀取目前 buildings（以閉包方式提供最新參考）
+    _buildings_cache: Dict[str, Building] = {}
+    def get_buildings():
+        return _buildings_cache
+
+    async def send_payload(payload):
+        if not websocket.open:
+            return
+        async with send_lock:
+            await safe_send_json(websocket, payload, chunk_size=WS_CHUNK_SIZE)
+
+    def _attach_task_cleanup(task: asyncio.Task):
+        nonlocal simulation_task
+        if simulation_task is task and task.done():
+            simulation_task = None
 
     try:
         async for message in websocket:
@@ -409,12 +512,31 @@ async def handler(websocket, path):
 
                 if command_type == "start_simulation":
                     print("收到來自Unity的開始模擬指令...")
-                    async for update_data in initialize_and_simulate(data['params']):
-                        # 每筆更新先瘦身，再安全分片送出
-                        shrink_update(update_data, LONG_TEXT_LIMIT)
-                        if not websocket.open:
-                            break
-                        await safe_send_json(websocket, update_data, chunk_size=WS_CHUNK_SIZE)
+                    # 關閉舊模擬
+                    if simulation_task and not simulation_task.done():
+                        simulation_task.cancel()
+                        with contextlib.suppress(asyncio.CancelledError):
+                            await simulation_task
+                    if motion_task and not motion_task.done():
+                        motion_task.cancel()
+                        with contextlib.suppress(asyncio.CancelledError):
+                            await motion_task
+
+                    # 啟動新模擬
+                    params = data['params']
+                    # 先行構建 buildings cache 以供 motion_loop 使用
+                    locs = params.get('locations', [])
+                    _buildings_cache.clear()
+                    for loc in locs:
+                        _buildings_cache[loc] = Building(loc, (0, 0))
+
+                    simulation_task = asyncio.create_task(
+                        stream_simulation_to_client(websocket, params, send_lock, _buildings_cache)
+                    )
+                    simulation_task.add_done_callback(_attach_task_cleanup)
+
+                    # 啟動微移動回傳
+                    motion_task = asyncio.create_task(motion_loop(websocket, send_lock, get_buildings))
 
                 elif command_type == "agent_teleport":
                     agent_name = data.get("agent_name")
@@ -423,50 +545,58 @@ async def handler(websocket, path):
                     if agent_to_teleport and target_portal_name:
                         agent_to_teleport.teleport(target_portal_name)
 
+                # 可選：由 Unity 顯式控制「思考期間」
+                elif command_type == "start_thinking":
+                    name = data.get("agent_name")
+                    if name:
+                        explicit_thinking.add(name)
+                elif command_type == "stop_thinking":
+                    name = data.get("agent_name")
+                    if name and name in explicit_thinking:
+                        explicit_thinking.remove(name)
+
             except (ConnectionClosedOK, ConnectionClosedError, ConnectionClosed):
-                # 對方關閉或連線錯誤，結束本 handler
                 break
             except Exception as e:
                 print(f"處理消息時發生錯誤: {e}")
                 traceback.print_exc()
-                # 若連線仍開啟，回傳錯誤資訊並結束
                 if not websocket.closed:
-                    await safe_send_json(websocket, {"type": "error", "message": f"後端錯誤: {str(e)}"})
+                    await send_payload({"type": "error", "message": f"後端錯誤: {str(e)}"})
                 break
 
     except (ConnectionClosedOK, ConnectionClosedError, ConnectionClosed) as e:
         close_code = getattr(e, "code", None)
         close_reason = getattr(e, "reason", "")
-
         if close_code or close_reason:
             print(f"Unity客戶端斷開連接: {websocket.remote_address}, 原因: {close_reason or close_code}")
         else:
             print(f"Unity客戶端斷開連接: {websocket.remote_address}, 原因: {e}")
     finally:
+        for t in (simulation_task, motion_task):
+            if t and not t.done():
+                t.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await t
         print("伺服器處理程序結束。")
 
-
+# ====== Main ======
 async def main():
-    # 若 LLM 初始化失敗，直接退出
     if not await llm.initialize_llm():
         print("LLM 初始化失敗，程式退出。")
         return
-    # 關鍵：提高/取消訊息大小限制 + 開壓縮，避免大包就被斷線，並取消 ping 限制防止閒置斷線
     server = await websockets.serve(
         handler, "localhost", 8765,
-        max_size=None,                # 取消預設 1MiB 限制
-        compression='deflate',        # 啟用 permessage-deflate
+        max_size=None,
+        compression='deflate',
         max_queue=64,
         ping_interval=None,
         ping_timeout=None
     )
-
     print(f"WebSocket 伺服器正在監聽 ws://localhost:8765")
     try:
         await server.wait_closed()
     finally:
         await llm.close_llm_session()
-
 
 if __name__ == "__main__":
     try:
