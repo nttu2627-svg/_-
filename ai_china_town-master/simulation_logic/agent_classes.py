@@ -188,6 +188,9 @@ class TownAgent:
         self.quake_evacuation_started = False
         self.quake_cooperation_inclination = min(1.0, self.cooperation_inclination + self._compute_quake_bonus())
         self.quake_support_committed = False
+        self.is_thinking = False
+        self._thinking_depth = 0
+        self.sync_events = []
 
     def is_location_outdoors(self, location_name):
         return "_室外" in str(location_name)
@@ -283,6 +286,16 @@ class TownAgent:
                 latest_item = (action, target)
         return latest_item
 
+    def _enter_thinking(self):
+        self._thinking_depth += 1
+        self.is_thinking = True
+
+    def _exit_thinking(self):
+        if self._thinking_depth > 0:
+            self._thinking_depth -= 1
+        if self._thinking_depth <= 0:
+            self._thinking_depth = 0
+            self.is_thinking = False
     async def update_action_by_time(self, current_time_hm_str):
         item = self.get_schedule_item_at(current_time_hm_str)
         if not item:
@@ -297,7 +310,8 @@ class TownAgent:
         if not destination:
             print(f"⚠️ [傳送警告] 在 PORTAL_CONNECTIONS 中找不到 '{target_portal_name}' 的對應目標。")
             self.current_thought = f"嗯？這扇門好像是壞的... ({target_portal_name})"
-            return
+            return None
+
 
         if isinstance(destination, list):
             chosen = random.choice(destination)
@@ -311,15 +325,32 @@ class TownAgent:
         else:
             canonical_place = PORTAL_DESTINATION_ALIASES.get(chosen, chosen)
 
+        fallback_candidates = []
         if canonical_place in self.available_locations:
-            self.curr_place = canonical_place
-        else:
-            self.curr_place = chosen
-        if self.curr_place in self.available_locations:
-            self.target_place = self.curr_place
-       
+            fallback_candidates.append(canonical_place)
+        if chosen in self.available_locations:
+            fallback_candidates.append(chosen)
+        if self.home in self.available_locations:
+            fallback_candidates.append(self.home)
+        if "Exterior" in self.available_locations:
+            fallback_candidates.append("Exterior")
+        if self.available_locations:
+            fallback_candidates.append(self.available_locations[0])
+
+        safe_location = next((loc for loc in fallback_candidates if loc), canonical_place)
+        self.curr_place = safe_location
+        self.target_place = self.curr_place
         self.current_thought = f"好了，我到 '{self.curr_place}' 了。"
         print(f"✅ [傳送成功] {self.name} 從 '{target_portal_name}' 傳送到 '{self.curr_place}' (出口: {chosen})")
+        event_payload = {
+            "type": "teleport",
+            "fromPortal": target_portal_name,
+            "toPortal": chosen,
+            "finalLocation": self.curr_place,
+            "targetPlace": self.target_place,
+        }
+        self.sync_events.append(event_payload)
+        return event_payload
 
     def get_lightweight_response(self, action):
         return LIGHTWEIGHT_ACTION_RESPONSES.get(action)
@@ -357,16 +388,22 @@ class TownAgent:
             thought, pronunciatio = lightweight
             self.current_thought = thought
             self.curr_action_pronunciatio = pronunciatio
+            self._thinking_depth = 0
+            self.is_thinking = False 
             return
 
+        self._enter_thinking()
         try:
-            self.current_thought = await llm.generate_action_thought(
-                self.persona_summary, self.curr_place, new_action
-            )
-        except Exception:
-            self.current_thought = ""
+            try:
+                self.current_thought = await llm.generate_action_thought(
+                    self.persona_summary, self.curr_place, new_action
+                )
+            except Exception:
+                self.current_thought = ""
 
-        self.curr_action_pronunciatio = await self.get_pronunciatio(self.curr_action)
+            self.curr_action_pronunciatio = await self.get_pronunciatio(self.curr_action)
+        finally:
+            self._exit_thinking()
 
     def is_asleep(self, current_time_hm_str):
         try:
@@ -537,25 +574,28 @@ class TownAgent:
         # --- LLM 模式：完全由 LLM 生成 ---
         elif schedule_mode == "llm":
             print(f"🤖 [Agent {self.name}] 正在以 'llm' 模式初始化...")
-            # 1. 生成初始記憶
-            memory, mem_success = await llm.run_gpt_prompt_generate_initial_memory(
-                self.name, self.MBTI, self.persona_summary, self.home
-            )
-            if not mem_success:
-                print(f"❌ [Agent {self.name}] LLM 生成初始記憶失敗。")
-                return False
-            self.memory = memory
-            
-            # 2. 生成週計劃
-            schedule, sched_success = await llm.run_gpt_prompt_generate_weekly_schedule(self.persona_summary)
-            if not sched_success:
-                print(f"❌ [Agent {self.name}] LLM 生成週計劃失敗。")
-                return False
-            self.weekly_schedule = schedule
+            self._enter_thinking()
+            try:
+                # 1. 生成初始記憶
+                memory, mem_success = await llm.run_gpt_prompt_generate_initial_memory(
+                    self.name, self.MBTI, self.persona_summary, self.home
+                )
+                if not mem_success:
+                    print(f"❌ [Agent {self.name}] LLM 生成初始記憶失敗。")
+                    return False
+                self.memory = memory
 
-            # 3. 生成日計劃
-            return await self.update_daily_schedule(current_date, "llm", schedule_file_path)
+                # 2. 生成週計劃
+                schedule, sched_success = await llm.run_gpt_prompt_generate_weekly_schedule(self.persona_summary)
+                if not sched_success:
+                    print(f"❌ [Agent {self.name}] LLM 生成週計劃失敗。")
+                    return False
+                self.weekly_schedule = schedule
 
+                # 3. 生成日計劃
+                return await self.update_daily_schedule(current_date, "llm", schedule_file_path)
+            finally:
+                self._exit_thinking()
         # 未知模式
         else:
             print(f"❌ [Agent {self.name}] 未知的 schedule_mode: '{schedule_mode}'")
@@ -568,22 +608,39 @@ class TownAgent:
             print(f"🤖 [Agent {self.name}] 使用 LLM 生成今日行程...")
             weekday_name = current_date.strftime('%A')
             today_goal = self.weekly_schedule.get(weekday_name, "自由活動")
-            raw_tasks = await llm.run_gpt_prompt_generate_hourly_schedule(self.persona_summary, current_date.strftime('%Y-%m-%d'), today_goal)
-            
-            if raw_tasks and isinstance(raw_tasks[0], list):
-                wake_time_str = await llm.run_gpt_prompt_wake_up_hour(self.persona_summary, current_date.strftime('%Y-%m-%d'), raw_tasks)
-                if not wake_time_str: return False
-                self.wake_time = wake_time_str.replace(":", "-")
-                
-                self.daily_schedule = update_agent_schedule(self.wake_time, raw_tasks)
-                
-                try:
-                    total_duration = sum(int(task[1]) for task in raw_tasks)
-                    self.sleep_time = (datetime.strptime(self.wake_time, '%H-%M') + timedelta(minutes=total_duration)).strftime('%H-%M')
-                except:
-                    self.sleep_time = (datetime.strptime(self.wake_time, '%H-%M') + timedelta(hours=16)).strftime('%H-%M')
-                
-                return True
+            self._enter_thinking()
+            try:
+                raw_tasks = await llm.run_gpt_prompt_generate_hourly_schedule(
+                    self.persona_summary,
+                    current_date.strftime('%Y-%m-%d'),
+                    today_goal
+                )
+
+                if raw_tasks and isinstance(raw_tasks[0], list):
+                    wake_time_str = await llm.run_gpt_prompt_wake_up_hour(
+                        self.persona_summary,
+                        current_date.strftime('%Y-%m-%d'),
+                        raw_tasks
+                    )
+                    if not wake_time_str:
+                        return False
+                    self.wake_time = wake_time_str.replace(":", "-")
+
+                    self.daily_schedule = update_agent_schedule(self.wake_time, raw_tasks)
+
+                    try:
+                        total_duration = sum(int(task[1]) for task in raw_tasks)
+                        self.sleep_time = (
+                            datetime.strptime(self.wake_time, '%H-%M') + timedelta(minutes=total_duration)
+                        ).strftime('%H-%M')
+                    except:
+                        self.sleep_time = (
+                            datetime.strptime(self.wake_time, '%H-%M') + timedelta(hours=16)
+                        ).strftime('%H-%M')
+
+                    return True
+            finally:
+                self._exit_thinking()
 
         elif schedule_mode == "preset":
             print(f"💾 [Agent {self.name}] 使用预设档案 '{schedule_file_path}' 载入行程...")
@@ -632,23 +689,36 @@ class TownAgent:
                 self.previous_place = self.curr_place
                 self.target_place = "Subway"
                 self.curr_place = self.find_path("Subway")
+                if self.curr_place in PORTAL_CONNECTIONS and "地鐵" in self.curr_place:
+                    self.teleport(self.curr_place)
             self.curr_action = "撤離到地鐵"
             self.current_thought = "往地鐵避難會更安全。"
             self.disaster_experience_log.append("開始撤離前往地鐵避難。")
             return f"{self.name} 正在撤離到地鐵避難 (HP:{self.health})。"
 
         if self.target_place == "Subway" and self.curr_place != "Subway":
+            if self.curr_place in PORTAL_CONNECTIONS and "地鐵" in self.curr_place:
+                self.teleport(self.curr_place)
+                if self.curr_place == "Subway":
+                    self.curr_action = "在地鐵避難"
+                    self.current_thought = "已經抵達地鐵，繼續保持警戒。"
+                    return f"{self.name} 已抵達地鐵避難 (HP:{self.health})。"
             self.curr_action = "撤離到地鐵"
             self.current_thought = "沿著路線前往地鐵避難。"
             return f"{self.name} 正在前往地鐵避難 (HP:{self.health})。"
 
         # 使用 LLM 決定下一步行動
-        new_action, new_thought = await llm.run_gpt_prompt_earthquake_step_action(
-            self.persona_summary, self.health, self.mental_state, self.curr_place, intensity, self.disaster_experience_log[-5:]
-        )
+        self._enter_thinking()
+        try:
+            new_action, new_thought = await llm.run_gpt_prompt_earthquake_step_action(
+                self.persona_summary, self.health, self.mental_state, self.curr_place, intensity, self.disaster_experience_log[-5:]
+            )
+        finally:
+            self._exit_thinking()
         self.curr_action = new_action
         self.current_thought = new_thought
         self.disaster_experience_log.append(f"在 {self.curr_place} 決定 {new_action}。內心想法: {new_thought}")
+
 
         # 執行幫助行為
         help_log = self.perceive_and_help(agents)
@@ -679,9 +749,13 @@ class TownAgent:
                     disaster_logger.記錄事件(self.name, "合作", current_time, help_log)
             else:
                 # 如果沒有人需要幫助，使用 LLM 決定恢復行動
-                self.curr_action = await llm.run_gpt_prompt_get_recovery_action(
-                    self.persona_summary, self.mental_state, self.curr_place
-                )
+                self._enter_thinking()
+                try:
+                    self.curr_action = await llm.run_gpt_prompt_get_recovery_action(
+                        self.persona_summary, self.mental_state, self.curr_place
+                    )
+                finally:
+                    self._exit_thinking()
         
         log_msg = f"{self.name} 正在 {self.curr_action} (HP:{self.health})。"
         self.disaster_experience_log.append(log_msg)

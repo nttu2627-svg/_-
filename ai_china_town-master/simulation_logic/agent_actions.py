@@ -64,16 +64,22 @@ async def process_chat_group(group, location, chat_buffer, now_time, chatting_ag
         if agent.curr_action != "聊天": agent.interrupt_action()
         agent.curr_action = "聊天"
         chatting_agents.add(agent.name)
-    
+        if hasattr(agent, "_enter_thinking"):
+            agent._enter_thinking()
     a1, a2 = random.sample(group, 2)
-    
+
     chat_context = {
         'location': location, 'now_time': now_time, 'history': [], 'eq_ctx': None,
         'agent1': {'name': a1.name, 'mbti': a1.MBTI, 'persona': a1.persona_summary, 'memory': a1.memory, 'action': a1.curr_action},
         'agent2': {'name': a2.name, 'mbti': a2.MBTI, 'persona': a2.persona_summary, 'memory': a2.memory, 'action': a2.curr_action}
     }
     
-    _, new_dialogs = await double_agents_chat(chat_context)
+    try:
+        _, new_dialogs = await double_agents_chat(chat_context)
+    finally:
+        for agent in group:
+            if hasattr(agent, "_exit_thinking"):
+                agent._exit_thinking()
     if new_dialogs:
         dialogue_str = " ".join([f"[{speaker}]: '{dialogue}'" for speaker, dialogue in new_dialogs])
         chat_buffer[location] = dialogue_str
@@ -84,7 +90,13 @@ async def process_chat_group(group, location, chat_buffer, now_time, chatting_ag
 
 async def process_monologue(agent, agent_context, generate_inner_monologue):
     """处理单个独白的异步函数。"""
-    _, monologue = await generate_inner_monologue(agent_context)
+    if hasattr(agent, "_enter_thinking"):
+        agent._enter_thinking()
+    try:
+        _, monologue = await generate_inner_monologue(agent_context)
+    finally:
+        if hasattr(agent, "_exit_thinking"):
+            agent._exit_thinking()
     agent.current_thought = monologue
 
 
@@ -107,6 +119,19 @@ async def generate_action_instructions(all_agents):
 
     instructions = []
     for agent in all_agents:
+        sync_events = list(getattr(agent, "sync_events", []))
+        if sync_events:
+            for event in sync_events:
+                if event.get("type") == "teleport":
+                    instructions.append({
+                        "agent": agent.name,
+                        "command": "teleport",
+                        "fromPortal": event.get("fromPortal"),
+                        "toPortal": event.get("toPortal"),
+                        "destination": event.get("finalLocation"),
+                        "target": event.get("targetPlace"),
+                    })
+            agent.sync_events.clear()
         origin = getattr(agent, 'previous_place', agent.curr_place)
         destination = agent.target_place or agent.curr_place
         if origin and destination and origin != destination:

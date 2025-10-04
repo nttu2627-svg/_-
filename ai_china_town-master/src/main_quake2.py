@@ -162,7 +162,8 @@ def build_micro_motion_payload(agents: list["TownAgent"], buildings: Dict[str, "
     for agent in agents:
         if agent.health <= 0:
             continue
-        if not detect_thinking(agent):
+        is_internal_thinking = getattr(agent, "is_thinking", False)
+        if not (is_internal_thinking or detect_thinking(agent)):
             continue
 
         mode = _pick_micro_mode()
@@ -332,7 +333,7 @@ async def initialize_and_simulate(params):
         'update_log': lambda msg, lvl: _history_log_buffer.append(f"[{lvl}] {msg}"),
         'chat_buffer': _chat_buffer,
         'event_log_buffer': _event_log_buffer,
-        'disaster_logger': 災難記錄器(),
+        'disaster_logger': disaster_logger,
         'max_chat_groups': configured_max_chat
     }
 
@@ -399,7 +400,10 @@ async def initialize_and_simulate(params):
         await asyncio.sleep(0.1)
 
     final_agent_states = {agent.name: {"hp": agent.health} for agent in agents}
-    report = 災難記錄器().生成報表(final_agent_states)
+    report = disaster_logger.生成報表(final_agent_states)
+    report_text = report.get("text")
+    if report_text:
+        _history_log_buffer.append(report_text)
     scores = report.get("scores", {})
     if scores:
         formatted_lines = ["{"]
