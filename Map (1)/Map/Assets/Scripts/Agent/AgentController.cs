@@ -558,7 +558,75 @@ public class AgentController : MonoBehaviour
         if (!_isInitialized || instruction == null) return;
 
         string command = instruction.Command?.Trim()?.ToLowerInvariant();
-        if (command == "move")
+        if (command == "teleport")
+        {
+            Vector3 exitPosition = _transform.position;
+            string resolvedLocation = null;
+            Transform exitTransform;
+
+            if (!string.IsNullOrWhiteSpace(instruction.ToPortal) &&
+                TryFindLocationTransform(instruction.ToPortal, out exitTransform) &&
+                exitTransform != null)
+            {
+                resolvedLocation = ResolveLocationKey(instruction.ToPortal, exitTransform);
+                exitPosition = exitTransform.position;
+            }
+            else if (!string.IsNullOrWhiteSpace(instruction.Destination) &&
+                     TryFindLocationTransform(instruction.Destination, out exitTransform) &&
+                     exitTransform != null)
+            {
+                resolvedLocation = ResolveLocationKey(instruction.Destination, exitTransform);
+                exitPosition = exitTransform.position;
+            }
+            else if (!string.IsNullOrWhiteSpace(instruction.Destination) &&
+                     TryParseVector3(instruction.Destination, out Vector3 destinationCoords))
+            {
+                exitPosition = destinationCoords;
+                resolvedLocation = instruction.Destination;
+            }
+            else
+            {
+                string targetPortal = string.IsNullOrWhiteSpace(instruction.ToPortal)
+                    ? instruction.Destination
+                    : instruction.ToPortal;
+                Debug.LogWarning($"[Agent {agentName}] 無法解析傳送出口 '{targetPortal}'，將忽略此傳送指令。");
+                return;
+            }
+
+            List<string> manualAliases = new List<string>();
+            if (!string.IsNullOrWhiteSpace(resolvedLocation))
+            {
+                manualAliases.Add(resolvedLocation);
+            }
+            if (!string.IsNullOrWhiteSpace(instruction.ToPortal) &&
+                !manualAliases.Contains(instruction.ToPortal))
+            {
+                manualAliases.Add(instruction.ToPortal);
+            }
+            if (!string.IsNullOrWhiteSpace(instruction.Destination) &&
+                !manualAliases.Contains(instruction.Destination))
+            {
+                manualAliases.Add(instruction.Destination);
+            }
+
+            TeleportTo(exitPosition, manualAliases.ToArray());
+
+            string nextLocationName = !string.IsNullOrWhiteSpace(resolvedLocation)
+                ? resolvedLocation
+                : (!string.IsNullOrWhiteSpace(instruction.ToPortal)
+                    ? instruction.ToPortal
+                    : instruction.Destination);
+
+            if (!string.IsNullOrWhiteSpace(nextLocationName))
+            {
+                _targetLocationName = nextLocationName;
+                _lastValidLocationName = nextLocationName;
+            }
+
+            _lastInstructionDestination = instruction.Destination;
+            SetActionState(string.IsNullOrEmpty(instruction.Action) ? "傳送" : instruction.Action);
+        }
+        else if (command == "move")
         {
             string nextStep = string.IsNullOrWhiteSpace(instruction.NextStep)
                 ? instruction.Destination

@@ -86,6 +86,7 @@ public class AgentActionInstruction
     [JsonProperty("command")] public string Command;
     [JsonProperty("origin")] public string Origin;
     [JsonProperty("destination")] public string Destination;
+    [JsonProperty("to_portal")] public string ToPortal;
     [JsonProperty("next_step")] public string NextStep;
     [JsonProperty("action")] public string Action;
 }
