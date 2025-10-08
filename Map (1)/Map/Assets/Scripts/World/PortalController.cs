@@ -28,18 +28,44 @@ public class PortalController : MonoBehaviour
     public bool matchExitRotation = false;         // 把物件 Z 旋轉對齊出口角度差
     public bool keepLocalOffset = false;           // 依「進門的相對位置」映射到出口
 
+        [Header("門類型設定")]
+    [Tooltip("若此傳送點代表室內外的門，將使用較短的冷卻時間並加強出口安全檢查。")]
+    public bool isDoor = false;
+    [Tooltip("門類型的自動冷卻時間（秒）")]
+    public float doorReenterCooldown = 0.08f;
+    [Tooltip("非門類型的自動冷卻時間（秒）")]
+    public float portalReenterCooldown = 0.18f;
+
+    [Header("出口安全偵測")]
+    [Tooltip("傳送後需要保留的最小空間半徑，用來避免生成在牆壁或其他角色上。")]
+    public float exitClearRadius = 0.25f;
+    [Tooltip("出口安全偵測時檢查的圖層。")]
+    public LayerMask exitObstructionLayers = ~0;
+    [Tooltip("若出口被阻擋，沿著出口方向搜尋的最大迭代次數。")]
+    public int maxExitAdjustmentIterations = 6;
+    [Tooltip("每次調整時沿出口方向或鄰近方向偏移的距離。")]
+    public float exitAdjustmentStep = 0.18f;
+
     [SerializeField, Tooltip("可保留為 -1 交由程式產生")]
     private int portalId = -1;
 
     // 內部：實際使用的配對門
     private PortalController _resolvedTarget;
-    private Collider2D _collider;
-    private Collider2D _cachedInteriorCollider;
+    private static readonly Collider2D[] ExitProbeBuffer = new Collider2D[16];
+    private static readonly Vector2[] ExitSearchDirections = new Vector2[]
+    {
+        Vector2.zero,
+        Vector2.right,
+        Vector2.left,
+        Vector2.up,
+        Vector2.down,
+        new Vector2(1f, 1f).normalized,
+        new Vector2(-1f, 1f).normalized,
+        new Vector2(1f, -1f).normalized,
+        new Vector2(-1f, -1f).normalized
+    };
 
-    public int PortalId => portalId;
-    public PortalController TargetPortal => _resolvedTarget;
-
-    void Reset()
+        void Reset()
     {
         var col = GetComponent<Collider2D>();
         col.isTrigger = true;
@@ -56,8 +82,9 @@ public class PortalController : MonoBehaviour
 
     void Awake()
     {
+        ConfigureCooldown();
         if (portalId == -1) portalId = GetInstanceID();
-        _collider = GetComponent<Collider2D>();
+
         // 1) 直接引用優先
         if (targetPortal != null)
         {
@@ -83,62 +110,52 @@ public class PortalController : MonoBehaviour
             Debug.LogError($"[{name}] 無法解析目標傳送門，請設定 targetPortal 或有效的 targetPortalNames。");
     }
 
+    private void ConfigureCooldown()
+    {
+        float desired = isDoor ? doorReenterCooldown : portalReenterCooldown;
+        if (desired < 0f) desired = 0f;
+        reenterCooldown = desired;
+    }
+
     void OnTriggerEnter2D(Collider2D other)
     {
         if (_resolvedTarget == null || exitPoint == null) return;
         if ((allowedLayers.value & (1 << other.gameObject.layer)) == 0) return;
 
-        var teleportable = other.GetComponent<Teleportable2D>();
-        if (teleportable == null) return;
+        // 需要 Teleportable2D（用來做冷卻標記）
+        var tp = other.GetComponent<Teleportable2D>();
+        if (tp == null) return;
 
-        TryTeleport(other.transform, teleportable);
-    }
+        if (tp.IsIgnoring) return;                                 // 剛傳送過
+        if (tp.lastPortalId == _resolvedTarget.portalId) return;   // 避免來回
 
-    public bool TryTeleport(Transform subject, Teleportable2D teleportable)
-    {
-        if (_resolvedTarget == null || exitPoint == null || subject == null)
-        {
-            return false;
-        }
+        var dst = _resolvedTarget;
+        var dstExit = dst.exitPoint != null ? dst.exitPoint : dst.transform;
 
-        if ((allowedLayers.value & (1 << subject.gameObject.layer)) == 0)
-        {
-            return false;
-        }
-
-        if (teleportable != null)
-        {
-            if (teleportable.IsIgnoring)
-            {
-                return false;
-            }
-
-            if (teleportable.lastPortalId == _resolvedTarget.portalId)
-            {
-                return false;
-            }
-        }
-
-        PortalController dst = _resolvedTarget;
-        Transform dstExit = dst.exitPoint != null ? dst.exitPoint : dst.transform;
-
+        // 計算落點
+        var obj = other.transform;
         Vector3 newPos;
         if (keepLocalOffset)
         {
-            Vector3 local = transform.InverseTransformPoint(subject.position);
+            Vector3 local = transform.InverseTransformPoint(obj.position);
             newPos = dstExit.TransformPoint(local);
         }
         else
         {
             newPos = dstExit.position;
         }
+        // 沿出口面向推出一點
         newPos += dstExit.right * Mathf.Max(0f, exitNudge);
 
-        Rigidbody2D rb = subject.GetComponent<Rigidbody2D>();
+        // 確保出口附近沒有障礙物
+        newPos = FindSafeExitPosition(dstExit, newPos, other);
+
+        // 速度/旋轉處理
+        var rb = other.attachedRigidbody;
         Vector2 newVel = Vector2.zero;
         if (rb != null && preserveMomentum)
         {
-            newVel = rb.linearVelocity;
+            newVel = rb.velocity;
             if (rotateMomentumWithPortal)
             {
                 float delta = dstExit.eulerAngles.z - transform.eulerAngles.z;
@@ -146,99 +163,104 @@ public class PortalController : MonoBehaviour
             }
         }
 
-        float newZ = subject.eulerAngles.z;
+        float newZ = obj.eulerAngles.z;
         if (matchExitRotation)
         {
             float delta = dstExit.eulerAngles.z - transform.eulerAngles.z;
             newZ += delta;
         }
 
-        if (teleportable != null)
+        // 實際傳送
+        obj.position = newPos;
+        obj.rotation = Quaternion.Euler(0, 0, newZ);
+        if (rb != null && preserveMomentum) rb.velocity = newVel;
+
+        // 通知代理人調整移動狀態
+        if (other.TryGetComponent(out AgentController agent))
         {
-            Collider2D interior = dst.GetInteriorCollider();
-            newPos = teleportable.ClampPositionToInterior(newPos, interior);
+            bool usedDoor = isDoor || (dst != null && dst.isDoor);
+            agent.OnTeleported(usedDoor);
         }
 
-        subject.position = newPos;
-        subject.rotation = Quaternion.Euler(0, 0, newZ);
-
-        if (rb != null)
-        {
-            if (preserveMomentum)
-            {
-                rb.linearVelocity = newVel;
-            }
-            else
-            {
-                rb.linearVelocity = Vector2.zero;
-            }
-        }
-
-        teleportable?.SetIgnore(reenterCooldown, portalId);
-        teleportable?.SetIgnore(dst.reenterCooldown, dst.portalId);
-
-        return true;
+        // 設定雙向冷卻（本門與目標門）
+        tp.SetIgnore(reenterCooldown, portalId);
+        tp.SetIgnore(dst.reenterCooldown, dst.portalId);
     }
 
-    public Vector3 GetExitPosition(Transform subject)
+    private Vector3 FindSafeExitPosition(Transform dstExit, Vector3 desiredPosition, Collider2D movingCollider)
     {
-        PortalController dst = _resolvedTarget != null ? _resolvedTarget : this;
-        Transform dstExit = dst.exitPoint != null ? dst.exitPoint : dst.transform;
-
-        Vector3 position;
-        if (keepLocalOffset && subject != null)
+        if (exitClearRadius <= 0f)
         {
-            Vector3 local = transform.InverseTransformPoint(subject.position);
-            position = dstExit.TransformPoint(local);
-        }
-        else
-        {
-            position = dstExit.position;
+            return desiredPosition;
         }
 
-        return position + dstExit.right * Mathf.Max(0f, exitNudge);
+        if (!IsExitBlocked(desiredPosition, movingCollider))
+        {
+            return desiredPosition;
+        }
+
+        Vector3 bestPosition = desiredPosition;
+        float bestDistance = float.MaxValue;
+
+        for (int step = 1; step <= Mathf.Max(1, maxExitAdjustmentIterations); step++)
+        {
+            float distance = step * Mathf.Max(0.01f, exitAdjustmentStep);
+            foreach (var dir in ExitSearchDirections)
+            {
+                if (dir == Vector2.zero && step > 1) continue;
+
+                Vector3 worldDir = dstExit.TransformDirection(new Vector3(dir.x, dir.y, 0f));
+                worldDir.z = 0f;
+                if (worldDir.sqrMagnitude < 0.0001f) worldDir = Vector3.right;
+
+                Vector3 candidate = desiredPosition + worldDir.normalized * distance;
+                if (!IsExitBlocked(candidate, movingCollider))
+                {
+                    float sqrDistance = (candidate - desiredPosition).sqrMagnitude;
+                    if (sqrDistance < bestDistance)
+                    {
+                        bestDistance = sqrDistance;
+                        bestPosition = candidate;
+                    }
+                }
+            }
+
+            if (bestDistance != float.MaxValue)
+            {
+                return bestPosition;
+            }
+        }
+
+        return bestPosition;
     }
 
-    public Collider2D GetInteriorCollider()
+    private bool IsExitBlocked(Vector3 position, Collider2D movingCollider)
     {
-        if (_cachedInteriorCollider != null)
+        var filter = new ContactFilter2D
         {
-            return _cachedInteriorCollider;
-        }
+            useLayerMask = true,
+            layerMask = exitObstructionLayers,
+            useTriggers = false
+        };
 
-        BuildingController building = GetComponentInParent<BuildingController>();
-        if (building == null)
+        int hits = Physics2D.OverlapCircle(position, exitClearRadius, filter, ExitProbeBuffer);
+        for (int i = 0; i < hits; i++)
         {
-            return null;
-        }
-
-        Collider2D[] colliders = building.GetComponentsInChildren<Collider2D>();
-        Collider2D fallback = null;
-        foreach (Collider2D collider in colliders)
-        {
-            if (collider == null || collider == _collider)
+            var col = ExitProbeBuffer[i];
+            if (col == null) continue;
+            if (!col.enabled) continue;
+            if (movingCollider != null)
             {
-                continue;
+                if (col == movingCollider) continue;
+                if (col.transform.IsChildOf(movingCollider.transform)) continue;
             }
 
-            if (!collider.isTrigger)
-            {
-                _cachedInteriorCollider = collider;
-                return _cachedInteriorCollider;
-            }
+            if (col.GetComponent<PortalController>() != null) continue;
 
-            if (fallback == null)
-            {
-                fallback = collider;
-            }
+            return true;
         }
 
-        if (fallback != null)
-        {
-            _cachedInteriorCollider = fallback;
-        }
-
-        return _cachedInteriorCollider;
+        return false;
     }
 
     private static Vector2 Rotate(Vector2 v, float degrees)

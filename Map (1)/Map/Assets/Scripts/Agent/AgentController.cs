@@ -54,6 +54,56 @@ public class AgentController : MonoBehaviour
     private const float MaxSeparationOffset = 0.6f;
     private const float PortalEscapeDistance = 0.75f;
     private static readonly Collider2D[] PortalOverlapBuffer = new Collider2D[8];
+    private static readonly Collider2D[] AgentAvoidanceBuffer = new Collider2D[16];
+
+    [Header("移動速度調整")]
+    [SerializeField, Tooltip("非傳送狀態下的基礎速度倍率。")]
+    private float _baseSpeedMultiplier = 1.6f;
+    [SerializeField, Tooltip("剛通過門時的速度加成倍率。")]
+    private float _doorSpeedMultiplier = 1.4f;
+    [SerializeField, Tooltip("其他傳送方式的速度加成倍率。")] 
+    private float _generalTeleportSpeedMultiplier = 1.1f;
+    [SerializeField, Tooltip("門口速度加成持續秒數。")]
+    private float _doorSpeedBoostDuration = 0.9f;
+    [SerializeField, Tooltip("一般傳送速度加成持續秒數。")] 
+    private float _generalTeleportBoostDuration = 1.2f;
+    [SerializeField, Tooltip("兩個目的地距離超過此值時啟用趕路加速。")]
+    private float _longDistanceThreshold = 6f;
+    [SerializeField, Tooltip("長距離行走的額外速度倍率。")]
+    private float _longDistanceSpeedMultiplier = 1.5f;
+    [SerializeField, Tooltip("接近目標時啟用緩慢移動的距離。")]
+    private float _arrivalSlowdownDistance = 1.2f;
+    [SerializeField, Range(0.1f, 1f), Tooltip("接近目標時的最低速度倍率。")]
+    private float _arrivalSlowdownFactor = 0.55f;
+    [SerializeField, Tooltip("在人群擁擠時的減速倍率。1 代表不減速。")]
+    private float _crowdSlowdownMultiplier = 0.7f;
+    [SerializeField, Tooltip("檢測人群擁擠的半徑。")]
+    private float _crowdCheckRadius = 1.1f;
+    [SerializeField, Tooltip("判定擁擠所需的鄰近代理人數量。")]
+    private int _crowdCountThreshold = 3;
+
+    [Header("局部避障與脫困")]
+    [SerializeField, Tooltip("其他代理人的避讓檢測半徑。")]
+    private float _agentAvoidanceRadius = 0.45f;
+    [SerializeField, Tooltip("物件重疊時計算的推離強度。")]
+    private float _agentAvoidanceStrength = 0.65f;
+    [SerializeField, Tooltip("局部避障所使用的圖層遮罩。")]
+    private LayerMask _agentAvoidanceMask = ~0;
+    [SerializeField, Tooltip("判定陷入停滯的最小移動距離平方根閾值。")]
+    private float _stuckMovementThreshold = 0.01f;
+    [SerializeField, Tooltip("連續多少幀幾乎沒有移動會觸發脫困。")]
+    private int _stuckFrameThreshold = 12;
+    [SerializeField, Tooltip("脫困時沿著探測方向嘗試移動的距離。")]
+    private float _unstuckProbeDistance = 0.35f;
+    [SerializeField, Tooltip("脫困時掃描的方向數量。")]
+    private int _unstuckProbeRays = 8;
+    [SerializeField, Tooltip("脫困檢測時考慮的障礙圖層。")]
+    private LayerMask _stuckProbeMask = ~0;
+
+    private float _teleportBoostUntil = -1f;
+    private bool _lastTeleportUsedDoor = false;
+    private int _stuckFrameCounter = 0;
+    private Vector3 _previousFramePosition;
     [SerializeField] private Color _idleNameColor = Color.white;
     [SerializeField] private Color _activeNameColor = new Color32(255, 204, 102, 255);
     private string _statusLabel = "待機";
@@ -77,6 +127,8 @@ public class AgentController : MonoBehaviour
         _simulationClient = FindFirstObjectByType<SimulationClient>();
         _bobSeed = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
         _targetPosition = _transform.position;
+        _previousFramePosition = _transform.position;
+        _teleportBoostUntil = -1f;
         if (string.IsNullOrEmpty(agentName))
         {
             agentName = gameObject.name.ToUpper();
@@ -142,17 +194,34 @@ public class AgentController : MonoBehaviour
 
     void Update()
     {
-        if (!_isInitialized || !gameObject.activeSelf)
+        if (!_isInitialized || !gameObject.activeSelf) return;
+
+        Vector3 currentPosition = _transform.position;
+        float distanceToTarget = Vector3.Distance(currentPosition, _targetPosition);
+
+        if (distanceToTarget <= _arrivalThreshold)
         {
+            _transform.position = _targetPosition;
+            _previousFramePosition = _targetPosition;
+            _stuckFrameCounter = 0;
             return;
         }
 
-        if (_movementController != null && _movementController.IsControllingMovement)
+        float speed = ComputeDynamicSpeed(distanceToTarget);
+        Vector3 direction = distanceToTarget > 0.0001f ? (_targetPosition - currentPosition).normalized : Vector3.zero;
+        float step = speed * Time.deltaTime;
+        if (step > distanceToTarget) step = distanceToTarget;
+
+        Vector3 candidate = currentPosition + direction * step;
+        candidate = ApplyAgentAvoidance(candidate);
+
+        if (Vector3.Distance(candidate, _targetPosition) <= _arrivalThreshold)
         {
-            return;
+            candidate = _targetPosition;
         }
 
-        _transform.position = Vector3.MoveTowards(_transform.position, _targetPosition, _movementSpeed * Time.deltaTime);
+        _transform.position = candidate;
+        UpdateStuckDetection(currentPosition, candidate, distanceToTarget);
     }
 
     void LateUpdate()
@@ -163,6 +232,182 @@ public class AgentController : MonoBehaviour
         }
     }
 
+    private float ComputeDynamicSpeed(float distanceToTarget)
+    {
+        float multiplier = Mathf.Max(0.1f, _baseSpeedMultiplier);
+
+        if (_teleportBoostUntil >= 0f && Time.time <= _teleportBoostUntil)
+        {
+            float teleportMultiplier = _lastTeleportUsedDoor ? _doorSpeedMultiplier : _generalTeleportSpeedMultiplier;
+            multiplier *= Mathf.Max(1f, teleportMultiplier);
+        }
+
+        if (distanceToTarget > _longDistanceThreshold)
+        {
+            multiplier *= Mathf.Max(1f, _longDistanceSpeedMultiplier);
+        }
+        else if (_arrivalSlowdownDistance > 0f)
+        {
+            float t = Mathf.Clamp01(distanceToTarget / _arrivalSlowdownDistance);
+            float slowdown = Mathf.Lerp(Mathf.Clamp(_arrivalSlowdownFactor, 0.1f, 1f), 1f, t);
+            multiplier *= slowdown;
+        }
+
+        if (IsCrowded(_transform.position, out float densityFactor))
+        {
+            float crowdSlowdown = Mathf.Lerp(1f, Mathf.Clamp(_crowdSlowdownMultiplier, 0.2f, 1f), densityFactor);
+            multiplier *= crowdSlowdown;
+        }
+
+        return _movementSpeed * multiplier;
+    }
+
+    private Vector3 ApplyAgentAvoidance(Vector3 candidatePosition)
+    {
+        candidatePosition += ComputeSeparation(candidatePosition);
+
+        int hits = Physics2D.OverlapCircleNonAlloc(candidatePosition, _agentAvoidanceRadius, AgentAvoidanceBuffer, _agentAvoidanceMask);
+        if (hits <= 0)
+        {
+            return candidatePosition;
+        }
+
+        Vector2 separation = Vector2.zero;
+        for (int i = 0; i < hits; i++)
+        {
+            var col = AgentAvoidanceBuffer[i];
+            if (col == null || !col.enabled) continue;
+            if (col.transform.IsChildOf(_transform)) continue;
+
+            AgentController otherAgent = col.GetComponentInParent<AgentController>();
+            if (otherAgent == null || otherAgent == this || !otherAgent.gameObject.activeSelf) continue;
+
+            Vector2 away = (Vector2)(candidatePosition - col.bounds.center);
+            float sqrMag = away.sqrMagnitude;
+            if (sqrMag < 0.0001f)
+            {
+                away = UnityEngine.Random.insideUnitCircle.normalized * 0.1f;
+                sqrMag = away.sqrMagnitude;
+            }
+
+            float distance = Mathf.Sqrt(sqrMag);
+            float weight = Mathf.Clamp01((_agentAvoidanceRadius - distance) / _agentAvoidanceRadius);
+            separation += away.normalized * weight;
+        }
+
+        if (separation.sqrMagnitude > 0.0001f)
+        {
+            Vector3 offset = new Vector3(separation.x, separation.y, 0f) * _agentAvoidanceStrength;
+            candidatePosition += offset;
+        }
+
+        return candidatePosition;
+    }
+
+    private bool IsCrowded(Vector3 position, out float densityFactor)
+    {
+        densityFactor = 0f;
+        if (_crowdCheckRadius <= 0f) return false;
+
+        int hits = Physics2D.OverlapCircleNonAlloc(position, _crowdCheckRadius, AgentAvoidanceBuffer, _agentAvoidanceMask);
+        if (hits <= 0) return false;
+
+        int neighbourCount = 0;
+        for (int i = 0; i < hits; i++)
+        {
+            var col = AgentAvoidanceBuffer[i];
+            if (col == null || !col.enabled) continue;
+            if (col.transform.IsChildOf(_transform)) continue;
+
+            AgentController otherAgent = col.GetComponentInParent<AgentController>();
+            if (otherAgent == null || otherAgent == this || !otherAgent.gameObject.activeSelf) continue;
+            neighbourCount++;
+        }
+
+        if (neighbourCount == 0) return false;
+
+        densityFactor = Mathf.Clamp01(neighbourCount / Mathf.Max(1f, _crowdCountThreshold));
+        return neighbourCount >= 1;
+    }
+
+    private void UpdateStuckDetection(Vector3 previousPosition, Vector3 currentPosition, float distanceToTarget)
+    {
+        float movedSqr = (currentPosition - previousPosition).sqrMagnitude;
+        float thresholdSqr = _stuckMovementThreshold * _stuckMovementThreshold;
+
+        if (distanceToTarget <= _arrivalThreshold)
+        {
+            _stuckFrameCounter = 0;
+            _previousFramePosition = currentPosition;
+            return;
+        }
+
+        if (movedSqr < thresholdSqr)
+        {
+            _stuckFrameCounter++;
+            if (_stuckFrameCounter >= Mathf.Max(3, _stuckFrameThreshold))
+            {
+                Vector3 nudge = FindUnstuckOffset();
+                if (nudge.sqrMagnitude > 0.0001f)
+                {
+                    Vector3 adjusted = currentPosition + nudge;
+                    _transform.position = adjusted;
+                    _targetPosition += nudge;
+                    currentPosition = adjusted;
+                }
+
+                _stuckFrameCounter = 0;
+            }
+        }
+        else
+        {
+            _stuckFrameCounter = 0;
+        }
+
+        _previousFramePosition = currentPosition;
+    }
+
+    private Vector3 FindUnstuckOffset()
+    {
+        if (_unstuckProbeDistance <= 0f) return Vector3.zero;
+
+        int rays = Mathf.Max(3, _unstuckProbeRays);
+        float radius = Mathf.Max(0.05f, _agentAvoidanceRadius * 0.5f);
+        Vector3 origin = _transform.position;
+
+        for (int i = 0; i < rays; i++)
+        {
+            float angle = (360f / rays) * i;
+            float rad = angle * Mathf.Deg2Rad;
+            Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+            Vector3 candidate = origin + new Vector3(dir.x, dir.y, 0f) * _unstuckProbeDistance;
+
+            int hits = Physics2D.OverlapCircleNonAlloc(candidate, radius, AgentAvoidanceBuffer, _stuckProbeMask);
+            bool blocked = false;
+            for (int h = 0; h < hits; h++)
+            {
+                var col = AgentAvoidanceBuffer[h];
+                if (col == null || !col.enabled) continue;
+                if (col.isTrigger) continue;
+                if (col.transform.IsChildOf(_transform)) continue;
+                blocked = true;
+                break;
+            }
+
+            if (!blocked)
+            {
+                return new Vector3(dir.x, dir.y, 0f) * _unstuckProbeDistance;
+            }
+        }
+
+        Vector2 random = UnityEngine.Random.insideUnitCircle;
+        if (random.sqrMagnitude < 0.0001f)
+        {
+            random = Vector2.up;
+        }
+
+        return new Vector3(random.x, random.y, 0f) * (_unstuckProbeDistance * 0.5f);
+    }
     private void UpdateNameplatePosition()
     {
         // ### 核心修正：增加一个安全边距 (padding) ###
@@ -629,6 +874,25 @@ public class AgentController : MonoBehaviour
         NudgeAwayFromPortals();
         _visualOffset = Vector3.zero;
         NotifyMovementCompleted();
+       OnTeleported(false);
+
+    }
+
+    public void OnTeleported(bool usedDoor)
+    {
+        _previousFramePosition = _transform.position;
+        _stuckFrameCounter = 0;
+        _lastTeleportUsedDoor = usedDoor;
+
+        float duration = usedDoor ? _doorSpeedBoostDuration : _generalTeleportBoostDuration;
+        if (duration > 0f)
+        {
+            _teleportBoostUntil = Time.time + duration;
+        }
+        else
+        {
+            _teleportBoostUntil = -1f;
+        }
 
     }
 
@@ -797,7 +1061,9 @@ public class AgentController : MonoBehaviour
         _visualOffset = Vector3.zero;
         _targetPosition = _transform.position;
         _bobSeed = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
-
+        _previousFramePosition = _transform.position;
+        _teleportBoostUntil = -1f;
+        _stuckFrameCounter = 0;
         if (nameTextUGUI != null) nameTextUGUI.gameObject.SetActive(false);
     }
 
@@ -807,6 +1073,8 @@ public class AgentController : MonoBehaviour
         if (nameTextUGUI != null) nameTextUGUI.gameObject.SetActive(false);
         SetManualLocationOverrides();
         _visualOffset = Vector3.zero;
+        _teleportBoostUntil = -1f;
+        _stuckFrameCounter = 0;
     }
 
     private Vector3 ComputeSeparation(Vector3 candidatePosition)
