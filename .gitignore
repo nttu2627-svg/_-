@@ -1,0 +1,29 @@
+# Unity generated folders 
+[Ll]ibrary/ 
+[Tt]emp/ 
+[Oo]bj/ 
+[Bb]uild/ 
+[Ll]ogs/ 
+[Uu]ser[Ss]ettings/ 
+MemoryCaptures/ 
+*.csproj 
+*.sln 
+*.unityproj 
+*.pidb 
+*.user 
+*.booproj 
+*.svd 
+*.pdb 
+*.mdb 
+.vs/ 
+Builds/ 
+Logs/ 
+CrashReports/ 
+# Python cache 
+__pycache__/ 
+*.pyc 
+*.pyo 
+*.pyd 
+*.log 
+.idea/ 
+.vscode/ 
