@@ -8,6 +8,7 @@ public class PortalController : MonoBehaviour
     public PortalController targetPortal;          // 直接拖引用（推薦）
     [Tooltip("若未指定 targetPortal，會用這些名字在場景中尋找（Awake 僅解析一次）")]
     public string[] targetPortalNames;
+
     public string targetPortalName
     {
         get
@@ -18,6 +19,7 @@ public class PortalController : MonoBehaviour
             return string.Empty;
         }
     }
+
     [Header("出口與行為")]
     public Transform exitPoint;                    // 出口點（若為空會在 Reset 自動建立子物件）
     public LayerMask allowedLayers = ~0;           // 允許被傳送的層
@@ -28,7 +30,7 @@ public class PortalController : MonoBehaviour
     public bool matchExitRotation = false;         // 把物件 Z 旋轉對齊出口角度差
     public bool keepLocalOffset = false;           // 依「進門的相對位置」映射到出口
 
-        [Header("門類型設定")]
+    [Header("門類型設定")]
     [Tooltip("若此傳送點代表室內外的門，將使用較短的冷卻時間並加強出口安全檢查。")]
     public bool isDoor = false;
     [Tooltip("門類型的自動冷卻時間（秒）")]
@@ -65,7 +67,7 @@ public class PortalController : MonoBehaviour
         new Vector2(-1f, -1f).normalized
     };
 
-        void Reset()
+    void Reset()
     {
         var col = GetComponent<Collider2D>();
         col.isTrigger = true;
@@ -92,7 +94,7 @@ public class PortalController : MonoBehaviour
             return;
         }
 
-        // 2) 以名稱尋找（只做一次）；若多個候選，固定挑第一個（避免每幀隨機不一致）
+        // 2) 以名稱尋找（只做一次）
         if (targetPortalNames != null && targetPortalNames.Length > 0)
         {
             foreach (var n in targetPortalNames)
@@ -144,10 +146,11 @@ public class PortalController : MonoBehaviour
         {
             newPos = dstExit.position;
         }
+
         // 沿出口面向推出一點
         newPos += dstExit.right * Mathf.Max(0f, exitNudge);
 
-        // 確保出口附近沒有障礙物
+        // 確保出口安全
         newPos = FindSafeExitPosition(dstExit, newPos, other);
 
         // 速度/旋轉處理
@@ -155,7 +158,7 @@ public class PortalController : MonoBehaviour
         Vector2 newVel = Vector2.zero;
         if (rb != null && preserveMomentum)
         {
-            newVel = rb.velocity;
+            newVel = rb.linearVelocity;
             if (rotateMomentumWithPortal)
             {
                 float delta = dstExit.eulerAngles.z - transform.eulerAngles.z;
@@ -173,7 +176,7 @@ public class PortalController : MonoBehaviour
         // 實際傳送
         obj.position = newPos;
         obj.rotation = Quaternion.Euler(0, 0, newZ);
-        if (rb != null && preserveMomentum) rb.velocity = newVel;
+        if (rb != null && preserveMomentum) rb.linearVelocity = newVel;
 
         // 通知代理人調整移動狀態
         if (other.TryGetComponent(out AgentController agent))
@@ -182,7 +185,7 @@ public class PortalController : MonoBehaviour
             agent.OnTeleported(usedDoor);
         }
 
-        // 設定雙向冷卻（本門與目標門）
+        // 設定冷卻
         tp.SetIgnore(reenterCooldown, portalId);
         tp.SetIgnore(dst.reenterCooldown, dst.portalId);
     }
@@ -190,14 +193,10 @@ public class PortalController : MonoBehaviour
     private Vector3 FindSafeExitPosition(Transform dstExit, Vector3 desiredPosition, Collider2D movingCollider)
     {
         if (exitClearRadius <= 0f)
-        {
             return desiredPosition;
-        }
 
         if (!IsExitBlocked(desiredPosition, movingCollider))
-        {
             return desiredPosition;
-        }
 
         Vector3 bestPosition = desiredPosition;
         float bestDistance = float.MaxValue;
@@ -208,11 +207,7 @@ public class PortalController : MonoBehaviour
             foreach (var dir in ExitSearchDirections)
             {
                 if (dir == Vector2.zero && step > 1) continue;
-
                 Vector3 worldDir = dstExit.TransformDirection(new Vector3(dir.x, dir.y, 0f));
-                worldDir.z = 0f;
-                if (worldDir.sqrMagnitude < 0.0001f) worldDir = Vector3.right;
-
                 Vector3 candidate = desiredPosition + worldDir.normalized * distance;
                 if (!IsExitBlocked(candidate, movingCollider))
                 {
@@ -224,11 +219,8 @@ public class PortalController : MonoBehaviour
                     }
                 }
             }
-
             if (bestDistance != float.MaxValue)
-            {
                 return bestPosition;
-            }
         }
 
         return bestPosition;
@@ -247,19 +239,15 @@ public class PortalController : MonoBehaviour
         for (int i = 0; i < hits; i++)
         {
             var col = ExitProbeBuffer[i];
-            if (col == null) continue;
-            if (!col.enabled) continue;
+            if (col == null || !col.enabled) continue;
             if (movingCollider != null)
             {
                 if (col == movingCollider) continue;
                 if (col.transform.IsChildOf(movingCollider.transform)) continue;
             }
-
             if (col.GetComponent<PortalController>() != null) continue;
-
             return true;
         }
-
         return false;
     }
 
@@ -270,6 +258,36 @@ public class PortalController : MonoBehaviour
         float s = Mathf.Sin(r);
         return new Vector2(c * v.x - s * v.y, s * v.x + c * v.y);
     }
+
+    // === 舊版本兼容接口 ===
+
+    // 讓舊代碼仍可使用 portal.TargetPortal
+    public PortalController TargetPortal => targetPortal != null ? targetPortal : _resolvedTarget;
+
+    // 提供舊版本的 GetExitPosition() 與 (Transform requester) 呼叫
+    public Vector3 GetExitPosition(Transform requester = null)
+    {
+        return exitPoint != null ? exitPoint.position : transform.position;
+    }
+
+    // 模擬舊版 TryTeleport，支援 1 或 2 參數版本
+public bool TryTeleport(Transform mover, object requester = null)
+{
+    if (targetPortal == null) return false;
+
+    Vector3 exitPos = targetPortal.exitPoint != null
+        ? targetPortal.exitPoint.position
+        : targetPortal.transform.position;
+
+    // 通知 AgentController（若存在）
+    if (mover.TryGetComponent(out AgentController agent))
+    {
+        agent.OnTeleported(isDoor || (targetPortal != null && targetPortal.isDoor));
+    }
+
+    mover.position = exitPos;
+    return true;
+}
 
 #if UNITY_EDITOR
     void OnDrawGizmos()
