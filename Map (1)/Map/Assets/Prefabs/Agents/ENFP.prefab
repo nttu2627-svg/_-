@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 9191976461991576753}
   - component: {fileID: 5068341416604806221}
   - component: {fileID: 3846724821824676553}
-  - component: {fileID: -4418541711649085292}
   m_Layer: 0
   m_Name: ENFP
   m_TagString: Untagged
@@ -57,6 +56,34 @@ MonoBehaviour:
   _movingBobFrequency: 4
   _idleBobAmplitude: 0.08
   _idleBobFrequency: 1.5
+  _baseSpeedMultiplier: 1.6
+  _doorSpeedMultiplier: 1.4
+  _generalTeleportSpeedMultiplier: 1.1
+  _doorSpeedBoostDuration: 0.9
+  _generalTeleportBoostDuration: 1.2
+  _longDistanceThreshold: 6
+  _longDistanceSpeedMultiplier: 1.5
+  _arrivalSlowdownDistance: 1.2
+  _arrivalSlowdownFactor: 0.55
+  _crowdSlowdownMultiplier: 0.7
+  _crowdCheckRadius: 1.1
+  _crowdCountThreshold: 3
+  _agentAvoidanceRadius: 0.45
+  _agentAvoidanceStrength: 0.65
+  _agentAvoidanceMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  _stuckMovementThreshold: 0.01
+  _stuckFrameThreshold: 12
+  _unstuckProbeDistance: 0.35
+  _unstuckProbeRays: 8
+  _stuckProbeMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  _idleNameColor: {r: 1, g: 1, b: 1, a: 1}
+  _activeNameColor: {r: 1, g: 0.8, b: 0.4, a: 1}
+  _visualRoot: {fileID: 0}
+  teleportScaleDuration: 0.25
 --- !u!212 &9191976461991576753
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -176,17 +203,3 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
---- !u!114 &-4418541711649085292
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 898052370114151923}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f2b3c95fbbb7f3f44a738433a34ae28e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  lastPortalId: -1
-  ignoreUntilTime: 0
