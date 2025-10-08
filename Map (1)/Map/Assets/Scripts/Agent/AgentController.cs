@@ -3,6 +3,7 @@
 using UnityEngine;
 using TMPro;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -48,11 +49,15 @@ public class AgentController : MonoBehaviour
     private readonly HashSet<string> _manualLocationOverrides = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private const float CoordinateSnapThreshold = 8f;
     private string _lastInstructionDestination;
+    // 全局代理人列表，用於近身避障與分離
     private static readonly List<AgentController> ActiveAgents = new List<AgentController>();
-    private const float SeparationRadius = 1.1f;
-    private const float SeparationStrength = 0.85f;
-    private const float MaxSeparationOffset = 0.6f;
-    private const float PortalEscapeDistance = 0.75f;
+    // ### 分離效果調整 ###
+    // 加大半徑與力度，避免多個代理人模型重疊在同一位置
+    private const float SeparationRadius = 1.2f;
+    private const float SeparationStrength = 0.9f;
+    private const float MaxSeparationOffset = 0.8f;
+    // 傳送後推離門口的距離加大，減少卡在門口的情況
+    private const float PortalEscapeDistance = 1.0f;
     private static readonly Collider2D[] PortalOverlapBuffer = new Collider2D[8];
     private static readonly Collider2D[] AgentAvoidanceBuffer = new Collider2D[16];
 
@@ -120,6 +125,13 @@ public class AgentController : MonoBehaviour
         ("Subway", "地鐵"),
         ("Exterior", "室外")
     };
+
+    [Header("視覺效果")]
+    [Tooltip("負責顯示代理人模型的子節點，可透過 Inspector 綁定，若為空會在 Awake 時自動尋找子物件。")]
+    [SerializeField] private Transform _visualRoot;
+    [Tooltip("傳送動畫持續時間，單位秒。")]
+    [SerializeField] private float teleportScaleDuration = 0.25f;
+    private Coroutine _teleportEffectCoroutine;
     void Awake()
     {
         _transform = transform;
@@ -160,6 +172,18 @@ public class AgentController : MonoBehaviour
 
         ShowIdleStatus();
 
+        // 若沒有綁定視覺根節點，嘗試自動找到第一個子節點用於動態效果
+        if (_visualRoot == null)
+        {
+            if (_transform.childCount > 0)
+            {
+                _visualRoot = _transform.GetChild(0);
+            }
+            else
+            {
+                _visualRoot = _transform;
+            }
+        }
         gameObject.SetActive(false);
     }
     
@@ -201,9 +225,12 @@ public class AgentController : MonoBehaviour
 
         if (distanceToTarget <= _arrivalThreshold)
         {
+            // 直接對齊目標位置
             _transform.position = _targetPosition;
             _previousFramePosition = _targetPosition;
             _stuckFrameCounter = 0;
+            // 更新待機時的浮動動畫
+            UpdateVisualBobbing(0f);
             return;
         }
 
@@ -222,6 +249,8 @@ public class AgentController : MonoBehaviour
 
         _transform.position = candidate;
         UpdateStuckDetection(currentPosition, candidate, distanceToTarget);
+        // 移動時更新視覺浮動效果
+        UpdateVisualBobbing(distanceToTarget);
     }
 
     void LateUpdate()
@@ -894,6 +923,16 @@ public class AgentController : MonoBehaviour
             _teleportBoostUntil = -1f;
         }
 
+        // 執行傳送視覺效果：快速縮放以提供過渡效果
+        if (_visualRoot != null)
+        {
+            if (_teleportEffectCoroutine != null)
+            {
+                StopCoroutine(_teleportEffectCoroutine);
+            }
+            _teleportEffectCoroutine = StartCoroutine(PlayTeleportEffect());
+        }
+
     }
 
     public void SyncTargetToCurrentPosition()
@@ -1065,6 +1104,12 @@ public class AgentController : MonoBehaviour
         _teleportBoostUntil = -1f;
         _stuckFrameCounter = 0;
         if (nameTextUGUI != null) nameTextUGUI.gameObject.SetActive(false);
+        // 重設視覺模型的位置與縮放
+        if (_visualRoot != null)
+        {
+            _visualRoot.localPosition = Vector3.zero;
+            _visualRoot.localScale = Vector3.one;
+        }
     }
 
     void OnDisable()
@@ -1073,6 +1118,12 @@ public class AgentController : MonoBehaviour
         if (nameTextUGUI != null) nameTextUGUI.gameObject.SetActive(false);
         SetManualLocationOverrides();
         _visualOffset = Vector3.zero;
+        // 禁用時重置視覺模型的位置與縮放
+        if (_visualRoot != null)
+        {
+            _visualRoot.localPosition = Vector3.zero;
+            _visualRoot.localScale = Vector3.one;
+        }
         _teleportBoostUntil = -1f;
         _stuckFrameCounter = 0;
     }
@@ -1151,6 +1202,54 @@ public class AgentController : MonoBehaviour
         Vector3 adjusted = _transform.position + new Vector3(offset.x, offset.y, 0f);
         _transform.position = adjusted;
         _targetPosition = adjusted;
+    }
+
+    /// <summary>
+    /// 根據代理人當前狀態更新視覺浮動效果。移動時使用較大幅度與頻率，待機時則較為平緩。
+    /// 此方法會更新 _visualOffset 並同步到 _visualRoot 的 localPosition。
+    /// </summary>
+    /// <param name="distanceToTarget">當前距離目標的距離，用來判斷是否正在移動</param>
+    private void UpdateVisualBobbing(float distanceToTarget)
+    {
+        // 沒有視覺節點時直接返回
+        if (_visualRoot == null) return;
+
+        // 判斷使用移動或待機參數
+        bool isMoving = distanceToTarget > _arrivalThreshold;
+        float amplitude = isMoving ? _movingBobAmplitude : _idleBobAmplitude;
+        float frequency = isMoving ? _movingBobFrequency : _idleBobFrequency;
+
+        // 計算正弦偏移
+        float offsetY = Mathf.Sin(Time.time * frequency + _bobSeed) * amplitude;
+        _visualOffset = new Vector3(0f, offsetY, 0f);
+
+        // 將偏移套用至視覺根物件
+        _visualRoot.localPosition = _visualOffset;
+    }
+
+    /// <summary>
+    /// 傳送時的縮放動畫，用於提供視覺過渡效果。會將 _visualRoot 的縮放從 0 漸變至 1。
+    /// </summary>
+    private IEnumerator PlayTeleportEffect()
+    {
+        if (_visualRoot == null || teleportScaleDuration <= 0f)
+        {
+            yield break;
+        }
+
+        // 初始縮放至 0，隱藏模型
+        _visualRoot.localScale = Vector3.zero;
+        float elapsed = 0f;
+        while (elapsed < teleportScaleDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / teleportScaleDuration);
+            // 使用 SmoothStep 使放大過程更自然
+            float scale = Mathf.SmoothStep(0f, 1f, t);
+            _visualRoot.localScale = new Vector3(scale, scale, scale);
+            yield return null;
+        }
+        _visualRoot.localScale = Vector3.one;
     }
     internal void NotifyMovementStarted()
     {

@@ -202,22 +202,21 @@ public class AgentMovementController : MonoBehaviour
         string startBuilding = DetermineCurrentBuilding();
         string destinationBuilding = DetermineDestinationBuilding(destinationTransform, locationName);
 
-        if (!string.Equals(startBuilding, destinationBuilding, StringComparison.OrdinalIgnoreCase))
+        // 嘗試尋找可用的傳送門，即使目標與起點在同一棟建築內部也一樣。
+        PortalController entryPortal = FindPortalPair(startBuilding, destinationBuilding, _transform.position);
+        if (entryPortal != null)
         {
-            PortalController entryPortal = FindPortalPair(startBuilding, destinationBuilding, _transform.position);
-            if (entryPortal != null)
-            {
-                result.Add(new PathNode(entryPortal.transform.position, entryPortal));
+            result.Add(new PathNode(entryPortal.transform.position, entryPortal));
 
-                PortalController exitPortal = entryPortal.TargetPortal;
-                if (exitPortal != null)
-                {
-                    Vector3 exitPosition = exitPortal.GetExitPosition(_transform);
-                    result.Add(new PathNode(exitPosition, null));
-                }
+            PortalController exitPortal = entryPortal.TargetPortal;
+            if (exitPortal != null)
+            {
+                Vector3 exitPosition = exitPortal.GetExitPosition(_transform);
+                result.Add(new PathNode(exitPosition, null));
             }
         }
 
+        // 最終將目的地本身加入路徑
         result.Add(new PathNode(new Vector2(destination.x, destination.y), null));
 
         return result;

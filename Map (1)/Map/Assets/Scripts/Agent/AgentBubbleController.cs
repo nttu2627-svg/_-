@@ -71,9 +71,13 @@ namespace DisasterSimulation
             if (氣泡文字) 氣泡文字.text = 內容;
             SetVisible(true, instant: true);
 
-            if (隱藏協程 != null) StopCoroutine(隱藏協程);
-            // 這裡開始就不會再有 inactive 時啟動協程的錯誤
-            隱藏協程 = StartCoroutine(延遲隱藏());
+            // 取消任何進行中的隱藏協程，使氣泡在下一次顯示前持續存在
+            if (隱藏協程 != null)
+            {
+                StopCoroutine(隱藏協程);
+                隱藏協程 = null;
+            }
+            // 不再啟動自動隱藏，氣泡將持續顯示直到下一次顯示氣泡調用覆蓋。
         }
 
         private IEnumerator 延遲隱藏()
