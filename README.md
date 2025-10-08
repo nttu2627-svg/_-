@@ -1,5 +1,43 @@
 # _-
+# _-
 
+This repository contains multiple Unity projects alongside the AI China Town prototype. Some of the
+folders – especially the Unity `Library` and `Logs` directories – are very large, which can make it
+hard to use GitHub's built-in search or other web UIs efficiently.
+
+## Working with the repository locally
+
+To explore or search the codebase, clone the repository and use local command-line tools that are
+optimised for large projects:
+
+1. Install [ripgrep](https://github.com/BurntSushi/ripgrep) (`rg`) and
+   [fd](https://github.com/sharkdp/fd) if they are not already available on your system.
+2. Use `rg` to search for text across the tracked source files:
+
+   ```bash
+   rg "search term"
+   ```
+
+   `rg` automatically respects `.gitignore`, so heavy Unity artefacts in `Library/` and other
+   generated folders are skipped.
+3. Use `fd` when you need to find files by name without traversing the entire directory tree:
+
+   ```bash
+   fd "pattern" src/
+   ```
+
+4. When working specifically on the AI China Town Python project, activate its virtual environment
+   and install dependencies from `ai_china_town-master/requirements.txt`.
+
+## Repository structure
+
+- `Map/` – Main Unity project. Generated folders (`Library/`, `Logs/`, `obj/`, etc.) are kept to
+  preserve the original environment but can be deleted locally to save space.
+- `Map (1)/Map/` – Secondary Unity assets and tooling.
+- `ai_china_town-master/` – Python project for the AI China Town simulation.
+
+Cleaning up the generated Unity folders locally and relying on `rg`/`fd` for searches should make it
+possible to navigate and understand the code without running into size-related limitations.
 # Map & ai_china_town-master
 
 結合 Unity 前端與 Python 後端的 MBTI 都市代理人模擬專案。
