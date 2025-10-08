@@ -8,7 +8,16 @@ public class PortalController : MonoBehaviour
     public PortalController targetPortal;          // 直接拖引用（推薦）
     [Tooltip("若未指定 targetPortal，會用這些名字在場景中尋找（Awake 僅解析一次）")]
     public string[] targetPortalNames;
-
+    public string targetPortalName
+    {
+        get
+        {
+            if (_resolvedTarget != null) return _resolvedTarget.name;
+            if (targetPortal != null) return targetPortal.name;
+            if (targetPortalNames != null && targetPortalNames.Length > 0) return targetPortalNames[0];
+            return string.Empty;
+        }
+    }
     [Header("出口與行為")]
     public Transform exitPoint;                    // 出口點（若為空會在 Reset 自動建立子物件）
     public LayerMask allowedLayers = ~0;           // 允許被傳送的層
@@ -104,7 +113,7 @@ public class PortalController : MonoBehaviour
         Vector2 newVel = Vector2.zero;
         if (rb != null && preserveMomentum)
         {
-            newVel = rb.velocity;
+            newVel = rb.linearVelocity;
             if (rotateMomentumWithPortal)
             {
                 float delta = dstExit.eulerAngles.z - transform.eulerAngles.z;
@@ -122,7 +131,7 @@ public class PortalController : MonoBehaviour
         // 實際傳送
         obj.position = newPos;
         obj.rotation = Quaternion.Euler(0, 0, newZ);
-        if (rb != null && preserveMomentum) rb.velocity = newVel;
+        if (rb != null && preserveMomentum) rb.linearVelocity = newVel;
 
         // 設定雙向冷卻（本門與目標門）
         tp.SetIgnore(reenterCooldown, portalId);

@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 632240723057707113}
   - component: {fileID: 8838828912356518111}
   - component: {fileID: 8526844873170229727}
+  - component: {fileID: 4131744690445873005}
   m_Layer: 0
   m_Name: INTJ
   m_TagString: Untagged
@@ -51,6 +52,12 @@ MonoBehaviour:
   agentName: INTJ
   nameTextUGUI: {fileID: 0}
   bubbleController: {fileID: 3392808334380540096, guid: 20e43da9218aab64bb31e40d53002a44, type: 3}
+  _movementSpeed: 4.5
+  _arrivalThreshold: 0.05
+  _movingBobAmplitude: 0.18
+  _movingBobFrequency: 4
+  _idleBobAmplitude: 0.08
+  _idleBobFrequency: 1.5
 --- !u!212 &7483965187551183171
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -185,3 +192,23 @@ MonoBehaviour:
   agentName: 
   nameTextUGUI: {fileID: 0}
   bubbleController: {fileID: 0}
+  _movementSpeed: 4.5
+  _arrivalThreshold: 0.05
+  _movingBobAmplitude: 0.18
+  _movingBobFrequency: 4
+  _idleBobAmplitude: 0.08
+  _idleBobFrequency: 1.5
+--- !u!114 &4131744690445873005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3285841149331094448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2b3c95fbbb7f3f44a738433a34ae28e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lastPortalId: -1
+  ignoreUntilTime: 0

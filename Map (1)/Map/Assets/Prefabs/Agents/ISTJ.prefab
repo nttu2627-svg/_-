@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 3085839472777703193}
   - component: {fileID: 8391679739591141462}
   - component: {fileID: 2961125275546048098}
+  - component: {fileID: -3581983982874176295}
   m_Layer: 0
   m_Name: ISTJ
   m_TagString: Untagged
@@ -52,6 +53,12 @@ MonoBehaviour:
   agentName: ISTJ
   nameTextUGUI: {fileID: 0}
   bubbleController: {fileID: 3392808334380540096, guid: 20e43da9218aab64bb31e40d53002a44, type: 3}
+  _movementSpeed: 4.5
+  _arrivalThreshold: 0.05
+  _movingBobAmplitude: 0.18
+  _movingBobFrequency: 4
+  _idleBobAmplitude: 0.08
+  _idleBobFrequency: 1.5
 --- !u!212 &8058868183950213855
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -207,3 +214,17 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
+--- !u!114 &-3581983982874176295
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1331204842062870462}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2b3c95fbbb7f3f44a738433a34ae28e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lastPortalId: -1
+  ignoreUntilTime: 0
