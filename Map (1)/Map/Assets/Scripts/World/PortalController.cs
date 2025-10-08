@@ -138,7 +138,7 @@ public class PortalController : MonoBehaviour
         Vector2 newVel = Vector2.zero;
         if (rb != null && preserveMomentum)
         {
-            newVel = rb.velocity;
+            newVel = rb.linearVelocity;
             if (rotateMomentumWithPortal)
             {
                 float delta = dstExit.eulerAngles.z - transform.eulerAngles.z;
@@ -166,11 +166,11 @@ public class PortalController : MonoBehaviour
         {
             if (preserveMomentum)
             {
-                rb.velocity = newVel;
+                rb.linearVelocity = newVel;
             }
             else
             {
-                rb.velocity = Vector2.zero;
+                rb.linearVelocity = Vector2.zero;
             }
         }
 
