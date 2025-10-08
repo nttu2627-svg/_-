@@ -41,6 +41,7 @@ public class AgentController : MonoBehaviour
     private float _bobSeed;
     private Camera _mainCamera;
     private SimulationClient _simulationClient;
+    private AgentMovementController _movementController;
     private string _targetLocationName;
     private string _lastValidLocationName;
     private string _currentAction;
@@ -53,6 +54,10 @@ public class AgentController : MonoBehaviour
     private const float MaxSeparationOffset = 0.6f;
     private const float PortalEscapeDistance = 0.75f;
     private static readonly Collider2D[] PortalOverlapBuffer = new Collider2D[8];
+    [SerializeField] private Color _idleNameColor = Color.white;
+    [SerializeField] private Color _activeNameColor = new Color32(255, 204, 102, 255);
+    private string _statusLabel = "待機";
+    private string _displayName;
     private static readonly (string english, string localized)[] LocationPrefixAliases = new (string, string)[]
     {
         ("Apartment", "公寓"),
@@ -80,7 +85,18 @@ public class AgentController : MonoBehaviour
         {
             agentName = agentName.ToUpper();
         }
-        
+
+        if (!TryGetComponent(out _movementController))
+        {
+            _movementController = gameObject.AddComponent<AgentMovementController>();
+        }
+
+        _movementController.ConfigureFromAgent(this, _movementSpeed, _arrivalThreshold);
+
+        _displayName = nameTextUGUI != null && !string.IsNullOrEmpty(nameTextUGUI.text)
+            ? nameTextUGUI.text
+            : agentName;
+
         if (bubbleController == null)
         {
             bubbleController = GetComponentInChildren<思考氣泡控制器>(true);
@@ -90,7 +106,8 @@ public class AgentController : MonoBehaviour
             }
         }
 
-        
+        ShowIdleStatus();
+
         gameObject.SetActive(false);
     }
     
@@ -117,14 +134,25 @@ public class AgentController : MonoBehaviour
         }
         _isInitialized = true;
         SetManualLocationOverrides();
+        if (_movementController != null)
+        {
+            _movementController.RegisterLocations(_locationTransforms);
+        }
     }
 
     void Update()
     {
-        if (_isInitialized && gameObject.activeSelf)
+        if (!_isInitialized || !gameObject.activeSelf)
         {
-            _transform.position = Vector3.Lerp(_transform.position, _targetPosition, Time.deltaTime * _movementSpeed);
+            return;
         }
+
+        if (_movementController != null && _movementController.IsControllingMovement)
+        {
+            return;
+        }
+
+        _transform.position = Vector3.MoveTowards(_transform.position, _targetPosition, _movementSpeed * Time.deltaTime);
     }
 
     void LateUpdate()
@@ -250,8 +278,7 @@ public class AgentController : MonoBehaviour
 
         return false;
     }
-
-    private bool TryFindLocationTransform(string locationName, out Transform transform)
+    internal bool TryFindLocationTransform(string locationName, out Transform transform)
     {
         transform = null;
         if (_locationTransforms == null || string.IsNullOrWhiteSpace(locationName))
@@ -370,6 +397,58 @@ public class AgentController : MonoBehaviour
 
         return transform != null ? transform.name : requestedName;
     }
+   private string DetermineBuildingFromTransform(Transform target)
+    {
+        if (target == null)
+        {
+            return null;
+        }
+
+        BuildingController building = target.GetComponentInParent<BuildingController>();
+        if (building != null && !string.IsNullOrEmpty(building.buildingName))
+        {
+            return building.buildingName;
+        }
+
+        return null;
+    }
+
+    internal string GetBuildingFromTransform(Transform target)
+    {
+        return DetermineBuildingFromTransform(target);
+    }
+
+    internal string GuessBuildingForLocation(string locationName)
+    {
+        if (string.IsNullOrWhiteSpace(locationName))
+        {
+            return null;
+        }
+
+        if (TryFindLocationTransform(locationName, out Transform locationTransform) && locationTransform != null)
+        {
+            return DetermineBuildingFromTransform(locationTransform);
+        }
+
+        return null;
+    }
+
+    internal string GuessCurrentBuilding()
+    {
+        string fromTransform = DetermineBuildingFromTransform(_transform);
+        if (!string.IsNullOrEmpty(fromTransform))
+        {
+            return fromTransform;
+        }
+
+        string fromLast = GuessBuildingForLocation(_lastValidLocationName);
+        if (!string.IsNullOrEmpty(fromLast))
+        {
+            return fromLast;
+        }
+
+        return GuessBuildingForLocation(_targetLocationName);
+    }
     public void UpdateState(AgentState state)
     {
         if (!_isInitialized) return;
@@ -398,13 +477,13 @@ public class AgentController : MonoBehaviour
         if (TryFindLocationTransform(incomingLocation, out Transform targetLocation) && targetLocation != null)
         {
             string resolvedKey = ResolveLocationKey(incomingLocation, targetLocation);
-            SetTargetLocation(resolvedKey, targetLocation.position);
+            SetTargetLocation(resolvedKey, targetLocation.position, targetLocation);
         }
         else if (TryParseVector3(incomingLocation, out Vector3 pos))
         {
-            if (TryResolveCoordinateLocation(pos, out string resolvedLocation, out Vector3 resolvedPosition))
+            if (TryResolveCoordinateLocation(pos, out string resolvedLocation, out Vector3 resolvedPosition, out Transform resolvedTransform))
             {
-                SetTargetLocation(resolvedLocation, resolvedPosition);
+                SetTargetLocation(resolvedLocation, resolvedPosition, resolvedTransform);
             }
             else
             {
@@ -427,16 +506,22 @@ public class AgentController : MonoBehaviour
             Debug.LogWarning($"地點 '{state.Location}' 在場景中未找到，代理人 '{agentName}' 將停在原地。");
         }
         _currentAction = state.CurrentState;
+        UpdateStatusIndicatorFromAction(_currentAction);
     }
-    private void SetTargetLocation(string locationName, Vector3 position)
+    private void SetTargetLocation(string locationName, Vector3 position, Transform locationTransform = null)
     {
         _targetLocationName = locationName;
         _targetPosition = position;
         _lastValidLocationName = locationName;
+        if (_movementController != null)
+        {
+            _movementController.RequestPathTo(locationName, position, locationTransform);
+        }
     }
-    private bool TryGetLocationPosition(string locationName, out Vector3 position)
+    private bool TryGetLocationPosition(string locationName, out Vector3 position, out Transform transform)
     {
         position = Vector3.zero;
+        transform = null;
         if (string.IsNullOrWhiteSpace(locationName) || _locationTransforms == null)
         {
             return false;
@@ -445,15 +530,17 @@ public class AgentController : MonoBehaviour
         if (TryFindLocationTransform(locationName, out Transform directTransform) && directTransform != null)
         {
             position = directTransform.position;
+            transform = directTransform;
             return true;
         }
         return false;
     }
 
-    private bool TryResolveCoordinateLocation(Vector3 coordinate, out string locationName, out Vector3 position)
+    private bool TryResolveCoordinateLocation(Vector3 coordinate, out string locationName, out Vector3 position, out Transform resolvedTransform)
     {
         locationName = null;
         position = coordinate;
+        resolvedTransform = null;
 
         if (_locationTransforms == null || _locationTransforms.Count == 0)
         {
@@ -470,10 +557,12 @@ public class AgentController : MonoBehaviour
                 if (_locationTransforms != null && _locationTransforms.TryGetValue(pair.Key, out Transform linkedTransform) && linkedTransform != null)
                 {
                     position = linkedTransform.position;
+                    resolvedTransform = linkedTransform;
                 }
                 else
                 {
                     position = collider.transform.position;
+                    resolvedTransform = collider.transform;
                 }
                 return true;
             }
@@ -492,6 +581,7 @@ public class AgentController : MonoBehaviour
                 closestDistance = distance;
                 closestName = pair.Key;
                 closestPosition = pair.Value.position;
+                resolvedTransform = pair.Value;
             }
         }
 
@@ -499,9 +589,14 @@ public class AgentController : MonoBehaviour
         {
             locationName = closestName;
             position = closestPosition;
+            if (_locationTransforms != null && _locationTransforms.TryGetValue(closestName, out Transform closestTransform))
+            {
+                resolvedTransform = closestTransform;
+            }
             return true;
         }
 
+        resolvedTransform = null;
         return false;
     }
     private static bool TryParseVector3(string input, out Vector3 result)
@@ -528,22 +623,26 @@ public class AgentController : MonoBehaviour
     {
         _transform.position = position;
         _targetPosition = position;
+        _movementController?.HandleTeleport(position);
         SetManualLocationOverrides(locationAliases);
         _lastInstructionDestination = null;
         NudgeAwayFromPortals();
         _visualOffset = Vector3.zero;
+        NotifyMovementCompleted();
 
     }
 
     public void SyncTargetToCurrentPosition()
     {
         _targetPosition = _transform.position;
+        _movementController?.HandleTeleport(_transform.position);
         _visualOffset = Vector3.zero;
     }
 
     public void SetActionState(string action)
     {
         _currentAction = action;
+        UpdateStatusIndicatorFromAction(action);
         if (bubbleController == null) return;
 
         string bubbleText = BuildBubbleText(action);
@@ -639,20 +738,20 @@ public class AgentController : MonoBehaviour
 
             if (destinationChanged || pathChanged)
             {
-                if (destinationChanged && TryGetLocationPosition(instruction.Origin, out Vector3 originPosition))
+                if (destinationChanged && TryGetLocationPosition(instruction.Origin, out Vector3 originPosition, out _))
                 {
                     _transform.position = originPosition;
+                    _movementController?.HandleTeleport(originPosition);
                 }
 
-                if (TryGetLocationPosition(nextStep, out Vector3 nextPosition))
+                if (TryGetLocationPosition(nextStep, out Vector3 nextPosition, out Transform nextTransform))
                 {
-                    _targetPosition = nextPosition;
-                    _targetLocationName = nextStep;
+                    SetTargetLocation(nextStep, nextPosition, nextTransform);
                 }
-                else if (TryGetLocationPosition(instruction.Destination, out Vector3 destinationPosition))
+                else if (TryGetLocationPosition(instruction.Destination, out Vector3 destinationPosition, out Transform destinationTransform))
                 {
-                    _targetPosition = destinationPosition;
-                    _targetLocationName = instruction.Destination;
+                    SetTargetLocation(instruction.Destination, destinationPosition, destinationTransform);
+
                 }
 
                 _lastInstructionDestination = instruction.Destination;
@@ -784,6 +883,59 @@ public class AgentController : MonoBehaviour
         Vector3 adjusted = _transform.position + new Vector3(offset.x, offset.y, 0f);
         _transform.position = adjusted;
         _targetPosition = adjusted;
+    }
+    internal void NotifyMovementStarted()
+    {
+        ShowActiveStatus("執行任務");
+    }
+
+    internal void NotifyMovementCompleted()
+    {
+        UpdateStatusIndicatorFromAction(_currentAction);
+    }
+
+    private void ShowIdleStatus()
+    {
+        UpdateStatusIndicator("待機", false);
+    }
+
+    private void ShowActiveStatus(string status)
+    {
+        string label = string.IsNullOrWhiteSpace(status) ? "執行任務" : status.Trim();
+        UpdateStatusIndicator(label, true);
+    }
+
+    private void UpdateStatusIndicator(string status, bool isActive)
+    {
+        _statusLabel = status;
+        if (nameTextUGUI != null)
+        {
+            nameTextUGUI.text = $"{_displayName} [{status}]";
+            nameTextUGUI.color = isActive ? _activeNameColor : _idleNameColor;
+        }
+    }
+
+    private void UpdateStatusIndicatorFromAction(string action)
+    {
+        if (IsIdleAction(action))
+        {
+            ShowIdleStatus();
+        }
+        else
+        {
+            ShowActiveStatus(action);
+        }
+    }
+
+    private static bool IsIdleAction(string action)
+    {
+        if (string.IsNullOrWhiteSpace(action))
+        {
+            return true;
+        }
+
+        string lower = action.Trim().ToLowerInvariant();
+        return lower.Contains("idle") || lower.Contains("待機") || lower.Contains("站立") || lower.Contains("wait") || lower.Contains("stand");
     }
 
     private string BuildBubbleText(string action)

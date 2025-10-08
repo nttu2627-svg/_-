@@ -33,6 +33,11 @@ public class PortalController : MonoBehaviour
 
     // 內部：實際使用的配對門
     private PortalController _resolvedTarget;
+    private Collider2D _collider;
+    private Collider2D _cachedInteriorCollider;
+
+    public int PortalId => portalId;
+    public PortalController TargetPortal => _resolvedTarget;
 
     void Reset()
     {
@@ -52,7 +57,7 @@ public class PortalController : MonoBehaviour
     void Awake()
     {
         if (portalId == -1) portalId = GetInstanceID();
-
+        _collider = GetComponent<Collider2D>();
         // 1) 直接引用優先
         if (targetPortal != null)
         {
@@ -83,37 +88,57 @@ public class PortalController : MonoBehaviour
         if (_resolvedTarget == null || exitPoint == null) return;
         if ((allowedLayers.value & (1 << other.gameObject.layer)) == 0) return;
 
-        // 需要 Teleportable2D（用來做冷卻標記）
-        var tp = other.GetComponent<Teleportable2D>();
-        if (tp == null) return;
+        var teleportable = other.GetComponent<Teleportable2D>();
+        if (teleportable == null) return;
 
-        if (tp.IsIgnoring) return;                                 // 剛傳送過
-        if (tp.lastPortalId == _resolvedTarget.portalId) return;   // 避免來回
+        TryTeleport(other.transform, teleportable);
+    }
 
-        var dst = _resolvedTarget;
-        var dstExit = dst.exitPoint != null ? dst.exitPoint : dst.transform;
+    public bool TryTeleport(Transform subject, Teleportable2D teleportable)
+    {
+        if (_resolvedTarget == null || exitPoint == null || subject == null)
+        {
+            return false;
+        }
 
-        // 計算落點
-        var obj = other.transform;
+        if ((allowedLayers.value & (1 << subject.gameObject.layer)) == 0)
+        {
+            return false;
+        }
+
+        if (teleportable != null)
+        {
+            if (teleportable.IsIgnoring)
+            {
+                return false;
+            }
+
+            if (teleportable.lastPortalId == _resolvedTarget.portalId)
+            {
+                return false;
+            }
+        }
+
+        PortalController dst = _resolvedTarget;
+        Transform dstExit = dst.exitPoint != null ? dst.exitPoint : dst.transform;
+
         Vector3 newPos;
         if (keepLocalOffset)
         {
-            Vector3 local = transform.InverseTransformPoint(obj.position);
+            Vector3 local = transform.InverseTransformPoint(subject.position);
             newPos = dstExit.TransformPoint(local);
         }
         else
         {
             newPos = dstExit.position;
         }
-        // 沿出口面向推出一點
         newPos += dstExit.right * Mathf.Max(0f, exitNudge);
 
-        // 速度/旋轉處理
-        var rb = other.attachedRigidbody;
+        Rigidbody2D rb = subject.GetComponent<Rigidbody2D>();
         Vector2 newVel = Vector2.zero;
         if (rb != null && preserveMomentum)
         {
-            newVel = rb.linearVelocity;
+            newVel = rb.velocity;
             if (rotateMomentumWithPortal)
             {
                 float delta = dstExit.eulerAngles.z - transform.eulerAngles.z;
@@ -121,21 +146,99 @@ public class PortalController : MonoBehaviour
             }
         }
 
-        float newZ = obj.eulerAngles.z;
+        float newZ = subject.eulerAngles.z;
         if (matchExitRotation)
         {
             float delta = dstExit.eulerAngles.z - transform.eulerAngles.z;
             newZ += delta;
         }
 
-        // 實際傳送
-        obj.position = newPos;
-        obj.rotation = Quaternion.Euler(0, 0, newZ);
-        if (rb != null && preserveMomentum) rb.linearVelocity = newVel;
+        if (teleportable != null)
+        {
+            Collider2D interior = dst.GetInteriorCollider();
+            newPos = teleportable.ClampPositionToInterior(newPos, interior);
+        }
 
-        // 設定雙向冷卻（本門與目標門）
-        tp.SetIgnore(reenterCooldown, portalId);
-        tp.SetIgnore(dst.reenterCooldown, dst.portalId);
+        subject.position = newPos;
+        subject.rotation = Quaternion.Euler(0, 0, newZ);
+
+        if (rb != null)
+        {
+            if (preserveMomentum)
+            {
+                rb.velocity = newVel;
+            }
+            else
+            {
+                rb.velocity = Vector2.zero;
+            }
+        }
+
+        teleportable?.SetIgnore(reenterCooldown, portalId);
+        teleportable?.SetIgnore(dst.reenterCooldown, dst.portalId);
+
+        return true;
+    }
+
+    public Vector3 GetExitPosition(Transform subject)
+    {
+        PortalController dst = _resolvedTarget != null ? _resolvedTarget : this;
+        Transform dstExit = dst.exitPoint != null ? dst.exitPoint : dst.transform;
+
+        Vector3 position;
+        if (keepLocalOffset && subject != null)
+        {
+            Vector3 local = transform.InverseTransformPoint(subject.position);
+            position = dstExit.TransformPoint(local);
+        }
+        else
+        {
+            position = dstExit.position;
+        }
+
+        return position + dstExit.right * Mathf.Max(0f, exitNudge);
+    }
+
+    public Collider2D GetInteriorCollider()
+    {
+        if (_cachedInteriorCollider != null)
+        {
+            return _cachedInteriorCollider;
+        }
+
+        BuildingController building = GetComponentInParent<BuildingController>();
+        if (building == null)
+        {
+            return null;
+        }
+
+        Collider2D[] colliders = building.GetComponentsInChildren<Collider2D>();
+        Collider2D fallback = null;
+        foreach (Collider2D collider in colliders)
+        {
+            if (collider == null || collider == _collider)
+            {
+                continue;
+            }
+
+            if (!collider.isTrigger)
+            {
+                _cachedInteriorCollider = collider;
+                return _cachedInteriorCollider;
+            }
+
+            if (fallback == null)
+            {
+                fallback = collider;
+            }
+        }
+
+        if (fallback != null)
+        {
+            _cachedInteriorCollider = fallback;
+        }
+
+        return _cachedInteriorCollider;
     }
 
     private static Vector2 Rotate(Vector2 v, float degrees)
