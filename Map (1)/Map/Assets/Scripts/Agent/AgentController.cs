@@ -1,5 +1,3 @@
-// Scripts/Agent/AgentController.cs (安全边距最终版)
-
 using UnityEngine;
 using TMPro;
 using System;
@@ -7,12 +5,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-
 using DisasterSimulation;
 
 public class AgentController : MonoBehaviour
 {
-    [Header("核心设定")]
+    [Header("核心設定")]
     [Tooltip("代理人的唯一標識符，必须与其 GameObject 的名字一致，例如 'ISTJ'")]
     public string agentName;
     
@@ -53,27 +50,16 @@ public class AgentController : MonoBehaviour
     private readonly HashSet<string> _manualLocationOverrides = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private const float CoordinateSnapThreshold = 8f;
     private string _lastInstructionDestination;
-    // 全局代理人列表，用於近身避障與分離
-    private static readonly List<AgentController> ActiveAgents = new List<AgentController>();
+
     // ### 分離效果調整 ###
-    // 加大半徑與力度，避免多個代理人模型重疊在同一位置
     private const float SeparationRadius = 1.2f;
     private const float SeparationStrength = 0.9f;
     private const float MaxSeparationOffset = 0.8f;
-    // 傳送後推離門口的距離加大，減少卡在門口的情況
     private const float PortalEscapeDistance = 1.0f;
     private static readonly Collider2D[] PortalOverlapBuffer = new Collider2D[8];
     private static readonly Collider2D[] AgentAvoidanceBuffer = new Collider2D[16];
+    private static readonly Collider2D[] StuckProbeBuffer = new Collider2D[8];
 
-    // 優化：使用 List 存儲物理查詢結果，取代 NonAlloc 缓冲陣列，並與 ContactFilter 配合，減少 GC 與棧上配置
-    // 這些 List 會在類間共用並持續重用，以避免每幀產生新的集合
-    private static readonly List<Collider2D> _agentDetectionResults = new List<Collider2D>(16);
-    private static readonly List<Collider2D> _portalDetectionResults = new List<Collider2D>(8);
-    // ContactFilter 用於指定圖層遮罩
-    private static ContactFilter2D _agentContactFilter;
-    private static bool _contactFilterInitialized = false;
-
-    // 群聚檢測的緩存：避免每幀都執行 Physics Overlap，改為定時更新
     [SerializeField, Tooltip("群聚檢測間隔（秒），較大值可減少物理查詢次數以改善效能")] private float _crowdCheckInterval = 0.25f;
     private float _lastCrowdCheckTime = 0f;
     private bool _cachedIsCrowded = false;
@@ -123,6 +109,11 @@ public class AgentController : MonoBehaviour
     [SerializeField, Tooltip("脫困檢測時考慮的障礙圖層。")]
     private LayerMask _stuckProbeMask = ~0;
 
+    // 用於取代舊版 NonAlloc API 的物理查詢過濾器
+    private ContactFilter2D _agentAvoidanceFilter;
+    private ContactFilter2D _stuckProbeFilter;
+    private ContactFilter2D _portalNudgeFilter;
+
     private float _teleportBoostUntil = -1f;
     private bool _lastTeleportUsedDoor = false;
     private int _stuckFrameCounter = 0;
@@ -151,19 +142,6 @@ public class AgentController : MonoBehaviour
     [SerializeField] private float teleportScaleDuration = 0.25f;
     private Coroutine _teleportEffectCoroutine;
 
-    /// <summary>
-    /// 初始化 ContactFilter 用於物理查詢。此方法只會呼叫一次。
-    /// </summary>
-    private void EnsureContactFilter()
-    {
-        if (_contactFilterInitialized) return;
-        _agentContactFilter = new ContactFilter2D();
-        _agentContactFilter.SetLayerMask(_agentAvoidanceMask);
-        _agentContactFilter.useLayerMask = true;
-        // 忽略觸發器避免計算 trigger collider
-        _agentContactFilter.useTriggers = false;
-        _contactFilterInitialized = true;
-    }
     void Awake()
     {
         _transform = transform;
@@ -204,7 +182,6 @@ public class AgentController : MonoBehaviour
 
         ShowIdleStatus();
 
-        // 若沒有綁定視覺根節點，嘗試自動找到第一個子節點用於動態效果
         if (_visualRoot == null)
         {
             if (_transform.childCount > 0)
@@ -216,9 +193,23 @@ public class AgentController : MonoBehaviour
                 _visualRoot = _transform;
             }
         }
+        
+        // 初始化物理查詢過濾器
+        _agentAvoidanceFilter = new ContactFilter2D();
+        _agentAvoidanceFilter.SetLayerMask(_agentAvoidanceMask);
+        _agentAvoidanceFilter.useTriggers = true; // NonAlloc 版本預設會包含觸發器
+
+        _stuckProbeFilter = new ContactFilter2D();
+        _stuckProbeFilter.SetLayerMask(_stuckProbeMask);
+        _stuckProbeFilter.useTriggers = true;
+
+        _portalNudgeFilter = new ContactFilter2D();
+        _portalNudgeFilter.NoFilter();
+        _portalNudgeFilter.useTriggers = true; // 需要檢測 PortalController，其碰撞體可能是觸發器
+
         gameObject.SetActive(false);
     }
-    
+
     public void Initialize(Dictionary<string, Transform> locations)
     {
         _locationTransforms = locations;
@@ -246,6 +237,12 @@ public class AgentController : MonoBehaviour
         {
             _movementController.RegisterLocations(_locationTransforms);
         }
+        if (TryResolveCoordinateLocation(_transform.position, out string resolvedName, out Vector3 resolvedPosition, out _))
+        {
+            _lastValidLocationName = resolvedName;
+            _targetLocationName = resolvedName;
+            _targetPosition = resolvedPosition;
+        }
     }
 
     void Update()
@@ -253,35 +250,38 @@ public class AgentController : MonoBehaviour
         if (!_isInitialized || !gameObject.activeSelf) return;
 
         Vector3 currentPosition = _transform.position;
-        float distanceToTarget = Vector3.Distance(currentPosition, _targetPosition);
+        Vector3 toTarget = _targetPosition - currentPosition;
+        float arrivalThresholdSqr = _arrivalThreshold * _arrivalThreshold;
+        float distanceSqr = toTarget.sqrMagnitude;
 
-        if (distanceToTarget <= _arrivalThreshold)
+        if (distanceSqr <= arrivalThresholdSqr)
         {
-            // 直接對齊目標位置
             _transform.position = _targetPosition;
             _previousFramePosition = _targetPosition;
             _stuckFrameCounter = 0;
-            // 更新待機時的浮動動畫
             UpdateVisualBobbing(0f);
             return;
         }
 
+        float distanceToTarget = Mathf.Sqrt(distanceSqr);
+        Vector3 direction = toTarget / distanceToTarget;
         float speed = ComputeDynamicSpeed(distanceToTarget);
-        Vector3 direction = distanceToTarget > 0.0001f ? (_targetPosition - currentPosition).normalized : Vector3.zero;
         float step = speed * Time.deltaTime;
-        if (step > distanceToTarget) step = distanceToTarget;
+        if (step > distanceToTarget)
+        {
+            step = distanceToTarget;
+        }
 
         Vector3 candidate = currentPosition + direction * step;
         candidate = ApplyAgentAvoidance(candidate);
 
-        if (Vector3.Distance(candidate, _targetPosition) <= _arrivalThreshold)
+        if ((_targetPosition - candidate).sqrMagnitude <= arrivalThresholdSqr)
         {
             candidate = _targetPosition;
         }
 
         _transform.position = candidate;
         UpdateStuckDetection(currentPosition, candidate, distanceToTarget);
-        // 移動時更新視覺浮動效果
         UpdateVisualBobbing(distanceToTarget);
     }
 
@@ -325,60 +325,88 @@ public class AgentController : MonoBehaviour
 
     private Vector3 ApplyAgentAvoidance(Vector3 candidatePosition)
     {
-        candidatePosition += ComputeSeparation(candidatePosition);
-
-        // 使用 List 版本的 OverlapCircle 搭配 ContactFilter，提高效能並避免非預期的 GC 產生
-        EnsureContactFilter();
-        _agentDetectionResults.Clear();
-        Physics2D.OverlapCircle((Vector2)candidatePosition, _agentAvoidanceRadius, _agentContactFilter, _agentDetectionResults);
-        int hits = _agentDetectionResults.Count;
-        if (hits <= 0)
+        float detectionRadius = Mathf.Max(_agentAvoidanceRadius, SeparationRadius);
+        int hitCount = Physics2D.OverlapCircle((Vector2)candidatePosition, detectionRadius, _agentAvoidanceFilter, AgentAvoidanceBuffer);
+        if (hitCount <= 0)
         {
             return candidatePosition;
         }
 
-        Vector2 separation = Vector2.zero;
-        for (int i = 0; i < hits; i++)
+        Vector2 separationAccum = Vector2.zero;
+        Vector2 avoidanceAccum = Vector2.zero;
+        int separationSamples = 0;
+        int avoidanceSamples = 0;
+
+        for (int i = 0; i < hitCount; i++)
         {
-            var col = _agentDetectionResults[i];
+            var col = AgentAvoidanceBuffer[i];
             if (col == null || !col.enabled) continue;
-            if (col.transform.IsChildOf(_transform)) continue;
+            if (col.isTrigger) continue;
+            if (col.transform == _transform || col.transform.IsChildOf(_transform)) continue;
 
             AgentController otherAgent = col.GetComponentInParent<AgentController>();
             if (otherAgent == null || otherAgent == this || !otherAgent.gameObject.activeSelf) continue;
 
-            Vector2 away = (Vector2)(candidatePosition - (Vector3)col.bounds.center);
-            float sqrMag = away.sqrMagnitude;
-            if (sqrMag < 0.0001f)
+            Vector2 offset = (Vector2)candidatePosition - (Vector2)col.bounds.center;
+            float sqrMagnitude = offset.sqrMagnitude;
+            if (sqrMagnitude < 0.0001f)
             {
-                away = UnityEngine.Random.insideUnitCircle.normalized * 0.1f;
-                sqrMag = away.sqrMagnitude;
+                offset = UnityEngine.Random.insideUnitCircle * 0.05f;
+                sqrMagnitude = offset.sqrMagnitude;
+                if (sqrMagnitude < 0.0001f)
+                {
+                    continue;
+                }
             }
 
-            float distance = Mathf.Sqrt(sqrMag);
-            float weight = Mathf.Clamp01((_agentAvoidanceRadius - distance) / _agentAvoidanceRadius);
-            separation += away.normalized * weight;
+            float distance = Mathf.Sqrt(sqrMagnitude);
+            Vector2 direction = offset / distance;
+
+            if (distance < SeparationRadius)
+            {
+                float weight = (SeparationRadius - distance) / SeparationRadius;
+                separationAccum += direction * weight;
+                separationSamples++;
+            }
+
+            if (distance < _agentAvoidanceRadius)
+            {
+                float weight = Mathf.Clamp01((_agentAvoidanceRadius - distance) / _agentAvoidanceRadius);
+                avoidanceAccum += direction * weight;
+                avoidanceSamples++;
+            }
         }
 
-        if (separation.sqrMagnitude > 0.0001f)
+        Vector3 adjusted = candidatePosition;
+
+        if (separationSamples > 0)
         {
-            Vector3 offset = new Vector3(separation.x, separation.y, 0f) * _agentAvoidanceStrength;
-            candidatePosition += offset;
+            Vector2 separation = separationAccum * (SeparationStrength / Mathf.Max(1, separationSamples));
+            float magnitude = separation.magnitude;
+            if (magnitude > MaxSeparationOffset)
+            {
+                separation = separation / magnitude * MaxSeparationOffset;
+            }
+            adjusted += new Vector3(separation.x, separation.y, 0f);
         }
 
-        return candidatePosition;
+        if (avoidanceSamples > 0)
+        {
+            Vector2 avoidance = avoidanceAccum / Mathf.Max(1, avoidanceSamples);
+            adjusted += new Vector3(avoidance.x, avoidance.y, 0f) * _agentAvoidanceStrength;
+        }
+
+        return adjusted;
     }
 
     private bool IsCrowded(Vector3 position, out float densityFactor)
     {
-        // 使用緩存以降低頻繁物理查詢造成的效能負擔
         if (_crowdCheckRadius <= 0f)
         {
             densityFactor = 0f;
             return false;
         }
 
-        // 若在檢查間隔之內，直接返回上次結果
         float currentTime = Time.time;
         if (currentTime - _lastCrowdCheckTime < _crowdCheckInterval)
         {
@@ -386,15 +414,14 @@ public class AgentController : MonoBehaviour
             return _cachedIsCrowded;
         }
 
-        EnsureContactFilter();
-        _agentDetectionResults.Clear();
-        Physics2D.OverlapCircle((Vector2)position, _crowdCheckRadius, _agentContactFilter, _agentDetectionResults);
+        int hitCount = Physics2D.OverlapCircle((Vector2)position, _crowdCheckRadius, _agentAvoidanceFilter, AgentAvoidanceBuffer);
         int neighbourCount = 0;
-        for (int i = 0; i < _agentDetectionResults.Count; i++)
+        for (int i = 0; i < hitCount; i++)
         {
-            var col = _agentDetectionResults[i];
+            var col = AgentAvoidanceBuffer[i];
             if (col == null || !col.enabled) continue;
-            if (col.transform.IsChildOf(_transform)) continue;
+            if (col.isTrigger) continue;
+            if (col.transform == _transform || col.transform.IsChildOf(_transform)) continue;
 
             AgentController otherAgent = col.GetComponentInParent<AgentController>();
             if (otherAgent == null || otherAgent == this || !otherAgent.gameObject.activeSelf) continue;
@@ -402,13 +429,8 @@ public class AgentController : MonoBehaviour
         }
 
         bool crowded = neighbourCount >= 1;
-        float density = 0f;
-        if (crowded)
-        {
-            density = Mathf.Clamp01(neighbourCount / Mathf.Max(1f, _crowdCountThreshold));
-        }
+        float density = crowded ? Mathf.Clamp01(neighbourCount / Mathf.Max(1f, _crowdCountThreshold)) : 0f;
 
-        // 更新緩存
         _lastCrowdCheckTime = currentTime;
         _cachedIsCrowded = crowded;
         _cachedDensityFactor = density;
@@ -464,25 +486,18 @@ public class AgentController : MonoBehaviour
 
         for (int i = 0; i < rays; i++)
         {
-            float angle = (360f / rays) * i;
-            float rad = angle * Mathf.Deg2Rad;
+            float rad = (Mathf.PI * 2f / rays) * i;
             Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
             Vector3 candidate = origin + new Vector3(dir.x, dir.y, 0f) * _unstuckProbeDistance;
 
-            // 使用臨時 contact filter 進行障礙檢測
-            ContactFilter2D probeFilter = new ContactFilter2D();
-            probeFilter.SetLayerMask(_stuckProbeMask);
-            probeFilter.useLayerMask = true;
-            probeFilter.useTriggers = false;
-            _agentDetectionResults.Clear();
-            Physics2D.OverlapCircle((Vector2)candidate, radius, probeFilter, _agentDetectionResults);
+            int hitCount = Physics2D.OverlapCircle((Vector2)candidate, radius, _stuckProbeFilter, StuckProbeBuffer);
             bool blocked = false;
-            for (int h = 0; h < _agentDetectionResults.Count; h++)
+            for (int h = 0; h < hitCount; h++)
             {
-                var col = _agentDetectionResults[h];
+                var col = StuckProbeBuffer[h];
                 if (col == null || !col.enabled) continue;
                 if (col.isTrigger) continue;
-                if (col.transform.IsChildOf(_transform)) continue;
+                if (col.transform == _transform || col.transform.IsChildOf(_transform)) continue;
                 blocked = true;
                 break;
             }
@@ -502,12 +517,9 @@ public class AgentController : MonoBehaviour
     }
     private void UpdateNameplatePosition()
     {
-        // ### 核心修正：增加一个安全边距 (padding) ###
-        float padding = 0.02f; // 2% 的萤幕边距
-
+        float padding = 0.02f; 
         Vector3 viewportPoint = _mainCamera.WorldToViewportPoint(_transform.position);
 
-        // 检查物件是否在摄影机前方，并且在加入了安全边距的视口范围内
         bool isVisible = viewportPoint.z > 0 &&
                          viewportPoint.x > padding && viewportPoint.x < 1 - padding &&
                          viewportPoint.y > padding && viewportPoint.y < 1 - padding;
@@ -790,7 +802,6 @@ public class AgentController : MonoBehaviour
     {
         if (!_isInitialized || state == null) return;
 
-        // 頻率限制：同一代理人太頻繁的更新會被略過
         if (Time.time - _lastStateApplyTime < _minStateApplyInterval)
         {
             return;
@@ -799,7 +810,6 @@ public class AgentController : MonoBehaviour
         string incomingLocation = state.Location ?? string.Empty;
         incomingLocation = incomingLocation.Trim();
 
-        // 若地點文字與目前的目標地點相同，且距離已經非常近，直接略過，避免重建路徑
         if (!string.IsNullOrEmpty(incomingLocation) &&
             !string.IsNullOrEmpty(_lastValidLocationName) &&
             string.Equals(incomingLocation, _lastValidLocationName, StringComparison.OrdinalIgnoreCase))
@@ -816,7 +826,6 @@ public class AgentController : MonoBehaviour
         if (state == null) return;
 
         incomingLocation = (state.Location ?? string.Empty).Trim();
-        incomingLocation = incomingLocation.Trim();
 
         if (string.IsNullOrEmpty(incomingLocation))
         {
@@ -858,8 +867,6 @@ public class AgentController : MonoBehaviour
         }
         else if (incomingLocation == "公寓")
         {
-            // 若後端傳來的地點在場景中沒有對應的標記（例如 "公寓"），
-            // 則維持目前的位置，避免代理人被傳回原點。
             _targetPosition = _transform.position;
         }
         else
@@ -868,8 +875,7 @@ public class AgentController : MonoBehaviour
         }
         _currentAction = state.CurrentState;
         UpdateStatusIndicatorFromAction(_currentAction);
-
-        // 成功處理一次才更新時間戳
+        
         _lastStateApplyTime = Time.time;
     }
     private void SetTargetLocation(string locationName, Vector3 position, Transform locationTransform = null)
@@ -967,22 +973,20 @@ public class AgentController : MonoBehaviour
     {
         result = Vector3.zero;
         if (string.IsNullOrWhiteSpace(input)) return false;
-        input = input.Trim();
         input = input.Trim('(', ')');
         string[] parts = input.Split(',');
         if (parts.Length != 3) return false;
-        float x, y, z;
-        if (!float.TryParse(parts[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out x)) return false;
-        if (!float.TryParse(parts[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out y)) return false;
-        if (!float.TryParse(parts[2].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out z)) return false;
 
-        result = new Vector3(x, y, z);
-        return true;
+        if (float.TryParse(parts[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float x) &&
+            float.TryParse(parts[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float y) &&
+            float.TryParse(parts[2].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float z))
+        {
+            result = new Vector3(x, y, z);
+            return true;
+        }
+        return false;
     }
-
-    /// <summary>
-    /// 立即將代理人傳送到指定位置，並同步目標位置。
-    /// </summary>
+    
     public void TeleportTo(Vector3 position, params string[] locationAliases)
     {
         _transform.position = position;
@@ -1013,7 +1017,6 @@ public class AgentController : MonoBehaviour
             _teleportBoostUntil = -1f;
         }
 
-        // 執行傳送視覺效果：快速縮放以提供過渡效果
         if (_visualRoot != null)
         {
             if (_teleportEffectCoroutine != null)
@@ -1144,7 +1147,6 @@ public class AgentController : MonoBehaviour
                 else if (TryGetLocationPosition(instruction.Destination, out Vector3 destinationPosition, out Transform destinationTransform))
                 {
                     SetTargetLocation(instruction.Destination, destinationPosition, destinationTransform);
-
                 }
 
                 _lastInstructionDestination = instruction.Destination;
@@ -1176,17 +1178,28 @@ public class AgentController : MonoBehaviour
     {
         string candidate = !string.IsNullOrWhiteSpace(_lastValidLocationName)
             ? _lastValidLocationName
-            : _targetLocationName;
+            : (!string.IsNullOrWhiteSpace(_targetLocationName) ? _targetLocationName : null);
+
+        if (string.IsNullOrWhiteSpace(candidate) &&
+            TryResolveCoordinateLocation(_transform.position, out string resolvedLocation, out Vector3 _, out Transform _))
+        {
+            _lastValidLocationName = resolvedLocation;
+            candidate = resolvedLocation;
+        }
+
+        if (string.IsNullOrWhiteSpace(candidate))
+        {
+            string guessed = GuessCurrentBuilding();
+            if (!string.IsNullOrWhiteSpace(guessed))
+            {
+                candidate = guessed;
+            }
+        }
 
         return LocationNameLocalizer.ToDisplayName(candidate);
     }
     void OnEnable()
     {
-        if (!ActiveAgents.Contains(this))
-        {
-            ActiveAgents.Add(this);
-        }
-
         _visualOffset = Vector3.zero;
         _targetPosition = _transform.position;
         _bobSeed = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
@@ -1194,7 +1207,6 @@ public class AgentController : MonoBehaviour
         _teleportBoostUntil = -1f;
         _stuckFrameCounter = 0;
         if (nameTextUGUI != null) nameTextUGUI.gameObject.SetActive(false);
-        // 重設視覺模型的位置與縮放
         if (_visualRoot != null)
         {
             _visualRoot.localPosition = Vector3.zero;
@@ -1204,11 +1216,9 @@ public class AgentController : MonoBehaviour
 
     void OnDisable()
     {
-        ActiveAgents.Remove(this);
         if (nameTextUGUI != null) nameTextUGUI.gameObject.SetActive(false);
         SetManualLocationOverrides();
         _visualOffset = Vector3.zero;
-        // 禁用時重置視覺模型的位置與縮放
         if (_visualRoot != null)
         {
             _visualRoot.localPosition = Vector3.zero;
@@ -1218,56 +1228,10 @@ public class AgentController : MonoBehaviour
         _stuckFrameCounter = 0;
     }
 
-    private Vector3 ComputeSeparation(Vector3 candidatePosition)
-    {
-        if (ActiveAgents.Count <= 1)
-        {
-            return Vector3.zero;
-        }
-
-        Vector2 accumulated = Vector2.zero;
-        int neighbourCount = 0;
-
-        foreach (var agent in ActiveAgents)
-        {
-            if (agent == null || agent == this || !agent.gameObject.activeSelf) continue;
-
-            Vector3 otherBase = agent._transform.position - agent._visualOffset;
-            Vector2 toOther = (Vector2)(candidatePosition - otherBase);
-            float sqrMagnitude = toOther.sqrMagnitude;
-            if (sqrMagnitude < 0.0001f || sqrMagnitude > SeparationRadius * SeparationRadius) continue;
-
-            float distance = Mathf.Sqrt(sqrMagnitude);
-            float weight = (SeparationRadius - distance) / SeparationRadius;
-            accumulated += toOther.normalized * weight;
-            neighbourCount++;
-        }
-
-        if (neighbourCount == 0)
-        {
-            return Vector3.zero;
-        }
-
-        Vector2 separation = accumulated * SeparationStrength;
-        float magnitude = separation.magnitude;
-        if (magnitude > MaxSeparationOffset)
-        {
-            separation = separation.normalized * MaxSeparationOffset;
-        }
-
-        return new Vector3(separation.x, separation.y, 0f);
-    }
-
     private void NudgeAwayFromPortals()
     {
-        // 使用可重用的 List 取得附近的傳送門，減少記憶體配置
-        _portalDetectionResults.Clear();
-        // ContactFilter2D 預設不設置圖層過濾，會返回所有重疊 collider
-        ContactFilter2D portalFilter = new ContactFilter2D();
-        portalFilter.useTriggers = true; // 傳送門通常為 trigger collider
-        // 不設 useLayerMask 表示不過濾圖層
-        Physics2D.OverlapCircle((Vector2)_transform.position, PortalEscapeDistance, portalFilter, _portalDetectionResults);
-        if (_portalDetectionResults.Count == 0)
+        int hitCount = Physics2D.OverlapCircle((Vector2)_transform.position, PortalEscapeDistance, _portalNudgeFilter, PortalOverlapBuffer);
+        if (hitCount <= 0)
         {
             return;
         }
@@ -1275,9 +1239,9 @@ public class AgentController : MonoBehaviour
         Vector2 cumulative = Vector2.zero;
         int portalCount = 0;
 
-        for (int i = 0; i < _portalDetectionResults.Count; i++)
+        for (int i = 0; i < hitCount; i++)
         {
-            var collider = _portalDetectionResults[i];
+            var collider = PortalOverlapBuffer[i];
             if (collider == null || collider.GetComponent<PortalController>() == null) continue;
 
             Vector2 away = (Vector2)_transform.position - (Vector2)collider.bounds.center;
@@ -1300,33 +1264,21 @@ public class AgentController : MonoBehaviour
         _transform.position = adjusted;
         _targetPosition = adjusted;
     }
-
-    /// <summary>
-    /// 根據代理人當前狀態更新視覺浮動效果。移動時使用較大幅度與頻率，待機時則較為平緩。
-    /// 此方法會更新 _visualOffset 並同步到 _visualRoot 的 localPosition。
-    /// </summary>
-    /// <param name="distanceToTarget">當前距離目標的距離，用來判斷是否正在移動</param>
+    
     private void UpdateVisualBobbing(float distanceToTarget)
     {
-        // 沒有視覺節點時直接返回
         if (_visualRoot == null) return;
 
-        // 判斷使用移動或待機參數
         bool isMoving = distanceToTarget > _arrivalThreshold;
         float amplitude = isMoving ? _movingBobAmplitude : _idleBobAmplitude;
         float frequency = isMoving ? _movingBobFrequency : _idleBobFrequency;
 
-        // 計算正弦偏移
         float offsetY = Mathf.Sin(Time.time * frequency + _bobSeed) * amplitude;
         _visualOffset = new Vector3(0f, offsetY, 0f);
-
-        // 將偏移套用至視覺根物件
+        
         _visualRoot.localPosition = _visualOffset;
     }
-
-    /// <summary>
-    /// 傳送時的縮放動畫，用於提供視覺過渡效果。會將 _visualRoot 的縮放從 0 漸變至 1。
-    /// </summary>
+    
     private IEnumerator PlayTeleportEffect()
     {
         if (_visualRoot == null || teleportScaleDuration <= 0f)
@@ -1334,14 +1286,12 @@ public class AgentController : MonoBehaviour
             yield break;
         }
 
-        // 初始縮放至 0，隱藏模型
         _visualRoot.localScale = Vector3.zero;
         float elapsed = 0f;
         while (elapsed < teleportScaleDuration)
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / teleportScaleDuration);
-            // 使用 SmoothStep 使放大過程更自然
             float scale = Mathf.SmoothStep(0f, 1f, t);
             _visualRoot.localScale = new Vector3(scale, scale, scale);
             yield return null;
