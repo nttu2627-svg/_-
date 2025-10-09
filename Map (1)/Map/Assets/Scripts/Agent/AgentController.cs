@@ -38,6 +38,10 @@ public class AgentController : MonoBehaviour
     [SerializeField] private float _movingBobFrequency = 4f;
     [SerializeField] private float _idleBobAmplitude = 0.08f;
     [SerializeField] private float _idleBobFrequency = 1.5f;
+
+    [SerializeField, Tooltip("同一代理連續套用後端狀態的最小時間間隔（秒），避免高頻重複指令造成卡頓）")]
+    private float _minStateApplyInterval = 0.05f;
+    private float _lastStateApplyTime = -999f;
     private Vector3 _visualOffset = Vector3.zero;
     private float _bobSeed;
     private Camera _mainCamera;
@@ -784,10 +788,34 @@ public class AgentController : MonoBehaviour
     }
     public void UpdateState(AgentState state)
     {
+        if (!_isInitialized || state == null) return;
+
+        // 頻率限制：同一代理人太頻繁的更新會被略過
+        if (Time.time - _lastStateApplyTime < _minStateApplyInterval)
+        {
+            return;
+        }
+
+        string incomingLocation = state.Location ?? string.Empty;
+        incomingLocation = incomingLocation.Trim();
+
+        // 若地點文字與目前的目標地點相同，且距離已經非常近，直接略過，避免重建路徑
+        if (!string.IsNullOrEmpty(incomingLocation) &&
+            !string.IsNullOrEmpty(_lastValidLocationName) &&
+            string.Equals(incomingLocation, _lastValidLocationName, StringComparison.OrdinalIgnoreCase))
+        {
+            float dist = Vector2.Distance(_transform.position, _targetPosition);
+            if (dist <= _arrivalThreshold * 1.5f)
+            {
+                _currentAction = state.CurrentState;
+                _lastStateApplyTime = Time.time;
+                return;
+            }
+        }
         if (!_isInitialized) return;
         if (state == null) return;
 
-        string incomingLocation = state.Location ?? string.Empty;
+        incomingLocation = (state.Location ?? string.Empty).Trim();
         incomingLocation = incomingLocation.Trim();
 
         if (string.IsNullOrEmpty(incomingLocation))
@@ -840,6 +868,9 @@ public class AgentController : MonoBehaviour
         }
         _currentAction = state.CurrentState;
         UpdateStatusIndicatorFromAction(_currentAction);
+
+        // 成功處理一次才更新時間戳
+        _lastStateApplyTime = Time.time;
     }
     private void SetTargetLocation(string locationName, Vector3 position, Transform locationTransform = null)
     {

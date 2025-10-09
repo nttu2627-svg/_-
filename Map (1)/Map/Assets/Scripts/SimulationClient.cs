@@ -1,4 +1,4 @@
-// Scripts/SimulationClient.cs (功能健壯最終版)
+// Scripts/SimulationClient.cs (Unity 6, message coalescing + per-frame budget)
 
 using UnityEngine;
 using System;
@@ -8,12 +8,22 @@ using System.Text;
 using System.Threading.Tasks;
 using NativeWebSocket;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq; // 確保引用 JToken
+using Newtonsoft.Json.Linq;
 
 public class SimulationClient : MonoBehaviour
 {
     [Header("Connection Settings")]
     public string serverUrl = "ws://localhost:8765";
+
+    [Header("Performance Settings (Unity 6)")]
+    [Tooltip("每幀最多處理的主線程動作數，避免一次吃光整幀造成前端掉幀與延遲。")]
+    [Range(1, 64)] public int maxActionsPerFrame = 8;
+
+    [Tooltip("合併高頻 update 封包：只保留最新一次，在 Update() 套用，避免排隊造成延遲。")]
+    public bool coalesceUpdates = true;
+
+    [Tooltip("是否輸出原始封包內容（大量訊息時請關閉以免卡頓）。")]
+    public bool verboseLog = false;
 
     [Header("Scene References")]
     public Transform characterRoot;
@@ -21,6 +31,7 @@ public class SimulationClient : MonoBehaviour
     public Transform buildingRoot;
     [Tooltip("額外的地點根節點 (例如 '傳送點' 群組)，會一併掃描加入位置查找表。")]
     public Transform[] additionalLocationRoots;
+
     // 私有變數
     private WebSocket websocket;
     private readonly Queue<Action> _mainThreadActions = new Queue<Action>();
@@ -36,6 +47,13 @@ public class SimulationClient : MonoBehaviour
     private readonly Collider2D[] _spawnOverlapBuffer = new Collider2D[16];
     private ContactFilter2D _spawnContactFilter;
     private bool _spawnContactFilterConfigured;
+
+    // --- 合併最新封包（避免排隊爆量） ---
+    private readonly object _pendingLock = new object();
+    private UpdateData _pendingUpdate;            // 最新 update
+    private EvaluationReport _pendingEvaluation;  // 最新 evaluation（通常頻率低）
+    private EarthquakeData _pendingQuake;         // 最新地震事件（以最新為準）
+
     private static readonly Dictionary<string, string[]> InteriorAliasOverrides = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
     {
         {"公寓_一樓", new[] {"Apartment_F1", "Apartment", "公寓"}},
@@ -58,15 +76,17 @@ public class SimulationClient : MonoBehaviour
     };
 
     // --- 全局靜態事件 ---
-    // 外部腳本 (如 UIController) 可以訂閱這些事件來接收更新
     public static event Action<string> OnStatusUpdate;
     public static event Action<UpdateData> OnLogUpdate;
     public static event Action<EvaluationReport> OnEvaluationReceived;
-    public static event Action<float> OnEarthquake; // 地震事件
+    public static event Action<float> OnEarthquake;
 
     [Obsolete]
     void Start()
     {
+        // 避免 Editor VSync 差異導致測試延遲偏大
+        Application.targetFrameRate = 60;
+
         Debug.Log("[SimulationClient] Starting...");
         ConfigureSpawnContactFilter();
         InitializeSceneReferences();
@@ -86,24 +106,76 @@ public class SimulationClient : MonoBehaviour
         };
         _spawnContactFilterConfigured = true;
     }
+
     void Update()
     {
-        // 在主線程中執行來自網路線程的任務
+        // 先讓 WebSocket 驅動接收
+        #if !UNITY_WEBGL || UNITY_EDITOR
+        if (websocket != null) { websocket.DispatchMessageQueue(); }
+        #endif
+
+        // 每幀只處理有限數量的排程動作，避免吃光整幀
+        int budget = Mathf.Max(1, maxActionsPerFrame);
         lock (_mainThreadActions)
         {
-            while (_mainThreadActions.Count > 0)
+            while (budget-- > 0 && _mainThreadActions.Count > 0)
             {
                 var action = _mainThreadActions.Dequeue();
                 try { action?.Invoke(); }
                 catch (Exception e) { Debug.LogError($"[SimulationClient] EXCEPTION in Main Thread Action: {e}"); }
             }
         }
-        
-        #if !UNITY_WEBGL || UNITY_EDITOR
-        if (websocket != null) { websocket.DispatchMessageQueue(); }
-        #endif
+
+        // 合併的最新訊息在這裡套用，避免排隊
+        if (coalesceUpdates)
+        {
+            UpdateData latestUpdate = null;
+            EvaluationReport latestEval = null;
+            EarthquakeData latestQuake = null;
+
+            lock (_pendingLock)
+            {
+                if (_pendingUpdate != null) { latestUpdate = _pendingUpdate; _pendingUpdate = null; }
+                if (_pendingEvaluation != null) { latestEval = _pendingEvaluation; _pendingEvaluation = null; }
+                if (_pendingQuake != null) { latestQuake = _pendingQuake; _pendingQuake = null; }
+            }
+
+            if (latestUpdate != null)
+            {
+                try
+                {
+                    OnStatusUpdate?.Invoke(latestUpdate.Status);
+                    OnLogUpdate?.Invoke(latestUpdate);
+                    UpdateAllAgentStates(latestUpdate.AgentStates);
+                    UpdateAllBuildingStates(latestUpdate.BuildingStates);
+                    ApplyAgentActions(latestUpdate.AgentActions);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"[SimulationClient] Error applying coalesced update: {ex}");
+                }
+            }
+            if (latestEval != null)
+            {
+                try { OnEvaluationReceived?.Invoke(latestEval); }
+                catch (Exception ex) { Debug.LogError($"[SimulationClient] Error applying evaluation: {ex}"); }
+            }
+            if (latestQuake != null)
+            {
+                try
+                {
+                    UpdateAllAgentStates(latestQuake.AgentStates);
+                    UpdateAllBuildingStates(latestQuake.BuildingStates);
+                    OnEarthquake?.Invoke(latestQuake.Intensity);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"[SimulationClient] Error applying quake: {ex}");
+                }
+            }
+        }
     }
-    
+
     private void OnApplicationQuit()
     {
         if (websocket != null && websocket.State == WebSocketState.Open)
@@ -112,6 +184,7 @@ public class SimulationClient : MonoBehaviour
             _ = websocket.Close();
         }
     }
+
     private static readonly (string english, string localized)[] LocationPrefixAliases = new (string, string)[]
     {
         ("Apartment", "公寓"),
@@ -124,10 +197,10 @@ public class SimulationClient : MonoBehaviour
         ("Subway", "地鐵"),
         ("Exterior", "室外")
     };
+
     private void RegisterLocationTransforms(Transform parent)
     {
         if (parent == null) return;
-
         foreach (Transform child in parent)
         {
             RegisterLocationTransform(child.name, child);
@@ -137,10 +210,7 @@ public class SimulationClient : MonoBehaviour
 
     private void RegisterLocationTransform(string key, Transform transform)
     {
-        if (string.IsNullOrWhiteSpace(key) || transform == null)
-        {
-            return;
-        }
+        if (string.IsNullOrWhiteSpace(key) || transform == null) return;
 
         string trimmed = key.Trim();
         AddLocationAlias(trimmed, transform);
@@ -166,10 +236,7 @@ public class SimulationClient : MonoBehaviour
 
     private void AddLocationAlias(string aliasKey, Transform transform)
     {
-        if (string.IsNullOrWhiteSpace(aliasKey) || transform == null)
-        {
-            return;
-        }
+        if (string.IsNullOrWhiteSpace(aliasKey) || transform == null) return;
 
         if (!_locationTransforms.ContainsKey(aliasKey))
         {
@@ -185,25 +252,15 @@ public class SimulationClient : MonoBehaviour
 
     private static string NormalizeLocationKey(string value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return string.Empty;
-        }
-
+        if (string.IsNullOrWhiteSpace(value)) return string.Empty;
         var builder = new StringBuilder(value.Length);
         foreach (char c in value)
         {
-            if (char.IsWhiteSpace(c) || c == '_' || c == '-' || c == '（' || c == '）')
-            {
-                continue;
-            }
-
+            if (char.IsWhiteSpace(c) || c == '_' || c == '-' || c == '（' || c == '）') continue;
             builder.Append(char.ToUpperInvariant(c));
         }
-
         return builder.ToString();
     }
-
 
     private Transform FindLocationTransform(string locationName)
     {
@@ -213,7 +270,6 @@ public class SimulationClient : MonoBehaviour
         {
             return cached;
         }
-
         if (locationRoot == null) return null;
 
         Transform found = FindChildRecursive(locationRoot, locationName);
@@ -238,7 +294,6 @@ public class SimulationClient : MonoBehaviour
     private Collider2D FindLocationCollider(Transform locationTransform)
     {
         if (locationTransform == null) return null;
-
         var colliders = locationTransform.GetComponentsInChildren<Collider2D>();
         foreach (var col in colliders)
         {
@@ -273,11 +328,11 @@ public class SimulationClient : MonoBehaviour
                 return col;
             }
         }
-
         return null;
     }
 
-    private List<Vector3> GenerateSpawnPositions(Transform locationTransform, int count, Collider2D overrideArea = null)    {
+    private List<Vector3> GenerateSpawnPositions(Transform locationTransform, int count, Collider2D overrideArea = null)
+    {
         var positions = new List<Vector3>();
         if ((locationTransform == null && overrideArea == null) || count <= 0) return positions;
 
@@ -336,7 +391,6 @@ public class SimulationClient : MonoBehaviour
                 positions.Add(new Vector3(candidate.x, candidate.y, locationTransform.position.z));
             }
         }
-
         return positions;
     }
 
@@ -361,10 +415,7 @@ public class SimulationClient : MonoBehaviour
             }
         }
 
-        if (!_spawnContactFilterConfigured)
-        {
-            ConfigureSpawnContactFilter();
-        }
+        if (!_spawnContactFilterConfigured) { ConfigureSpawnContactFilter(); }
 
         int hitCount = Physics2D.OverlapCircle(candidate, AgentCollisionRadius, _spawnContactFilter, _spawnOverlapBuffer);
         for (int i = 0; i < hitCount; i++)
@@ -377,9 +428,9 @@ public class SimulationClient : MonoBehaviour
             if (hit.isTrigger) continue;
             return false;
         }
-
         return true;
     }
+
     [Obsolete]
     private void InitializeSceneReferences()
     {
@@ -419,9 +470,7 @@ public class SimulationClient : MonoBehaviour
             }
             Debug.Log($"[SimulationClient] Registered {_buildingControllers.Count} building controllers.");
         }
-        // 收集場景中所有名稱包含 "Bounds" 的 Collider2D，避免隨機傳送到不可到達區域。
         CachePhysicsColliders();
-    
     }
 
     private async Task ConnectToServer()
@@ -430,33 +479,75 @@ public class SimulationClient : MonoBehaviour
         websocket.OnOpen += () => EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke("已連接到伺服器"));
         websocket.OnError += (e) => EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke($"錯誤: {e}"));
         websocket.OnClose += (e) => EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke($"與伺服器斷開連接 (代碼: {e})"));
-        
-        websocket.OnMessage += (bytes) => {
+
+        websocket.OnMessage += (bytes) =>
+        {
             var message = System.Text.Encoding.UTF8.GetString(bytes);
-            Debug.Log($"[SimulationClient] Raw message received:\n{message}");
+            if (verboseLog)
+            {
+                Debug.Log($"[SimulationClient] Raw message received ({bytes?.Length ?? 0} bytes)");
+            }
+
             try
             {
                 var wsMessage = JsonConvert.DeserializeObject<WebSocketMessage>(message);
-                // 將反序列化後的訊息排入主線程佇列等待處理
+
+                if (coalesceUpdates && wsMessage != null)
+                {
+                    // 直接在接收執行緒反序列化 Data → 暫存最新
+                    switch (wsMessage.Type)
+                    {
+                        case "update":
+                            if (wsMessage.Data != null)
+                            {
+                                var updateData = wsMessage.Data.ToObject<UpdateData>();
+                                lock (_pendingLock) { _pendingUpdate = updateData; }
+                            }
+                            return;
+
+                        case "evaluation":
+                            if (wsMessage.Data != null)
+                            {
+                                var eval = wsMessage.Data.ToObject<EvaluationReport>();
+                                lock (_pendingLock) { _pendingEvaluation = eval; }
+                            }
+                            return;
+
+                        case "earthquake":
+                            if (wsMessage.Data != null)
+                            {
+                                var quake = wsMessage.Data.ToObject<EarthquakeData>();
+                                lock (_pendingLock) { _pendingQuake = quake; }
+                            }
+                            return;
+
+                        case "status":
+                        case "error":
+                        case "end":
+                            // 非高頻訊息仍走主執行緒排程
+                            EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke(wsMessage.Message));
+                            return;
+                    }
+                }
+
+                // 若未啟用 coalescing，或非上述類型，仍以 Queue 方式交給主執行緒
                 EnqueueMainThreadAction(() => ProcessMessageOnMainThread(wsMessage));
             }
             catch (Exception e)
             {
-                EnqueueMainThreadAction(() => Debug.LogError($"[SimulationClient] JSON Deserialization failed: {e.Message}\nRawData: {message}"));
+                EnqueueMainThreadAction(() => Debug.LogError($"[SimulationClient] JSON Deserialization failed: {e.Message}"));
             }
         };
+
         await websocket.Connect();
     }
-    
-    /// <summary>
-    /// 在主線程中安全地處理來自 WebSocket 的訊息。
-    /// </summary>
+
+    /// <summary>在主線程中安全地處理來自 WebSocket 的訊息。</summary>
     private void ProcessMessageOnMainThread(WebSocketMessage wsMessage)
     {
         if (wsMessage == null) return;
         try
         {
-            // 使用 switch 根據訊息類型，將 Data 反序列化為對應的具體類別
             switch (wsMessage.Type)
             {
                 case "update":
@@ -467,10 +558,10 @@ public class SimulationClient : MonoBehaviour
                         OnLogUpdate?.Invoke(updateData);
                         UpdateAllAgentStates(updateData.AgentStates);
                         UpdateAllBuildingStates(updateData.BuildingStates);
-                        ApplyAgentActions(updateData.AgentActions); 
+                        ApplyAgentActions(updateData.AgentActions);
                     }
                     break;
-                    
+
                 case "evaluation":
                     if (wsMessage.Data != null)
                     {
@@ -489,8 +580,8 @@ public class SimulationClient : MonoBehaviour
                     }
                     break;
 
-                case "status": 
-                case "error": 
+                case "status":
+                case "error":
                 case "end":
                     OnStatusUpdate?.Invoke(wsMessage.Message);
                     break;
@@ -518,7 +609,7 @@ public class SimulationClient : MonoBehaviour
             }
         }
     }
-    
+
     private void UpdateAllBuildingStates(Dictionary<string, BuildingState> buildingStates)
     {
         if (buildingStates == null) return;
@@ -530,6 +621,7 @@ public class SimulationClient : MonoBehaviour
             }
         }
     }
+
     private void ApplyAgentActions(List<AgentActionInstruction> agentActions)
     {
         if (agentActions == null || agentActions.Count == 0) return;
@@ -545,10 +637,8 @@ public class SimulationClient : MonoBehaviour
             }
         }
     }
-    private bool IsInsideBounds(Vector3 position)
-    {
-        return IsInsideInteriorBounds(new Vector2(position.x, position.y));
-    }
+
+    private bool IsInsideBounds(Vector3 position) => IsInsideInteriorBounds(new Vector2(position.x, position.y));
 
     private Vector3 GetRandomApartmentPosition()
     {
@@ -715,7 +805,7 @@ public class SimulationClient : MonoBehaviour
             OnStatusUpdate?.Invoke("錯誤：未連接到伺服器");
             return;
         }
-        
+
         Debug.Log("[SimulationClient] Activating selected agents for simulation...");
         _activeAgentControllers.Clear();
         foreach (var agentName in parameters.Mbti)
@@ -735,6 +825,7 @@ public class SimulationClient : MonoBehaviour
         {
             TeleportActiveAgentsToApartmentArea();
         }
+
         var command = new SimulationStartCommand { Params = parameters };
         string jsonCommand = JsonConvert.SerializeObject(command, Formatting.Indented);
         OnStatusUpdate?.Invoke("已發送模擬指令，等待後端響應...");
@@ -743,7 +834,6 @@ public class SimulationClient : MonoBehaviour
 
     public async void SendTeleportRequest(string agentName, string targetPortalName)
     {
-        // ... (這部分與您提供的程式碼完全相同，無需修改)
         if (websocket == null || websocket.State != WebSocketState.Open)
         {
             Debug.LogWarning("Cannot send teleport request: WebSocket is not connected.");
@@ -758,7 +848,7 @@ public class SimulationClient : MonoBehaviour
         };
 
         string jsonCommand = JsonConvert.SerializeObject(command);
-        Debug.Log($"[SimulationClient] Sending teleport request: {jsonCommand}");
+        if (verboseLog) Debug.Log($"[SimulationClient] Sending teleport request: {jsonCommand}");
         await websocket.SendText(jsonCommand);
     }
 
@@ -908,12 +998,8 @@ public class SimulationClient : MonoBehaviour
         foreach (var collider in _boundsColliders)
         {
             if (collider == null) continue;
-            if (collider.OverlapPoint(position))
-            {
-                return true;
-            }
+            if (collider.OverlapPoint(position)) return true;
         }
-
         return false;
     }
 
@@ -922,12 +1008,8 @@ public class SimulationClient : MonoBehaviour
         foreach (var collider in _houseCollisionColliders)
         {
             if (collider == null) continue;
-            if (collider.OverlapPoint(position))
-            {
-                return true;
-            }
+            if (collider.OverlapPoint(position)) return true;
         }
-
         return false;
     }
 
@@ -949,7 +1031,6 @@ public class SimulationClient : MonoBehaviour
             result = new Vector3(candidate.x, candidate.y, collider.transform.position.z);
             return true;
         }
-
         return false;
     }
 }
