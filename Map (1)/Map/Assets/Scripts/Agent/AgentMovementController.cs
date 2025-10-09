@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+
 
 [DisallowMultipleComponent]
 public class AgentMovementController : MonoBehaviour
@@ -343,39 +345,43 @@ public class AgentMovementController : MonoBehaviour
         }
     }
 
-    private void EnsurePortalLookup()
+private void EnsurePortalLookup()
+{
+    if (_portalsByBuilding != null && _allPortals.Count > 0)
+        return;
+
+    _portalsByBuilding = new Dictionary<string, List<PortalController>>(StringComparer.OrdinalIgnoreCase);
+    _allPortals.Clear();
+
+    PortalController[] portals;
+
+#if UNITY_2023_1_OR_NEWER
+    // ✅ Unity 6 / 2025：新版 API，參數順序為 (includeInactive, sortMode)
+    portals = FindObjectsByType<PortalController>(
+        FindObjectsInactive.Include,
+        FindObjectsSortMode.None
+    );
+#else
+    // ↩️ 舊版回退
+    portals = FindObjectsOfType<PortalController>(true);
+#endif
+
+    foreach (var portal in portals)
     {
-        if (_portalsByBuilding != null && _allPortals.Count > 0)
+        if (!portal) continue;
+
+        _allPortals.Add(portal);
+
+        string building = DeterminePortalBuilding(portal);
+        if (!_portalsByBuilding.TryGetValue(building, out var list))
         {
-            return;
+            list = new List<PortalController>();
+            _portalsByBuilding[building] = list;
         }
-
-        _portalsByBuilding = new Dictionary<string, List<PortalController>>(StringComparer.OrdinalIgnoreCase);
-        _allPortals.Clear();
-
-        PortalController[] portals = FindObjectsOfType<PortalController>(true);
-        foreach (PortalController portal in portals)
-        {
-            if (portal == null)
-            {
-                continue;
-            }
-
-            _allPortals.Add(portal);
-
-            string building = DeterminePortalBuilding(portal);
-            if (!_portalsByBuilding.TryGetValue(building, out List<PortalController> list))
-            {
-                list = new List<PortalController>();
-                _portalsByBuilding[building] = list;
-            }
-
-            if (!list.Contains(portal))
-            {
-                list.Add(portal);
-            }
-        }
+        if (!list.Contains(portal))
+            list.Add(portal);
     }
+}
 
     private string DeterminePortalBuilding(PortalController portal)
     {
