@@ -61,6 +61,20 @@ public class AgentController : MonoBehaviour
     private static readonly Collider2D[] PortalOverlapBuffer = new Collider2D[8];
     private static readonly Collider2D[] AgentAvoidanceBuffer = new Collider2D[16];
 
+    // 優化：使用 List 存儲物理查詢結果，取代 NonAlloc 缓冲陣列，並與 ContactFilter 配合，減少 GC 與棧上配置
+    // 這些 List 會在類間共用並持續重用，以避免每幀產生新的集合
+    private static readonly List<Collider2D> _agentDetectionResults = new List<Collider2D>(16);
+    private static readonly List<Collider2D> _portalDetectionResults = new List<Collider2D>(8);
+    // ContactFilter 用於指定圖層遮罩
+    private static ContactFilter2D _agentContactFilter;
+    private static bool _contactFilterInitialized = false;
+
+    // 群聚檢測的緩存：避免每幀都執行 Physics Overlap，改為定時更新
+    [SerializeField, Tooltip("群聚檢測間隔（秒），較大值可減少物理查詢次數以改善效能")] private float _crowdCheckInterval = 0.25f;
+    private float _lastCrowdCheckTime = 0f;
+    private bool _cachedIsCrowded = false;
+    private float _cachedDensityFactor = 0f;
+
     [Header("移動速度調整")]
     [SerializeField, Tooltip("非傳送狀態下的基礎速度倍率。")]
     private float _baseSpeedMultiplier = 1.6f;
@@ -132,6 +146,20 @@ public class AgentController : MonoBehaviour
     [Tooltip("傳送動畫持續時間，單位秒。")]
     [SerializeField] private float teleportScaleDuration = 0.25f;
     private Coroutine _teleportEffectCoroutine;
+
+    /// <summary>
+    /// 初始化 ContactFilter 用於物理查詢。此方法只會呼叫一次。
+    /// </summary>
+    private void EnsureContactFilter()
+    {
+        if (_contactFilterInitialized) return;
+        _agentContactFilter = new ContactFilter2D();
+        _agentContactFilter.SetLayerMask(_agentAvoidanceMask);
+        _agentContactFilter.useLayerMask = true;
+        // 忽略觸發器避免計算 trigger collider
+        _agentContactFilter.useTriggers = false;
+        _contactFilterInitialized = true;
+    }
     void Awake()
     {
         _transform = transform;
@@ -295,7 +323,11 @@ public class AgentController : MonoBehaviour
     {
         candidatePosition += ComputeSeparation(candidatePosition);
 
-        int hits = Physics2D.OverlapCircleNonAlloc(candidatePosition, _agentAvoidanceRadius, AgentAvoidanceBuffer, _agentAvoidanceMask);
+        // 使用 List 版本的 OverlapCircle 搭配 ContactFilter，提高效能並避免非預期的 GC 產生
+        EnsureContactFilter();
+        _agentDetectionResults.Clear();
+        Physics2D.OverlapCircle((Vector2)candidatePosition, _agentAvoidanceRadius, _agentContactFilter, _agentDetectionResults);
+        int hits = _agentDetectionResults.Count;
         if (hits <= 0)
         {
             return candidatePosition;
@@ -304,14 +336,14 @@ public class AgentController : MonoBehaviour
         Vector2 separation = Vector2.zero;
         for (int i = 0; i < hits; i++)
         {
-            var col = AgentAvoidanceBuffer[i];
+            var col = _agentDetectionResults[i];
             if (col == null || !col.enabled) continue;
             if (col.transform.IsChildOf(_transform)) continue;
 
             AgentController otherAgent = col.GetComponentInParent<AgentController>();
             if (otherAgent == null || otherAgent == this || !otherAgent.gameObject.activeSelf) continue;
 
-            Vector2 away = (Vector2)(candidatePosition - col.bounds.center);
+            Vector2 away = (Vector2)(candidatePosition - (Vector3)col.bounds.center);
             float sqrMag = away.sqrMagnitude;
             if (sqrMag < 0.0001f)
             {
@@ -335,16 +367,28 @@ public class AgentController : MonoBehaviour
 
     private bool IsCrowded(Vector3 position, out float densityFactor)
     {
-        densityFactor = 0f;
-        if (_crowdCheckRadius <= 0f) return false;
-
-        int hits = Physics2D.OverlapCircleNonAlloc(position, _crowdCheckRadius, AgentAvoidanceBuffer, _agentAvoidanceMask);
-        if (hits <= 0) return false;
-
-        int neighbourCount = 0;
-        for (int i = 0; i < hits; i++)
+        // 使用緩存以降低頻繁物理查詢造成的效能負擔
+        if (_crowdCheckRadius <= 0f)
         {
-            var col = AgentAvoidanceBuffer[i];
+            densityFactor = 0f;
+            return false;
+        }
+
+        // 若在檢查間隔之內，直接返回上次結果
+        float currentTime = Time.time;
+        if (currentTime - _lastCrowdCheckTime < _crowdCheckInterval)
+        {
+            densityFactor = _cachedDensityFactor;
+            return _cachedIsCrowded;
+        }
+
+        EnsureContactFilter();
+        _agentDetectionResults.Clear();
+        Physics2D.OverlapCircle((Vector2)position, _crowdCheckRadius, _agentContactFilter, _agentDetectionResults);
+        int neighbourCount = 0;
+        for (int i = 0; i < _agentDetectionResults.Count; i++)
+        {
+            var col = _agentDetectionResults[i];
             if (col == null || !col.enabled) continue;
             if (col.transform.IsChildOf(_transform)) continue;
 
@@ -353,10 +397,20 @@ public class AgentController : MonoBehaviour
             neighbourCount++;
         }
 
-        if (neighbourCount == 0) return false;
+        bool crowded = neighbourCount >= 1;
+        float density = 0f;
+        if (crowded)
+        {
+            density = Mathf.Clamp01(neighbourCount / Mathf.Max(1f, _crowdCountThreshold));
+        }
 
-        densityFactor = Mathf.Clamp01(neighbourCount / Mathf.Max(1f, _crowdCountThreshold));
-        return neighbourCount >= 1;
+        // 更新緩存
+        _lastCrowdCheckTime = currentTime;
+        _cachedIsCrowded = crowded;
+        _cachedDensityFactor = density;
+
+        densityFactor = density;
+        return crowded;
     }
 
     private void UpdateStuckDetection(Vector3 previousPosition, Vector3 currentPosition, float distanceToTarget)
@@ -411,18 +465,23 @@ public class AgentController : MonoBehaviour
             Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
             Vector3 candidate = origin + new Vector3(dir.x, dir.y, 0f) * _unstuckProbeDistance;
 
-            int hits = Physics2D.OverlapCircleNonAlloc(candidate, radius, AgentAvoidanceBuffer, _stuckProbeMask);
+            // 使用臨時 contact filter 進行障礙檢測
+            ContactFilter2D probeFilter = new ContactFilter2D();
+            probeFilter.SetLayerMask(_stuckProbeMask);
+            probeFilter.useLayerMask = true;
+            probeFilter.useTriggers = false;
+            _agentDetectionResults.Clear();
+            Physics2D.OverlapCircle((Vector2)candidate, radius, probeFilter, _agentDetectionResults);
             bool blocked = false;
-            for (int h = 0; h < hits; h++)
+            for (int h = 0; h < _agentDetectionResults.Count; h++)
             {
-                var col = AgentAvoidanceBuffer[h];
+                var col = _agentDetectionResults[h];
                 if (col == null || !col.enabled) continue;
                 if (col.isTrigger) continue;
                 if (col.transform.IsChildOf(_transform)) continue;
                 blocked = true;
                 break;
             }
-
             if (!blocked)
             {
                 return new Vector3(dir.x, dir.y, 0f) * _unstuckProbeDistance;
@@ -1170,8 +1229,14 @@ public class AgentController : MonoBehaviour
 
     private void NudgeAwayFromPortals()
     {
-        Collider2D[] hitPortals = Physics2D.OverlapCircleAll(_transform.position, PortalEscapeDistance);
-        if (hitPortals == null || hitPortals.Length == 0)
+        // 使用可重用的 List 取得附近的傳送門，減少記憶體配置
+        _portalDetectionResults.Clear();
+        // ContactFilter2D 預設不設置圖層過濾，會返回所有重疊 collider
+        ContactFilter2D portalFilter = new ContactFilter2D();
+        portalFilter.useTriggers = true; // 傳送門通常為 trigger collider
+        // 不設 useLayerMask 表示不過濾圖層
+        Physics2D.OverlapCircle((Vector2)_transform.position, PortalEscapeDistance, portalFilter, _portalDetectionResults);
+        if (_portalDetectionResults.Count == 0)
         {
             return;
         }
@@ -1179,8 +1244,9 @@ public class AgentController : MonoBehaviour
         Vector2 cumulative = Vector2.zero;
         int portalCount = 0;
 
-        foreach (Collider2D collider in hitPortals)
+        for (int i = 0; i < _portalDetectionResults.Count; i++)
         {
+            var collider = _portalDetectionResults[i];
             if (collider == null || collider.GetComponent<PortalController>() == null) continue;
 
             Vector2 away = (Vector2)_transform.position - (Vector2)collider.bounds.center;
