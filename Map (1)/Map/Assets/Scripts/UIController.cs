@@ -298,23 +298,32 @@ public class UIController : MonoBehaviour
 
 // 在 UIController.cs 中
 
-    private void OnStartButtonClick()
+     private void OnStartButtonClick()
     {
 
         var selectedAgents = _agentToggleMap
             .Where(pair => pair.Key != null && pair.Key.isOn)
             .Select(pair => pair.Value)
             .ToList();
-        var initialPositions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var agent in selectedAgents)
         {
             agent.gameObject.SetActive(true);
+        }
 
-            string initialLocation = agent.GetDisplayLocationName();
-            if (!string.IsNullOrEmpty(initialLocation))
+        var initialPositions = TeleportAgentsToApartment(selectedAgents);
+
+        if (initialPositions.Count == 0)
+        {
+            initialPositions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var agent in selectedAgents)
             {
-                initialPositions[agent.agentName] = initialLocation;
+                string initialLocation = agent.GetDisplayLocationName();
+                if (!string.IsNullOrEmpty(initialLocation))
+                {
+                    initialPositions[agent.agentName] = initialLocation;
+                }
             }
         }
 
