@@ -50,7 +50,14 @@ public class AgentController : MonoBehaviour
     private readonly HashSet<string> _manualLocationOverrides = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private const float CoordinateSnapThreshold = 8f;
     private string _lastInstructionDestination;
-
+    [SerializeField, Tooltip("視覺動態效果的刷新間隔（秒）。數值越大更新越少，建議值約為 0.5 秒，即每秒更新兩次。")]
+    private float _visualUpdateInterval = 0.5f;
+    [SerializeField, Tooltip("姓名牌與相關 UI 的刷新間隔（秒）。")]
+    private float _uiUpdateInterval = 0.5f;
+    private float _nextVisualUpdateTime = 0f;
+    private float _nextNameplateUpdateTime = 0f;
+    private bool _forceVisualUpdate = true;
+    private bool _forceImmediateNameplateUpdate = true;
     // ### 分離效果調整 ###
     private const float SeparationRadius = 1.2f;
     private const float SeparationStrength = 0.9f;
@@ -259,7 +266,8 @@ public class AgentController : MonoBehaviour
             _transform.position = _targetPosition;
             _previousFramePosition = _targetPosition;
             _stuckFrameCounter = 0;
-            UpdateVisualBobbing(0f);
+            UpdateVisualBobbing(0f, true);
+            _forceImmediateNameplateUpdate = true;
             return;
         }
 
@@ -289,7 +297,13 @@ public class AgentController : MonoBehaviour
     {
         if (_isInitialized && gameObject.activeSelf && nameTextUGUI != null && _mainCamera != null)
         {
-            UpdateNameplatePosition();
+            bool shouldUpdate = _forceImmediateNameplateUpdate || Time.time >= _nextNameplateUpdateTime;
+            if (shouldUpdate)
+            {
+                UpdateNameplatePosition();
+                _nextNameplateUpdateTime = Time.time + Mathf.Max(0.1f, _uiUpdateInterval);
+                _forceImmediateNameplateUpdate = false;
+            }
         }
     }
 
@@ -997,7 +1011,7 @@ public class AgentController : MonoBehaviour
         NudgeAwayFromPortals();
         _visualOffset = Vector3.zero;
         NotifyMovementCompleted();
-       OnTeleported(false);
+        OnTeleported(false);
 
     }
 
@@ -1023,6 +1037,7 @@ public class AgentController : MonoBehaviour
             {
                 StopCoroutine(_teleportEffectCoroutine);
             }
+            ForceImmediateVisualRefresh();
             _teleportEffectCoroutine = StartCoroutine(PlayTeleportEffect());
         }
 
@@ -1033,6 +1048,7 @@ public class AgentController : MonoBehaviour
         _targetPosition = _transform.position;
         _movementController?.HandleTeleport(_transform.position);
         _visualOffset = Vector3.zero;
+        ForceImmediateVisualRefresh();
     }
 
     public void SetActionState(string action)
@@ -1046,6 +1062,13 @@ public class AgentController : MonoBehaviour
         {
             bubbleController.顯示氣泡(bubbleText, _transform);
         }
+    }
+    internal void ForceImmediateVisualRefresh()
+    {
+        _forceVisualUpdate = true;
+        _nextVisualUpdateTime = Time.time;
+        _forceImmediateNameplateUpdate = true;
+        _nextNameplateUpdateTime = Time.time;
     }
 
     public void ApplyActionInstruction(AgentActionInstruction instruction)
@@ -1212,6 +1235,10 @@ public class AgentController : MonoBehaviour
             _visualRoot.localPosition = Vector3.zero;
             _visualRoot.localScale = Vector3.one;
         }
+        _forceVisualUpdate = true;
+        _forceImmediateNameplateUpdate = true;
+        _nextVisualUpdateTime = Time.time;
+        _nextNameplateUpdateTime = Time.time;
     }
 
     void OnDisable()
@@ -1226,6 +1253,8 @@ public class AgentController : MonoBehaviour
         }
         _teleportBoostUntil = -1f;
         _stuckFrameCounter = 0;
+        _forceVisualUpdate = true;
+        _forceImmediateNameplateUpdate = true;
     }
 
     private void NudgeAwayFromPortals()
@@ -1265,9 +1294,15 @@ public class AgentController : MonoBehaviour
         _targetPosition = adjusted;
     }
     
-    private void UpdateVisualBobbing(float distanceToTarget)
+    private void UpdateVisualBobbing(float distanceToTarget, bool forceUpdate = false)
     {
         if (_visualRoot == null) return;
+
+        bool shouldUpdate = forceUpdate || _forceVisualUpdate || Time.time >= _nextVisualUpdateTime;
+        if (!shouldUpdate)
+        {
+            return;
+        }
 
         bool isMoving = distanceToTarget > _arrivalThreshold;
         float amplitude = isMoving ? _movingBobAmplitude : _idleBobAmplitude;
@@ -1275,8 +1310,10 @@ public class AgentController : MonoBehaviour
 
         float offsetY = Mathf.Sin(Time.time * frequency + _bobSeed) * amplitude;
         _visualOffset = new Vector3(0f, offsetY, 0f);
-        
+
         _visualRoot.localPosition = _visualOffset;
+        _nextVisualUpdateTime = Time.time + Mathf.Max(0.1f, _visualUpdateInterval);
+        _forceVisualUpdate = false;
     }
     
     private IEnumerator PlayTeleportEffect()
@@ -1301,11 +1338,13 @@ public class AgentController : MonoBehaviour
     internal void NotifyMovementStarted()
     {
         ShowActiveStatus("執行任務");
+        ForceImmediateVisualRefresh();
     }
 
     internal void NotifyMovementCompleted()
     {
         UpdateStatusIndicatorFromAction(_currentAction);
+        ForceImmediateVisualRefresh();
     }
 
     private void ShowIdleStatus()

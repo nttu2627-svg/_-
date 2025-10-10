@@ -98,6 +98,7 @@ public class AgentMovementController : MonoBehaviour
         {
             _transform.position = new Vector3(newPosition.x, newPosition.y, _transform.position.z);
         }
+        _agent?.ForceImmediateVisualRefresh();
     }
 
     public void CancelMovement()
