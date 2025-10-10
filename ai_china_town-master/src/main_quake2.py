@@ -40,7 +40,7 @@ except NameError:
 # --- 模組導入 ---
 try:
     from tools.LLM import run_gpt_prompt as llm
-    from simulation_logic.agent_classes import TownAgent, Building
+    from simulation_logic.agent_classes import TownAgent, Building, normalize_location_name
     from simulation_logic.event_handler import check_and_handle_phase_transitions
     from simulation_logic.agent_actions import handle_social_interactions, generate_action_instructions
     from simulation_logic.disaster_logger import 災難記錄器
@@ -243,9 +243,25 @@ async def initialize_and_simulate(params):
             yield {"type": "error", "message": f"代理人 {agents[i].name} 初始化失敗: {result}"}
             return
 
-    buildings = {loc: Building(loc, (0, 0)) for loc in available_locations}
+    buildings = {}
+    for loc in available_locations:
+        canonical_loc = normalize_location_name(loc)
+        if canonical_loc not in buildings:
+            buildings[canonical_loc] = Building(canonical_loc, (0, 0))
     for agent in agents:
         agent.update_current_building(buildings)
+
+    for agent in agents:
+        try:
+            spawn_event = agent.ensure_spawn_position()
+            if spawn_event:
+                print(
+                    f"🚪 [初始化傳送] {agent.name} 已定位至 {spawn_event.get('finalLocation')} "
+                    f"(入口: {spawn_event.get('fromPortal')} -> 出口: {spawn_event.get('toPortal')})"
+                )
+        except Exception as exc:
+            print(f"⚠️ [初始化傳送警告] 嘗試定位 {agent.name} 時發生錯誤: {exc}")
+
 
     disaster_logger = 災難記錄器()
 

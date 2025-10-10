@@ -102,6 +102,59 @@ PORTAL_DESTINATION_ALIASES = {
     "地鐵上入口_室外": "Exterior",
     "地鐵下入口_室外": "Exterior",
 }
+LOCATION_ALIAS_MAP = {
+    "apartment": "Apartment_F1",
+    "apartment_f1": "Apartment_F1",
+    "apartment f1": "Apartment_F1",
+    "apartment_f2": "Apartment_F2",
+    "apartment f2": "Apartment_F2",
+    "apartment_floor2": "Apartment_F2",
+    "apartment floor2": "Apartment_F2",
+    "公寓": "Apartment_F1",
+    "公寓一樓": "Apartment_F1",
+    "公寓f1": "Apartment_F1",
+    "公寓二樓": "Apartment_F2",
+    "公寓f2": "Apartment_F2",
+    "學校": "School",
+    "学校": "School",
+    "school": "School",
+    "rest": "Rest",
+    "餐廳": "Rest",
+    "餐厅": "Rest",
+    "咖啡店": "Rest",
+    "cafe": "Rest",
+    "restaurant": "Rest",
+    "gym": "Gym",
+    "健身房": "Gym",
+    "super": "Super",
+    "超市": "Super",
+    "商場": "Super",
+    "商场": "Super",
+    "便利店": "Super",
+    "subway": "Subway",
+    "地鐵": "Subway",
+    "地铁": "Subway",
+    "metro": "Subway",
+    "exterior": "Exterior",
+    "室外": "Exterior",
+    "戶外": "Exterior",
+    "户外": "Exterior",
+    "公園": "Exterior",
+    "公园": "Exterior",
+    "park": "Exterior",
+}
+
+
+def normalize_location_name(location_name):
+    if not location_name:
+        return location_name
+
+    location_str = str(location_name).strip()
+    if location_str in PORTAL_CONNECTIONS or location_str in PORTAL_DESTINATION_ALIASES:
+        return location_str
+
+    lookup_key = location_str.lower()
+    return LOCATION_ALIAS_MAP.get(lookup_key, location_str)
 
 # --- 動態載入代理人設定 ---
 BASE_DIR = './agents/'
@@ -157,17 +210,30 @@ class TownAgent:
         self.id = agent_id_mbti.upper()
         self.name = agent_id_mbti.upper()
         self.MBTI = agent_id_mbti.upper()
-        self.available_locations = available_locations 
-        self.home = initial_home_name
+
+        normalized_locations = []
+        seen_locations = set()
+        for loc in available_locations:
+            normalized = normalize_location_name(loc)
+            if normalized not in seen_locations:
+                seen_locations.add(normalized)
+                normalized_locations.append(normalized)
+        self.available_locations = normalized_locations
+
+        normalized_home = normalize_location_name(initial_home_name)
+        if normalized_home not in self.available_locations and self.available_locations:
+            normalized_home = self.available_locations[0]
+
+        self.home = normalized_home
         
         mbti_info = MBTI_PROFILES.get(self.MBTI, {'desc': '未知個性', 'cooperation': 0.5})
         self.personality_desc = mbti_info['desc']
         self.cooperation_inclination = mbti_info['cooperation']
         self.persona_summary = f"MBTI: {self.MBTI}. 個性: {self.personality_desc}"
         
-        self.curr_place = initial_home_name
-        self.target_place = initial_home_name
-        self.previous_place = initial_home_name
+        self.curr_place = normalized_home
+        self.target_place = normalized_home
+        self.previous_place = normalized_home
         self.last_action = "等待初始化"
         self.curr_action = "等待初始化"
         self.curr_action_pronunciatio = "⏳"
@@ -193,7 +259,11 @@ class TownAgent:
         self.sync_events = []
 
     def is_location_outdoors(self, location_name):
-        return "_室外" in str(location_name)
+        name_str = str(location_name)
+        if "_室外" in name_str:
+            return True
+        normalized = normalize_location_name(name_str)
+        return normalized == "Exterior"
     
     def _compute_quake_bonus(self) -> float:
         bonus = 0.25
@@ -212,7 +282,7 @@ class TownAgent:
             return self.curr_place
 
         destination_str = str(destination)
-
+        destination_str = normalize_location_name(destination_str)
         if destination_str and destination_str.lower() == "subway":
             if self.curr_place == "Subway" or (self.curr_place and "地鐵" in self.curr_place):
                 return "Subway"
@@ -246,12 +316,12 @@ class TownAgent:
                 if portal.startswith(building_name) and "_室內" in portal:
                     return portal
         
-        return destination
+        return destination_str
     def resolve_destination(self, action, destination):
         """Normalize ambiguous destinations to meaningful map locations."""
         previous_target = getattr(self, "target_place", None)
         current_location = self.curr_place or previous_target or self.home or ""
-
+        current_location = normalize_location_name(current_location)
         sleep_keywords = ["睡", "sleep", "Sleep"]
 
         if not destination or destination == action:
@@ -260,11 +330,12 @@ class TownAgent:
             return previous_target or current_location
 
         destination_str = str(destination)
+        normalized_destination = normalize_location_name(destination_str)
         if any(keyword in destination_str for keyword in sleep_keywords):
-            if destination_str not in self.available_locations:
+            if normalized_destination not in self.available_locations:
                 return self.home or current_location
 
-        return destination
+        return normalized_destination
 
     def get_schedule_item_at(self, current_time_hm_str):
         try:
@@ -325,11 +396,16 @@ class TownAgent:
         else:
             canonical_place = PORTAL_DESTINATION_ALIASES.get(chosen, chosen)
 
+        canonical_place = normalize_location_name(canonical_place)
+
         fallback_candidates = []
         if canonical_place in self.available_locations:
             fallback_candidates.append(canonical_place)
-        if chosen in self.available_locations:
-            fallback_candidates.append(chosen)
+
+        normalized_chosen = normalize_location_name(chosen)
+        if normalized_chosen in self.available_locations:
+            fallback_candidates.append(normalized_chosen)
+
         if self.home in self.available_locations:
             fallback_candidates.append(self.home)
         if "Exterior" in self.available_locations:
@@ -338,6 +414,7 @@ class TownAgent:
             fallback_candidates.append(self.available_locations[0])
 
         safe_location = next((loc for loc in fallback_candidates if loc), canonical_place)
+        safe_location = normalize_location_name(safe_location)
         self.curr_place = safe_location
         self.target_place = self.curr_place
         self.current_thought = f"好了，我到 '{self.curr_place}' 了。"
@@ -352,6 +429,19 @@ class TownAgent:
         self.sync_events.append(event_payload)
         return event_payload
 
+    def ensure_spawn_position(self):
+        preferred_location = self.curr_place or self.home
+        preferred_location = normalize_location_name(preferred_location)
+
+        entry_portal = LOCATION_ENTRY_PORTALS.get(preferred_location)
+        if not entry_portal and self.home:
+            entry_portal = LOCATION_ENTRY_PORTALS.get(self.home)
+
+        if not entry_portal:
+            print(f"⚠️ [傳送警告] 找不到 {self.name} 對應 {preferred_location} 的預設入口。")
+            return None
+
+        return self.teleport(entry_portal)
     def get_lightweight_response(self, action):
         return LIGHTWEIGHT_ACTION_RESPONSES.get(action)
 
