@@ -182,7 +182,7 @@ public class PortalController : MonoBehaviour
         if (other.TryGetComponent(out AgentController agent))
         {
             bool usedDoor = isDoor || (dst != null && dst.isDoor);
-            agent.OnTeleported(usedDoor);
+            agent.OnTeleported(usedDoor, false);
         }
 
         // 設定冷卻
@@ -282,7 +282,7 @@ public bool TryTeleport(Transform mover, object requester = null)
     // 通知 AgentController（若存在）
     if (mover.TryGetComponent(out AgentController agent))
     {
-        agent.OnTeleported(isDoor || (targetPortal != null && targetPortal.isDoor));
+        agent.OnTeleported(isDoor || (targetPortal != null && targetPortal.isDoor), false);
     }
 
     mover.position = exitPos;

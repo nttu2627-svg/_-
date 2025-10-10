@@ -50,14 +50,19 @@ public class AgentController : MonoBehaviour
     private readonly HashSet<string> _manualLocationOverrides = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private const float CoordinateSnapThreshold = 8f;
     private string _lastInstructionDestination;
-    [SerializeField, Tooltip("視覺動態效果的刷新間隔（秒）。數值越大更新越少，建議值約為 0.5 秒，即每秒更新兩次。")]
-    private float _visualUpdateInterval = 0.5f;
+    [SerializeField, Tooltip("Bobbing 動態效果的刷新間隔（秒）。建議值介於 0.1 到 0.2 秒，可依效能需求調整。")]
+    private float _bobUpdateInterval = 0.15f;
     [SerializeField, Tooltip("姓名牌與相關 UI 的刷新間隔（秒）。")]
     private float _uiUpdateInterval = 0.5f;
     private float _nextVisualUpdateTime = 0f;
     private float _nextNameplateUpdateTime = 0f;
     private bool _forceVisualUpdate = true;
     private bool _forceImmediateNameplateUpdate = true;
+    // ### 局部避障調整 ###
+    [SerializeField, Tooltip("局部避障檢測的最小間隔（秒），用於降低 Physics2D.OverlapCircle 呼叫頻率。")]
+    private float _avoidanceInterval = 0.12f;
+    private float _lastAvoidanceTime = -999f;
+    private static readonly List<Collider2D> _sharedAvoidanceResults = new List<Collider2D>(16);
     // ### 分離效果調整 ###
     private const float SeparationRadius = 1.2f;
     private const float SeparationStrength = 0.9f;
@@ -66,7 +71,16 @@ public class AgentController : MonoBehaviour
     private static readonly Collider2D[] PortalOverlapBuffer = new Collider2D[8];
     private static readonly Collider2D[] AgentAvoidanceBuffer = new Collider2D[16];
     private static readonly Collider2D[] StuckProbeBuffer = new Collider2D[8];
-
+    private static readonly HashSet<string> UnknownLocationAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "未知地點",
+        "未知地点",
+        "未知位置",
+        "未知區域",
+        "unknown",
+        "unknown location",
+        "unknown place"
+    };
     [SerializeField, Tooltip("群聚檢測間隔（秒），較大值可減少物理查詢次數以改善效能")] private float _crowdCheckInterval = 0.25f;
     private float _lastCrowdCheckTime = 0f;
     private bool _cachedIsCrowded = false;
@@ -129,7 +143,12 @@ public class AgentController : MonoBehaviour
     [SerializeField] private Color _activeNameColor = new Color32(255, 204, 102, 255);
     private string _statusLabel = "待機";
     private string _displayName;
-    private static readonly (string english, string localized)[] LocationPrefixAliases = new (string, string)[]
+    private int _agentIndex;
+    private static int _agentCounter = 0;
+    private static int _activeAgentCount = 0;
+    private static int _sleepingAgentCount = 0;
+    private static bool AreAllAgentsSleeping => _activeAgentCount > 0 && _sleepingAgentCount >= _activeAgentCount;
+    private bool _isCurrentlySleeping = false;    private static readonly (string english, string localized)[] LocationPrefixAliases = new (string, string)[]
     {
         ("Apartment", "公寓"),
         ("Apartment_F1", "公寓一樓"),
@@ -158,6 +177,7 @@ public class AgentController : MonoBehaviour
         _targetPosition = _transform.position;
         _previousFramePosition = _transform.position;
         _teleportBoostUntil = -1f;
+        _agentIndex = _agentCounter++;
         if (string.IsNullOrEmpty(agentName))
         {
             agentName = gameObject.name.ToUpper();
@@ -281,7 +301,15 @@ public class AgentController : MonoBehaviour
         }
 
         Vector3 candidate = currentPosition + direction * step;
-        candidate = ApplyAgentAvoidance(candidate);
+        bool allowPhysicsStep = (Time.frameCount + _agentIndex) % 3 == 0;
+        float avoidanceInterval = Mathf.Max(0.01f, _avoidanceInterval);
+        bool shouldApplyAvoidance = allowPhysicsStep && (Time.time - _lastAvoidanceTime) >= avoidanceInterval;
+
+        if (shouldApplyAvoidance)
+        {
+            candidate = ApplyAgentAvoidance(candidate);
+            _lastAvoidanceTime = Time.time;
+        }
 
         if ((_targetPosition - candidate).sqrMagnitude <= arrivalThresholdSqr)
         {
@@ -289,7 +317,7 @@ public class AgentController : MonoBehaviour
         }
 
         _transform.position = candidate;
-        UpdateStuckDetection(currentPosition, candidate, distanceToTarget);
+        UpdateStuckDetection(currentPosition, candidate, distanceToTarget, allowPhysicsStep);
         UpdateVisualBobbing(distanceToTarget);
     }
 
@@ -297,6 +325,11 @@ public class AgentController : MonoBehaviour
     {
         if (_isInitialized && gameObject.activeSelf && nameTextUGUI != null && _mainCamera != null)
         {
+            if (AreAllAgentsSleeping && !_forceImmediateNameplateUpdate)
+            {
+                _nextNameplateUpdateTime = Time.time + Mathf.Max(0.1f, _uiUpdateInterval);
+                return;
+            }
             bool shouldUpdate = _forceImmediateNameplateUpdate || Time.time >= _nextNameplateUpdateTime;
             if (shouldUpdate)
             {
@@ -340,7 +373,8 @@ public class AgentController : MonoBehaviour
     private Vector3 ApplyAgentAvoidance(Vector3 candidatePosition)
     {
         float detectionRadius = Mathf.Max(_agentAvoidanceRadius, SeparationRadius);
-        int hitCount = Physics2D.OverlapCircle((Vector2)candidatePosition, detectionRadius, _agentAvoidanceFilter, AgentAvoidanceBuffer);
+        _sharedAvoidanceResults.Clear();
+        int hitCount = Physics2D.OverlapCircle((Vector2)candidatePosition, detectionRadius, _agentAvoidanceFilter, _sharedAvoidanceResults);
         if (hitCount <= 0)
         {
             return candidatePosition;
@@ -353,7 +387,7 @@ public class AgentController : MonoBehaviour
 
         for (int i = 0; i < hitCount; i++)
         {
-            var col = AgentAvoidanceBuffer[i];
+            var col = _sharedAvoidanceResults[i];
             if (col == null || !col.enabled) continue;
             if (col.isTrigger) continue;
             if (col.transform == _transform || col.transform.IsChildOf(_transform)) continue;
@@ -453,11 +487,8 @@ public class AgentController : MonoBehaviour
         return crowded;
     }
 
-    private void UpdateStuckDetection(Vector3 previousPosition, Vector3 currentPosition, float distanceToTarget)
+    private void UpdateStuckDetection(Vector3 previousPosition, Vector3 currentPosition, float distanceToTarget, bool allowCheck)
     {
-        float movedSqr = (currentPosition - previousPosition).sqrMagnitude;
-        float thresholdSqr = _stuckMovementThreshold * _stuckMovementThreshold;
-
         if (distanceToTarget <= _arrivalThreshold)
         {
             _stuckFrameCounter = 0;
@@ -465,6 +496,14 @@ public class AgentController : MonoBehaviour
             return;
         }
 
+        if (!allowCheck)
+        {
+            _previousFramePosition = currentPosition;
+            return;
+        }
+
+        float movedSqr = (currentPosition - previousPosition).sqrMagnitude;
+        float thresholdSqr = _stuckMovementThreshold * _stuckMovementThreshold;
         if (movedSqr < thresholdSqr)
         {
             _stuckFrameCounter++;
@@ -554,7 +593,24 @@ public class AgentController : MonoBehaviour
             }
         }
     }
+    private void SetSleepState(bool sleeping)
+    {
+        if (sleeping == _isCurrentlySleeping)
+        {
+            return;
+        }
 
+        if (sleeping)
+        {
+            _sleepingAgentCount++;
+        }
+        else if (_isCurrentlySleeping)
+        {
+            _sleepingAgentCount = Mathf.Max(0, _sleepingAgentCount - 1);
+        }
+
+        _isCurrentlySleeping = sleeping;
+    }
     private void SetManualLocationOverrides(params string[] locationAliases)
     {
         _manualLocationOverrides.Clear();
@@ -564,6 +620,7 @@ public class AgentController : MonoBehaviour
         foreach (string alias in locationAliases)
         {
             if (string.IsNullOrWhiteSpace(alias)) continue;
+            if (IsUnknownLocation(alias)) continue;
             _manualLocationOverrides.Add(alias.Trim());
         }
     }
@@ -609,6 +666,32 @@ public class AgentController : MonoBehaviour
         }
 
         return builder.ToString();
+    }
+    private static bool IsUnknownLocation(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        string trimmed = value.Trim();
+        if (UnknownLocationAliases.Contains(trimmed))
+        {
+            return true;
+        }
+
+        string lower = trimmed.ToLowerInvariant();
+        if (UnknownLocationAliases.Contains(lower))
+        {
+            return true;
+        }
+
+        if (lower.Contains("未知") || lower.Contains("unknown"))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private void AddNormalizedLocationKey(string key, Transform transform)
@@ -846,7 +929,13 @@ public class AgentController : MonoBehaviour
             _currentAction = state.CurrentState;
             return;
         }
-
+        if (IsUnknownLocation(incomingLocation))
+        {
+            _currentAction = state.CurrentState;
+            UpdateStatusIndicatorFromAction(_currentAction);
+            _lastStateApplyTime = Time.time;
+            return;
+        }
         if (ShouldRespectManualOverride(incomingLocation))
         {
             _currentAction = state.CurrentState;
@@ -883,7 +972,7 @@ public class AgentController : MonoBehaviour
         {
             _targetPosition = _transform.position;
         }
-        else
+        else if (!IsUnknownLocation(state.Location))
         {
             Debug.LogWarning($"地點 '{state.Location}' 在場景中未找到，代理人 '{agentName}' 將停在原地。");
         }
@@ -1003,6 +1092,11 @@ public class AgentController : MonoBehaviour
     
     public void TeleportTo(Vector3 position, params string[] locationAliases)
     {
+        TeleportTo(position, false, locationAliases);
+    }
+
+    public void TeleportTo(Vector3 position, bool suppressEffects, params string[] locationAliases)
+    {
         _transform.position = position;
         _targetPosition = position;
         _movementController?.HandleTeleport(position);
@@ -1011,11 +1105,11 @@ public class AgentController : MonoBehaviour
         NudgeAwayFromPortals();
         _visualOffset = Vector3.zero;
         NotifyMovementCompleted();
-        OnTeleported(false);
+        OnTeleported(false, suppressEffects);
 
     }
 
-    public void OnTeleported(bool usedDoor)
+    public void OnTeleported(bool usedDoor, bool suppressEffects = false)
     {
         _previousFramePosition = _transform.position;
         _stuckFrameCounter = 0;
@@ -1031,13 +1125,14 @@ public class AgentController : MonoBehaviour
             _teleportBoostUntil = -1f;
         }
 
-        if (_visualRoot != null)
+        ForceImmediateVisualRefresh();
+
+        if (_visualRoot != null && !suppressEffects)
         {
             if (_teleportEffectCoroutine != null)
             {
                 StopCoroutine(_teleportEffectCoroutine);
             }
-            ForceImmediateVisualRefresh();
             _teleportEffectCoroutine = StartCoroutine(PlayTeleportEffect());
         }
 
@@ -1078,6 +1173,11 @@ public class AgentController : MonoBehaviour
         string command = instruction.Command?.Trim()?.ToLowerInvariant();
         if (command == "teleport")
         {
+            if (IsUnknownLocation(instruction.Destination) || IsUnknownLocation(instruction.ToPortal))
+            {
+                Debug.LogWarning($"[Agent {agentName}] 忽略傳送至未知地點的指令。");
+                return;
+            }
             Vector3 exitPosition = _transform.position;
             string resolvedLocation = null;
             Transform exitTransform;
@@ -1146,6 +1246,10 @@ public class AgentController : MonoBehaviour
         }
         else if (command == "move")
         {
+            if (IsUnknownLocation(instruction.Destination) || IsUnknownLocation(instruction.NextStep))
+            {
+                return;
+            }
             string nextStep = string.IsNullOrWhiteSpace(instruction.NextStep)
                 ? instruction.Destination
                 : instruction.NextStep;
@@ -1223,6 +1327,12 @@ public class AgentController : MonoBehaviour
     }
     void OnEnable()
     {
+        _activeAgentCount++;
+        if (_isCurrentlySleeping)
+        {
+            _sleepingAgentCount = Mathf.Max(0, _sleepingAgentCount - 1);
+        }
+        _isCurrentlySleeping = false;
         _visualOffset = Vector3.zero;
         _targetPosition = _transform.position;
         _bobSeed = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
@@ -1238,11 +1348,18 @@ public class AgentController : MonoBehaviour
         _forceVisualUpdate = true;
         _forceImmediateNameplateUpdate = true;
         _nextVisualUpdateTime = Time.time;
+        _lastAvoidanceTime = -999f;
         _nextNameplateUpdateTime = Time.time;
     }
 
     void OnDisable()
     {
+        if (_isCurrentlySleeping)
+        {
+            _sleepingAgentCount = Mathf.Max(0, _sleepingAgentCount - 1);
+        }
+        _activeAgentCount = Mathf.Max(0, _activeAgentCount - 1);
+        _isCurrentlySleeping = false;
         if (nameTextUGUI != null) nameTextUGUI.gameObject.SetActive(false);
         SetManualLocationOverrides();
         _visualOffset = Vector3.zero;
@@ -1303,7 +1420,11 @@ public class AgentController : MonoBehaviour
         {
             return;
         }
-
+        if (!forceUpdate && !_forceVisualUpdate && AreAllAgentsSleeping)
+        {
+            _nextVisualUpdateTime = Time.time + Mathf.Max(0.05f, _bobUpdateInterval);
+            return;
+        }
         bool isMoving = distanceToTarget > _arrivalThreshold;
         float amplitude = isMoving ? _movingBobAmplitude : _idleBobAmplitude;
         float frequency = isMoving ? _movingBobFrequency : _idleBobFrequency;
@@ -1312,7 +1433,7 @@ public class AgentController : MonoBehaviour
         _visualOffset = new Vector3(0f, offsetY, 0f);
 
         _visualRoot.localPosition = _visualOffset;
-        _nextVisualUpdateTime = Time.time + Mathf.Max(0.1f, _visualUpdateInterval);
+        _nextVisualUpdateTime = Time.time + Mathf.Max(0.05f, _bobUpdateInterval);
         _forceVisualUpdate = false;
     }
     
@@ -1350,12 +1471,21 @@ public class AgentController : MonoBehaviour
     private void ShowIdleStatus()
     {
         UpdateStatusIndicator("待機", false);
+        SetSleepState(false);
     }
 
     private void ShowActiveStatus(string status)
     {
         string label = string.IsNullOrWhiteSpace(status) ? "執行任務" : status.Trim();
         UpdateStatusIndicator(label, true);
+        SetSleepState(false);
+    }
+
+    private void ShowSleepingStatus(string status)
+    {
+        string label = string.IsNullOrWhiteSpace(status) ? "睡覺" : status.Trim();
+        UpdateStatusIndicator(label, false);
+        SetSleepState(true);
     }
 
     private void UpdateStatusIndicator(string status, bool isActive)
@@ -1370,7 +1500,11 @@ public class AgentController : MonoBehaviour
 
     private void UpdateStatusIndicatorFromAction(string action)
     {
-        if (IsIdleAction(action))
+        if (IsSleepAction(action))
+        {
+            ShowSleepingStatus(action);
+        }
+        else if (IsIdleAction(action))
         {
             ShowIdleStatus();
         }
@@ -1390,7 +1524,16 @@ public class AgentController : MonoBehaviour
         string lower = action.Trim().ToLowerInvariant();
         return lower.Contains("idle") || lower.Contains("待機") || lower.Contains("站立") || lower.Contains("wait") || lower.Contains("stand");
     }
+    private static bool IsSleepAction(string action)
+    {
+        if (string.IsNullOrWhiteSpace(action))
+        {
+            return false;
+        }
 
+        string lower = action.Trim().ToLowerInvariant();
+        return lower.Contains("sleep") || lower.Contains("睡") || lower.Contains("nap");
+    }
     private string BuildBubbleText(string action)
     {
         if (string.IsNullOrWhiteSpace(action))

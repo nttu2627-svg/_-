@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 
 [DisallowMultipleComponent]
@@ -40,8 +39,13 @@ public class AgentMovementController : MonoBehaviour
     private Dictionary<string, List<PortalController>> _portalsByBuilding;
     private readonly List<PortalController> _allPortals = new List<PortalController>();
     private bool _isMoving;
-
-    public bool IsControllingMovement => _isMoving || _movementRoutine != null;
+    private bool _hasLastRequestedTarget = false;
+    private Vector3 _lastRequestedTarget = Vector3.positiveInfinity;
+    private string _lastRequestedLocation = null;
+    private static readonly List<PortalController> GlobalPortalCache = new List<PortalController>();
+    private static readonly Dictionary<string, List<PortalController>> GlobalPortalsByBuilding = new Dictionary<string, List<PortalController>>(StringComparer.OrdinalIgnoreCase);
+    private static float _globalPortalCacheTimestamp = -99f;
+    private const float PortalCacheDuration = 5f;    public bool IsControllingMovement => _isMoving || _movementRoutine != null;
 
     public void ConfigureFromAgent(AgentController agent, float moveSpeed, float arrivalThreshold)
     {
@@ -79,7 +83,19 @@ public class AgentMovementController : MonoBehaviour
                 destination = resolved;
             }
         }
+        if (_hasLastRequestedTarget)
+        {
+            bool sameLocation = string.Equals(_lastRequestedLocation, locationName, StringComparison.OrdinalIgnoreCase) ||
+                                (string.IsNullOrEmpty(_lastRequestedLocation) && string.IsNullOrEmpty(locationName));
+            if (sameLocation && (worldPosition - _lastRequestedTarget).sqrMagnitude < 0.0001f)
+            {
+                return;
+            }
+        }
 
+        _lastRequestedTarget = worldPosition;
+        _lastRequestedLocation = locationName;
+        _hasLastRequestedTarget = true;
         List<PathNode> path = BuildPath(worldPosition, destination, locationName);
         if (path.Count == 0)
         {
@@ -94,6 +110,7 @@ public class AgentMovementController : MonoBehaviour
     public void HandleTeleport(Vector3 newPosition)
     {
         CancelMovementInternal();
+        _hasLastRequestedTarget = false;
         if (_transform != null)
         {
             _transform.position = new Vector3(newPosition.x, newPosition.y, _transform.position.z);
@@ -104,6 +121,7 @@ public class AgentMovementController : MonoBehaviour
     public void CancelMovement()
     {
         CancelMovementInternal();
+        _hasLastRequestedTarget = false;
         _agent?.NotifyMovementCompleted();
     }
 
@@ -113,6 +131,7 @@ public class AgentMovementController : MonoBehaviour
         {
             _isMoving = false;
             _movementRoutine = null;
+            _hasLastRequestedTarget = false; 
             yield break;
         }
 
@@ -152,6 +171,7 @@ public class AgentMovementController : MonoBehaviour
 
         _isMoving = false;
         _movementRoutine = null;
+        _hasLastRequestedTarget = false;
         _agent?.NotifyMovementCompleted();
     }
 
@@ -346,45 +366,75 @@ public class AgentMovementController : MonoBehaviour
         }
     }
 
-private void EnsurePortalLookup()
-{
-    if (_portalsByBuilding != null && _allPortals.Count > 0)
-        return;
+    private void EnsurePortalLookup()
+    {
+        if (Time.time - _globalPortalCacheTimestamp > PortalCacheDuration || GlobalPortalCache.Count == 0)
+        {
+            RefreshPortalCache();
+        }
 
-    _portalsByBuilding = new Dictionary<string, List<PortalController>>(StringComparer.OrdinalIgnoreCase);
-    _allPortals.Clear();
+        if (_allPortals.Count != GlobalPortalCache.Count)
+        {
+            _allPortals.Clear();
+            _allPortals.AddRange(GlobalPortalCache);
+        }
 
-    PortalController[] portals;
+        if (_portalsByBuilding == null)
+        {
+            _portalsByBuilding = new Dictionary<string, List<PortalController>>(StringComparer.OrdinalIgnoreCase);
+        }
+        else
+        {
+            _portalsByBuilding.Clear();
+        }
+
+        foreach (var pair in GlobalPortalsByBuilding)
+        {
+            if (pair.Value == null || pair.Value.Count == 0)
+            {
+                continue;
+            }
+
+            _portalsByBuilding[pair.Key] = pair.Value;
+        }
+    }
+
+    private static void RefreshPortalCache()
+    {
+        PortalController[] portals;
 
 #if UNITY_2023_1_OR_NEWER
-    // ✅ Unity 6 / 2025：新版 API，參數順序為 (includeInactive, sortMode)
-    portals = FindObjectsByType<PortalController>(
-        FindObjectsInactive.Include,
-        FindObjectsSortMode.None
-    );
+        portals = FindObjectsByType<PortalController>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None
+        );
 #else
-    // ↩️ 舊版回退
-    portals = FindObjectsOfType<PortalController>(true);
+        portals = FindObjectsOfType<PortalController>(true);
 #endif
 
-    foreach (var portal in portals)
-    {
-        if (!portal) continue;
+        GlobalPortalCache.Clear();
+        GlobalPortalsByBuilding.Clear();
 
-        _allPortals.Add(portal);
-
-        string building = DeterminePortalBuilding(portal);
-        if (!_portalsByBuilding.TryGetValue(building, out var list))
+        foreach (var portal in portals)
         {
-            list = new List<PortalController>();
-            _portalsByBuilding[building] = list;
-        }
-        if (!list.Contains(portal))
-            list.Add(portal);
-    }
-}
+            if (!portal) continue;
 
-    private string DeterminePortalBuilding(PortalController portal)
+            GlobalPortalCache.Add(portal);
+
+            string building = DeterminePortalBuilding(portal);
+            if (!GlobalPortalsByBuilding.TryGetValue(building, out var list))
+            {
+                list = new List<PortalController>();
+                GlobalPortalsByBuilding[building] = list;
+            }
+
+            list.Add(portal);
+        }
+
+        _globalPortalCacheTimestamp = Time.time;
+    }
+
+    private static string DeterminePortalBuilding(PortalController portal)
     {
         if (portal == null)
         {

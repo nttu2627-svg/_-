@@ -731,6 +731,7 @@ public class SimulationClient : MonoBehaviour
 
                 fallbackController.TeleportTo(
                     GetRandomApartmentPosition(),
+                    true,
                     aliases.ToArray());
             }
             return;
@@ -794,6 +795,7 @@ public class SimulationClient : MonoBehaviour
 
             controller.TeleportTo(
                 targetPosition,
+                true,
                 aliasSet.ToArray());
         }
     }
