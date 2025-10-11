@@ -165,7 +165,14 @@ def build_micro_motion_payload(agents: list["TownAgent"], buildings: Dict[str, "
         is_internal_thinking = getattr(agent, "is_thinking", False)
         if not (is_internal_thinking or detect_thinking(agent)):
             continue
-
+    for agent in agents:
+        try:
+            spawn_event = agent.ensure_spawn_position()
+            if spawn_event:
+                print(f"🚪 [初始化傳送] {agent.name} 已定位至 {spawn_event.get('finalLocation')} "
+                      f"(入口: {spawn_event.get('fromPortal')} -> 出口: {spawn_event.get('toPortal')})")
+        except Exception as exc:
+            print(f"⚠️ [初始化傳送警告] 嘗試定位 {agent.name} 時發生錯誤: {exc}")
         mode = _pick_micro_mode()
         payload: Dict = {
             "agent": agent.name,
@@ -197,11 +204,21 @@ def build_micro_motion_payload(agents: list["TownAgent"], buildings: Dict[str, "
 
 # ====== 模擬主流程（與 main_quake2.py 相同骨架，少量增補） ======
 async def initialize_and_simulate(params, step_sync_event: Optional[asyncio.Event] = None):
-
     global simulation_agents
     print(f"後端收到來自 Unity 的參數: {json.dumps(params, indent=2, ensure_ascii=False)}")
 
     initial_positions = params.get('initial_positions', {})
+   
+    agents = []
+    for mbti in selected_mbti_list:
+        # 從參數中獲取初始位置，預設為 Apartment_F1
+        initial_location = initial_positions.get(mbti, "Apartment_F1")
+        agent = TownAgent(mbti, initial_location, available_locations)
+        agents.append(agent)
+        print(f"代理人 {mbti} 的初始位置被設定為: {initial_location}")
+    
+    simulation_agents = agents
+
     use_preset = params.get('use_default_calendar', False)
     schedule_mode = 'preset' if use_preset else 'llm'
     print(f"日曆模式已設定為: '{schedule_mode}' (來自 use_default_calendar: {use_preset})")
@@ -252,6 +269,7 @@ async def initialize_and_simulate(params, step_sync_event: Optional[asyncio.Even
     for agent in agents:
         agent.update_current_building(buildings)
 
+    # 新增：執行初始傳送（在模擬開始前）
     for agent in agents:
         try:
             spawn_event = agent.ensure_spawn_position()
@@ -513,6 +531,87 @@ async def handler(websocket, path):
 
     send_lock = asyncio.Lock()
     simulation_task: Optional[asyncio.Task] = None
+    # 新增：Step 同步機制
+    step_sync_event: Optional[asyncio.Event] = None
+    expected_step_id = 0  # 追蹤預期的 step ID
+    try:
+        async for message in websocket:
+            try:
+                data = json.loads(message)
+                command_type = data.get("command")
+
+                if command_type == "start_simulation":
+                    print("收到來自Unity的開始模擬指令...")
+                    
+                    # 關閉舊的模擬任務
+                    if simulation_task and not simulation_task.done():
+                        simulation_task.cancel()
+                        with contextlib.suppress(asyncio.CancelledError):
+                            await simulation_task
+                    
+                    params = data['params']
+                    
+                    # 初始化 step 同步
+                    step_sync_event = asyncio.Event()
+                    expected_step_id = 0
+                    
+                    # 啟動新的模擬任務
+                    simulation_task = asyncio.create_task(
+                        stream_simulation_to_client(
+                            websocket, 
+                            params, 
+                            send_lock,
+                            step_sync_event  # 傳入 event
+                        )
+                    )
+                
+                # 新增：處理 Unity 回報的 step 完成
+                elif command_type == "step_complete":
+                    if step_sync_event is None:
+                        continue
+                    
+                    step_id = data.get("step_id")
+                    if step_id is None:
+                        continue
+                    
+                    # 驗證 step_id 的正確性
+                    if step_id < expected_step_id:
+                        print(f"⚠️ 收到過期的步驟回報: 期待 {expected_step_id}, 但收到 {step_id}。已忽略。")
+                        continue
+                    
+                    if step_id != expected_step_id:
+                        print(f"⚠️ 收到不一致的步驟回報: 期待 {expected_step_id}, 但收到 {step_id}。將以客戶端回報為準。")
+                    
+                    # 設置事件，允許模擬繼續
+                    if not step_sync_event.is_set():
+                        step_sync_event.set()
+                    
+                    expected_step_id = step_id + 1
+                
+                # 處理傳送請求
+                elif command_type == "agent_teleport":
+                    agent_name = data.get("agent_name")
+                    target_portal_name = data.get("target_portal_name")
+                    
+                    # 執行傳送
+                    agent_to_teleport = next(
+                        (agent for agent in simulation_agents if agent.name == agent_name), 
+                        None
+                    )
+                    if agent_to_teleport and target_portal_name:
+                        agent_to_teleport.teleport(target_portal_name)
+            
+            except Exception as e:
+                print(f"處理消息時發生錯誤: {e}")
+                traceback.print_exc()
+    
+    finally:
+        # 清理
+        if simulation_task and not simulation_task.done():
+            simulation_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await simulation_task
+
     motion_task: Optional[asyncio.Task] = None
     step_sync_event: Optional[asyncio.Event] = None
     expected_step_id = 0

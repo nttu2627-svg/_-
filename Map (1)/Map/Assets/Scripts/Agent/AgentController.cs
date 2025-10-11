@@ -165,7 +165,7 @@ public class AgentController : MonoBehaviour
     [Tooltip("負責顯示代理人模型的子節點，可透過 Inspector 綁定，若為空會在 Awake 時自動尋找子物件。")]
     [SerializeField] private Transform _visualRoot;
     [Tooltip("傳送動畫持續時間，單位秒。")]
-    [SerializeField] private float teleportScaleDuration = 0.25f;
+    [SerializeField] private float teleportScaleDuration = 0f;
     private Coroutine _teleportEffectCoroutine;
 
     void Awake()
@@ -224,7 +224,7 @@ public class AgentController : MonoBehaviour
         // 初始化物理查詢過濾器
         _agentAvoidanceFilter = new ContactFilter2D();
         _agentAvoidanceFilter.SetLayerMask(_agentAvoidanceMask);
-        _agentAvoidanceFilter.useTriggers = true; // NonAlloc 版本預設會包含觸發器
+        _agentAvoidanceFilter.useTriggers = true;
 
         _stuckProbeFilter = new ContactFilter2D();
         _stuckProbeFilter.SetLayerMask(_stuckProbeMask);
@@ -232,8 +232,9 @@ public class AgentController : MonoBehaviour
 
         _portalNudgeFilter = new ContactFilter2D();
         _portalNudgeFilter.NoFilter();
-        _portalNudgeFilter.useTriggers = true; // 需要檢測 PortalController，其碰撞體可能是觸發器
+        _portalNudgeFilter.useTriggers = true;
 
+        // 關鍵：避免初始化時「閃回 (0,0,0)」
         gameObject.SetActive(false);
     }
 
@@ -1104,9 +1105,12 @@ public class AgentController : MonoBehaviour
         _lastInstructionDestination = null;
         NudgeAwayFromPortals();
         _visualOffset = Vector3.zero;
+        
+        // ======== 修改：通知移動完成 ========
         NotifyMovementCompleted();
+        // ====================================
+        
         OnTeleported(false, suppressEffects);
-
     }
 
     public void OnTeleported(bool usedDoor, bool suppressEffects = false)
@@ -1172,118 +1176,14 @@ public class AgentController : MonoBehaviour
         if (!_isInitialized || instruction == null) return;
 
         string command = instruction.Command?.Trim()?.ToLowerInvariant();
+
         if (command == "teleport")
         {
-            if (IsUnknownLocation(instruction.Destination) || IsUnknownLocation(instruction.ToPortal))
-            {
-                Debug.LogWarning($"[Agent {agentName}] 忽略傳送至未知地點的指令。");
-                _simulationClient?.ReportTeleport(agentName);
-
-                return;
-            }
-            Vector3 exitPosition = _transform.position;
-            string resolvedLocation = null;
-            Transform exitTransform;
-
-            if (!string.IsNullOrWhiteSpace(instruction.ToPortal) &&
-                TryFindLocationTransform(instruction.ToPortal, out exitTransform) &&
-                exitTransform != null)
-            {
-                resolvedLocation = ResolveLocationKey(instruction.ToPortal, exitTransform);
-                exitPosition = exitTransform.position;
-            }
-            else if (!string.IsNullOrWhiteSpace(instruction.Destination) &&
-                     TryFindLocationTransform(instruction.Destination, out exitTransform) &&
-                     exitTransform != null)
-            {
-                resolvedLocation = ResolveLocationKey(instruction.Destination, exitTransform);
-                exitPosition = exitTransform.position;
-            }
-            else if (!string.IsNullOrWhiteSpace(instruction.Destination) &&
-                     TryParseVector3(instruction.Destination, out Vector3 destinationCoords))
-            {
-                exitPosition = destinationCoords;
-                resolvedLocation = instruction.Destination;
-            }
-            else
-            {
-                string targetPortal = string.IsNullOrWhiteSpace(instruction.ToPortal)
-                    ? instruction.Destination
-                    : instruction.ToPortal;
-                Debug.LogWarning($"[Agent {agentName}] 無法解析傳送出口 '{targetPortal}'，將忽略此傳送指令。");
-                return;
-            }
-
-            List<string> manualAliases = new List<string>();
-            if (!string.IsNullOrWhiteSpace(resolvedLocation))
-            {
-                manualAliases.Add(resolvedLocation);
-            }
-            if (!string.IsNullOrWhiteSpace(instruction.ToPortal) &&
-                !manualAliases.Contains(instruction.ToPortal))
-            {
-                manualAliases.Add(instruction.ToPortal);
-            }
-            if (!string.IsNullOrWhiteSpace(instruction.Destination) &&
-                !manualAliases.Contains(instruction.Destination))
-            {
-                manualAliases.Add(instruction.Destination);
-            }
-
-            TeleportTo(exitPosition, manualAliases.ToArray());
-
-            string nextLocationName = !string.IsNullOrWhiteSpace(resolvedLocation)
-                ? resolvedLocation
-                : (!string.IsNullOrWhiteSpace(instruction.ToPortal)
-                    ? instruction.ToPortal
-                    : instruction.Destination);
-
-            if (!string.IsNullOrWhiteSpace(nextLocationName))
-            {
-                _targetLocationName = nextLocationName;
-                _lastValidLocationName = nextLocationName;
-            }
-
-            _lastInstructionDestination = instruction.Destination;
-            SetActionState(string.IsNullOrEmpty(instruction.Action) ? "傳送" : instruction.Action);
+            HandleTeleportInstruction(instruction);
         }
         else if (command == "move")
         {
-            if (IsUnknownLocation(instruction.Destination) || IsUnknownLocation(instruction.NextStep))
-            {
-                _simulationClient?.ReportMovementCompleted(agentName);
-                return;
-            }
-            string nextStep = string.IsNullOrWhiteSpace(instruction.NextStep)
-                ? instruction.Destination
-                : instruction.NextStep;
-
-            bool destinationChanged = !string.IsNullOrWhiteSpace(instruction.Destination) &&
-                !string.Equals(_lastInstructionDestination, instruction.Destination, StringComparison.OrdinalIgnoreCase);
-            bool pathChanged = !string.IsNullOrWhiteSpace(nextStep) &&
-                !string.Equals(_targetLocationName, nextStep, StringComparison.OrdinalIgnoreCase);
-
-            if (destinationChanged || pathChanged)
-            {
-                if (destinationChanged && TryGetLocationPosition(instruction.Origin, out Vector3 originPosition, out _))
-                {
-                    _transform.position = originPosition;
-                    _movementController?.HandleTeleport(originPosition);
-                }
-
-                if (TryGetLocationPosition(nextStep, out Vector3 nextPosition, out Transform nextTransform))
-                {
-                    SetTargetLocation(nextStep, nextPosition, nextTransform);
-                }
-                else if (TryGetLocationPosition(instruction.Destination, out Vector3 destinationPosition, out Transform destinationTransform))
-                {
-                    SetTargetLocation(instruction.Destination, destinationPosition, destinationTransform);
-                }
-
-                _lastInstructionDestination = instruction.Destination;
-            }
-
-            SetActionState(string.IsNullOrEmpty(instruction.Action) ? "移動" : instruction.Action);
+            HandleMoveInstruction(instruction);
         }
         else if (command == "interact")
         {
@@ -1291,6 +1191,127 @@ public class AgentController : MonoBehaviour
             _lastInstructionDestination = instruction.Destination;
         }
     }
+
+
+// === 修改 2: 在類別中添加新方法（建議放在 ApplyActionInstruction 之後）===
+
+    // ======== 新增：處理傳送指令 ========
+    private void HandleTeleportInstruction(AgentActionInstruction instruction)
+    {
+        if (IsUnknownLocation(instruction.Destination) || IsUnknownLocation(instruction.ToPortal))
+        {
+            Debug.LogWarning($"[Agent {agentName}] 忽略傳送至未知地點的指令。");
+            _simulationClient?.ReportTeleport(agentName);
+            return;
+        }
+
+        Vector3 exitPosition = _transform.position;
+        string resolvedLocation = null;
+        Transform exitTransform;
+
+        if (!string.IsNullOrWhiteSpace(instruction.ToPortal) &&
+            TryFindLocationTransform(instruction.ToPortal, out exitTransform) &&
+            exitTransform != null)
+        {
+            resolvedLocation = ResolveLocationKey(instruction.ToPortal, exitTransform);
+            exitPosition = exitTransform.position;
+        }
+        else if (!string.IsNullOrWhiteSpace(instruction.Destination) &&
+                 TryFindLocationTransform(instruction.Destination, out exitTransform) &&
+                 exitTransform != null)
+        {
+            resolvedLocation = ResolveLocationKey(instruction.Destination, exitTransform);
+            exitPosition = exitTransform.position;
+        }
+        else if (!string.IsNullOrWhiteSpace(instruction.Destination) &&
+                 TryParseVector3(instruction.Destination, out Vector3 destinationCoords))
+        {
+            exitPosition = destinationCoords;
+            resolvedLocation = instruction.Destination;
+        }
+        else
+        {
+            string targetPortal = string.IsNullOrWhiteSpace(instruction.ToPortal)
+                ? instruction.Destination
+                : instruction.ToPortal;
+            Debug.LogWarning($"[Agent {agentName}] 無法解析傳送出口 '{targetPortal}'，將忽略此傳送指令。");
+            return;
+        }
+
+        List<string> manualAliases = new List<string>();
+        if (!string.IsNullOrWhiteSpace(resolvedLocation))
+        {
+            manualAliases.Add(resolvedLocation);
+        }
+        if (!string.IsNullOrWhiteSpace(instruction.ToPortal) &&
+            !manualAliases.Contains(instruction.ToPortal))
+        {
+            manualAliases.Add(instruction.ToPortal);
+        }
+        if (!string.IsNullOrWhiteSpace(instruction.Destination) &&
+            !manualAliases.Contains(instruction.Destination))
+        {
+            manualAliases.Add(instruction.Destination);
+        }
+
+        TeleportTo(exitPosition, true, manualAliases.ToArray());
+
+        string nextLocationName = !string.IsNullOrWhiteSpace(resolvedLocation)
+            ? resolvedLocation
+            : (!string.IsNullOrWhiteSpace(instruction.ToPortal)
+                ? instruction.ToPortal
+                : instruction.Destination);
+
+        if (!string.IsNullOrWhiteSpace(nextLocationName))
+        {
+            _targetLocationName = nextLocationName;
+            _lastValidLocationName = nextLocationName;
+        }
+
+        _lastInstructionDestination = instruction.Destination;
+        SetActionState(string.IsNullOrEmpty(instruction.Action) ? "傳送" : instruction.Action);
+    }
+
+    private void HandleMoveInstruction(AgentActionInstruction instruction)
+    {
+        if (IsUnknownLocation(instruction.Destination) || IsUnknownLocation(instruction.NextStep))
+        {
+            _simulationClient?.ReportMovementCompleted(agentName);
+            return;
+        }
+
+        string nextStep = string.IsNullOrWhiteSpace(instruction.NextStep)
+            ? instruction.Destination
+            : instruction.NextStep;
+
+        bool destinationChanged = !string.IsNullOrWhiteSpace(instruction.Destination) &&
+            !string.Equals(_lastInstructionDestination, instruction.Destination, StringComparison.OrdinalIgnoreCase);
+
+        bool pathChanged = !string.IsNullOrWhiteSpace(nextStep) &&
+            !string.Equals(_targetLocationName, nextStep, StringComparison.OrdinalIgnoreCase);
+
+        if (destinationChanged || pathChanged)
+        {
+            if (destinationChanged && TryGetLocationPosition(instruction.Origin, out Vector3 originPosition, out _))
+            {
+                _transform.position = originPosition;
+                _movementController?.HandleTeleport(originPosition);
+            }
+
+            if (TryGetLocationPosition(nextStep, out Vector3 nextPosition, out Transform nextTransform))
+            {
+                SetTargetLocation(nextStep, nextPosition, nextTransform);
+            }
+            else if (TryGetLocationPosition(instruction.Destination, out Vector3 destinationPosition, out Transform destinationTransform))
+            {
+                SetTargetLocation(instruction.Destination, destinationPosition, destinationTransform);
+            }
+
+            _lastInstructionDestination = instruction.Destination;
+        }
+
+        SetActionState(string.IsNullOrEmpty(instruction.Action) ? "移動" : instruction.Action);
+    } 
     private void OnTriggerEnter2D(Collider2D other)
     {
         PortalController portal = other.GetComponent<PortalController>();

@@ -774,8 +774,8 @@ public class SimulationClient : MonoBehaviour
         OnLogUpdate?.Invoke(updateData);
         UpdateAllAgentStates(updateData.AgentStates);
         UpdateAllBuildingStates(updateData.BuildingStates);
-        BeginSimulationStep(updateData.StepId, updateData.AgentActions);
-        ApplyAgentActions(updateData.AgentActions);
+        BeginSimulationStep(updateData.StepId, updateData.AgentActions);  // 記錄哪些代理人要 Move/Teleport
+        ApplyAgentActions(updateData.AgentActions);                        // 轉發指令給各 AgentController
     }
     private void ApplyAgentActions(List<AgentActionInstruction> agentActions)
     {
@@ -978,6 +978,7 @@ public class SimulationClient : MonoBehaviour
                 Debug.LogWarning($"[SimulationClient] Selected agent '{standardizedMbti}' not found in scene controllers.");
             }
         }
+        // 關鍵：若前端沒給初始座標，就一律傳送到公寓（F1 超過 8 人再放 F2）
         if (parameters.InitialPositions == null || parameters.InitialPositions.Count == 0)
         {
             TeleportActiveAgentsToApartmentArea();

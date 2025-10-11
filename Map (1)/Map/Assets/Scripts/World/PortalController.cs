@@ -173,16 +173,16 @@ public class PortalController : MonoBehaviour
             newZ += delta;
         }
 
-        // 實際傳送
+        // 實際傳送（瞬間位移）
         obj.position = newPos;
         obj.rotation = Quaternion.Euler(0, 0, newZ);
         if (rb != null && preserveMomentum) rb.linearVelocity = newVel;
 
-        // 通知代理人調整移動狀態
+        // 通知代理人調整移動狀態（※取消動畫：suppressEffects=true）
         if (other.TryGetComponent(out AgentController agent))
         {
             bool usedDoor = isDoor || (dst != null && dst.isDoor);
-            agent.OnTeleported(usedDoor, false);
+            agent.OnTeleported(usedDoor, true); // <== 關鍵：一律抑制傳送動畫
         }
 
         // 設定冷卻
@@ -259,35 +259,32 @@ public class PortalController : MonoBehaviour
         return new Vector2(c * v.x - s * v.y, s * v.x + c * v.y);
     }
 
-    // === 舊版本兼容接口 ===
+    // === 舊版本兼容接口（保留以防外部呼叫） ===
 
-    // 讓舊代碼仍可使用 portal.TargetPortal
     public PortalController TargetPortal => targetPortal != null ? targetPortal : _resolvedTarget;
 
-    // 提供舊版本的 GetExitPosition() 與 (Transform requester) 呼叫
     public Vector3 GetExitPosition(Transform requester = null)
     {
         return exitPoint != null ? exitPoint.position : transform.position;
     }
 
-    // 模擬舊版 TryTeleport，支援 1 或 2 參數版本
-public bool TryTeleport(Transform mover, object requester = null)
-{
-    if (targetPortal == null) return false;
-
-    Vector3 exitPos = targetPortal.exitPoint != null
-        ? targetPortal.exitPoint.position
-        : targetPortal.transform.position;
-
-    // 通知 AgentController（若存在）
-    if (mover.TryGetComponent(out AgentController agent))
+    // 舊版 TryTeleport 的兼容做法（同樣取消動畫）
+    public bool TryTeleport(Transform mover, object requester = null)
     {
-        agent.OnTeleported(isDoor || (targetPortal != null && targetPortal.isDoor), false);
-    }
+        if (targetPortal == null) return false;
 
-    mover.position = exitPos;
-    return true;
-}
+        Vector3 exitPos = targetPortal.exitPoint != null
+            ? targetPortal.exitPoint.position
+            : targetPortal.transform.position;
+
+        if (mover.TryGetComponent(out AgentController agent))
+        {
+            agent.OnTeleported(isDoor || (targetPortal != null && targetPortal.isDoor), true);
+        }
+
+        mover.position = exitPos;
+        return true;
+    }
 
 #if UNITY_EDITOR
     void OnDrawGizmos()
