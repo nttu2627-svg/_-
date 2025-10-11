@@ -44,6 +44,8 @@ public class AgentController : MonoBehaviour
     private Camera _mainCamera;
     private SimulationClient _simulationClient;
     private AgentMovementController _movementController;
+    private Coroutine _networkMoveRoutine;
+
     private string _targetLocationName;
     private string _lastValidLocationName;
     private string _currentAction;
@@ -1170,7 +1172,64 @@ public class AgentController : MonoBehaviour
         _forceImmediateNameplateUpdate = true;
         _nextNameplateUpdateTime = Time.time;
     }
+    public void ExecuteNetworkMove(IReadOnlyList<Vector3> path)
+    {
+        if (_networkMoveRoutine != null)
+        {
+            StopCoroutine(_networkMoveRoutine);
+            _networkMoveRoutine = null;
+        }
 
+        if (path == null || path.Count == 0)
+        {
+            NotifyMovementCompleted();
+            return;
+        }
+
+        _movementController?.CancelMovement();
+        _networkMoveRoutine = StartCoroutine(NetworkMoveRoutine(path));
+    }
+
+    private IEnumerator NetworkMoveRoutine(IReadOnlyList<Vector3> path)
+    {
+        NotifyMovementStarted();
+
+        for (int i = 0; i < path.Count; i++)
+        {
+            if (_transform == null)
+            {
+                _networkMoveRoutine = null;
+                yield break;
+            }
+
+            Vector3 target = path[i];
+            Vector3 destination = new Vector3(target.x, target.y, _transform.position.z);
+
+            if (Vector3.Distance(_transform.position, destination) <= Mathf.Max(_arrivalThreshold, 0.02f))
+            {
+                _transform.position = destination;
+                continue;
+            }
+
+            _targetPosition = destination;
+
+            while (Vector3.Distance(_transform.position, destination) > Mathf.Max(_arrivalThreshold, 0.02f))
+            {
+                float speed = Mathf.Max(0.5f, _movementSpeed);
+                _transform.position = Vector3.MoveTowards(
+                    _transform.position,
+                    destination,
+                    speed * Time.deltaTime);
+                yield return null;
+            }
+
+            _transform.position = destination;
+            yield return null;
+        }
+
+        _networkMoveRoutine = null;
+        NotifyMovementCompleted();
+    }
     public void ApplyActionInstruction(AgentActionInstruction instruction)
     {
         if (!_isInitialized || instruction == null) return;

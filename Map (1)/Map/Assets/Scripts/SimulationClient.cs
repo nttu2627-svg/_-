@@ -58,6 +58,17 @@ public class SimulationClient : MonoBehaviour
         new Dictionary<string, AgentPendingAction>(StringComparer.OrdinalIgnoreCase);
     private int _pendingStepId = -1;
     private bool _awaitingStepAck = false;
+
+    private struct PendingNetworkAction
+    {
+        public string AgentId;
+        public int Step;
+        public string Type;
+    }
+
+    private readonly Dictionary<string, PendingNetworkAction> _pendingNetworkActions =
+        new Dictionary<string, PendingNetworkAction>(StringComparer.OrdinalIgnoreCase);
+
     // --- 合併最新封包（避免排隊爆量） ---
     private readonly object _pendingLock = new object();
     private UpdateData _pendingUpdate;            // 最新 update
@@ -494,6 +505,29 @@ public class SimulationClient : MonoBehaviour
             {
                 Debug.Log($"[SimulationClient] Raw message received ({bytes?.Length ?? 0} bytes)");
             }
+            JObject parsedObject = null;
+            try
+            {
+                parsedObject = JObject.Parse(message);
+            }
+            catch (JsonReaderException)
+            {
+                parsedObject = null;
+            }
+
+            if (parsedObject != null && parsedObject.TryGetValue("command", out _))
+            {
+                string captured = message;
+                EnqueueMainThreadAction(() => HandleCommandMessage(captured));
+                return;
+            }
+
+            if (parsedObject != null && !parsedObject.ContainsKey("type") && parsedObject.TryGetValue("status", out _))
+            {
+                string capturedStatus = message;
+                EnqueueMainThreadAction(() => HandleStatusEnvelope(capturedStatus));
+                return;
+            }
 
             try
             {
@@ -548,7 +582,245 @@ public class SimulationClient : MonoBehaviour
 
         await websocket.Connect();
     }
+    private void HandleStatusEnvelope(string json)
+    {
+        if (string.IsNullOrEmpty(json))
+        {
+            return;
+        }
 
+        try
+        {
+            var statusMessage = JsonConvert.DeserializeObject<ClientMessage>(json);
+            if (statusMessage != null && !string.IsNullOrWhiteSpace(statusMessage.Status))
+            {
+                OnStatusUpdate?.Invoke(statusMessage.Status);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[SimulationClient] Failed to parse status envelope: {ex.Message}");
+        }
+    }
+
+    private void HandleCommandMessage(string json)
+    {
+        if (string.IsNullOrEmpty(json))
+        {
+            return;
+        }
+
+        ServerCommandEnvelope envelope;
+        try
+        {
+            envelope = JsonConvert.DeserializeObject<ServerCommandEnvelope>(json);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[SimulationClient] Failed to parse command envelope: {ex}");
+            return;
+        }
+
+        if (envelope == null || string.IsNullOrWhiteSpace(envelope.Command))
+        {
+            return;
+        }
+
+        switch (envelope.Command)
+        {
+            case "initialize_agents":
+                ProcessInitializeAgents(JsonConvert.DeserializeObject<InitializeAgentsCommand>(json));
+                break;
+
+            case "execute_actions":
+                ProcessExecuteActions(JsonConvert.DeserializeObject<ExecuteActionsCommand>(json));
+                break;
+
+            default:
+                Debug.LogWarning($"[SimulationClient] Unhandled server command '{envelope.Command}'.");
+                break;
+        }
+    }
+
+    private void ProcessInitializeAgents(InitializeAgentsCommand command)
+    {
+        if (command == null || command.Agents == null)
+        {
+            return;
+        }
+
+        Debug.Log($"[SimulationClient] Received initialize_agents for {command.Agents.Count} agents.");
+        _pendingNetworkActions.Clear();
+
+        foreach (var agentData in command.Agents)
+        {
+            if (agentData == null || string.IsNullOrWhiteSpace(agentData.Id))
+            {
+                continue;
+            }
+
+            AgentController controller = EnsureAgentActive(agentData.Id);
+            if (controller == null)
+            {
+                Debug.LogWarning($"[SimulationClient] Agent '{agentData.Id}' not found in scene during initialization.");
+                continue;
+            }
+
+            Vector3 spawnPosition = ConvertToVector3(agentData.Position);
+            controller.TeleportTo(spawnPosition, true);
+        }
+
+        SendClientMessageAsync(ClientMessage.InitializationComplete());
+    }
+
+    private void ProcessExecuteActions(ExecuteActionsCommand command)
+    {
+        if (command == null)
+        {
+            return;
+        }
+
+        _pendingNetworkActions.Clear();
+
+        if (command.Actions == null || command.Actions.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var action in command.Actions)
+        {
+            if (action == null || string.IsNullOrWhiteSpace(action.Id))
+            {
+                continue;
+            }
+
+            AgentController controller = EnsureAgentActive(action.Id);
+            if (controller == null)
+            {
+                Debug.LogWarning($"[SimulationClient] Action for unknown agent '{action.Id}' skipped.");
+                SendClientMessageAsync(ClientMessage.ActionComplete(action.Id, command.Step));
+                continue;
+            }
+
+            string key = action.Id.ToUpperInvariant();
+            string actionType = action.Type ?? string.Empty;
+
+            if (string.Equals(actionType, "teleport", StringComparison.OrdinalIgnoreCase))
+            {
+                _pendingNetworkActions[key] = new PendingNetworkAction
+                {
+                    AgentId = action.Id,
+                    Step = command.Step,
+                    Type = actionType
+                };
+
+                Vector3 destination = ConvertToVector3(action.Position);
+                controller.TeleportTo(destination, true);
+            }
+            else if (string.Equals(actionType, "move", StringComparison.OrdinalIgnoreCase))
+            {
+                List<Vector3> path = ConvertPath(action.Path);
+                if (path.Count == 0)
+                {
+                    SendClientMessageAsync(ClientMessage.ActionComplete(action.Id, command.Step));
+                    continue;
+                }
+
+                _pendingNetworkActions[key] = new PendingNetworkAction
+                {
+                    AgentId = action.Id,
+                    Step = command.Step,
+                    Type = actionType
+                };
+
+                controller.ExecuteNetworkMove(path);
+            }
+            else
+            {
+                Debug.LogWarning($"[SimulationClient] Unsupported action type '{action.Type}' for agent '{action.Id}'.");
+                SendClientMessageAsync(ClientMessage.ActionComplete(action.Id, command.Step));
+            }
+        }
+    }
+
+    private AgentController EnsureAgentActive(string agentId)
+    {
+        if (string.IsNullOrWhiteSpace(agentId))
+        {
+            return null;
+        }
+
+        string key = agentId.ToUpperInvariant();
+        if (_activeAgentControllers.TryGetValue(key, out AgentController activeController))
+        {
+            return activeController;
+        }
+
+        if (_sceneAgentControllers.TryGetValue(key, out AgentController sceneController))
+        {
+            sceneController.gameObject.SetActive(true);
+            _activeAgentControllers[key] = sceneController;
+            return sceneController;
+        }
+
+        return null;
+    }
+
+    private static Vector3 ConvertToVector3(IList<float> components)
+    {
+        if (components == null || components.Count == 0)
+        {
+            return Vector3.zero;
+        }
+
+        float x = components.Count > 0 ? components[0] : 0f;
+        float y = components.Count > 1 ? components[1] : 0f;
+        float z = components.Count > 2 ? components[2] : 0f;
+        return new Vector3(x, y, z);
+    }
+
+    private static List<Vector3> ConvertPath(List<List<float>> rawPath)
+    {
+        var result = new List<Vector3>();
+        if (rawPath == null)
+        {
+            return result;
+        }
+
+        foreach (var node in rawPath)
+        {
+            result.Add(ConvertToVector3(node));
+        }
+
+        return result;
+    }
+
+    private async void SendClientMessageAsync(ClientMessage message)
+    {
+        if (message == null)
+        {
+            return;
+        }
+
+        if (websocket == null || websocket.State != WebSocketState.Open)
+        {
+            return;
+        }
+
+        try
+        {
+            string json = JsonConvert.SerializeObject(message);
+            await websocket.SendText(json);
+            if (verboseLog)
+            {
+                Debug.Log($"[SimulationClient] Sent client status '{message.Status}' ({json}).");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[SimulationClient] Failed to send client message: {ex.Message}");
+        }
+    }
     /// <summary>在主線程中安全地處理來自 WebSocket 的訊息。</summary>
     private void ProcessMessageOnMainThread(WebSocketMessage wsMessage)
     {
@@ -629,6 +901,7 @@ public class SimulationClient : MonoBehaviour
         _pendingAgentActions.Clear();
         _pendingStepId = -1;
         _awaitingStepAck = false;
+        _pendingNetworkActions.Clear();
     }
 
     private void BeginSimulationStep(int stepId, List<AgentActionInstruction> agentActions)
@@ -752,6 +1025,14 @@ public class SimulationClient : MonoBehaviour
             _pendingAgentActions[key] = AgentPendingAction.None;
             CheckStepCompletion();
         }
+        if (_pendingNetworkActions.TryGetValue(key, out PendingNetworkAction networkAction))
+        {
+            _pendingNetworkActions.Remove(key);
+            if (networkAction.Step >= 0 && !string.IsNullOrWhiteSpace(networkAction.AgentId))
+            {
+                SendClientMessageAsync(ClientMessage.ActionComplete(networkAction.AgentId, networkAction.Step));
+            }
+        }
     }
 
     internal void ReportTeleport(string agentName)
@@ -763,6 +1044,15 @@ public class SimulationClient : MonoBehaviour
         {
             _pendingAgentActions[key] = AgentPendingAction.None;
             CheckStepCompletion();
+        }
+
+        if (_pendingNetworkActions.TryGetValue(key, out PendingNetworkAction networkAction))
+        {
+            _pendingNetworkActions.Remove(key);
+            if (networkAction.Step >= 0 && !string.IsNullOrWhiteSpace(networkAction.AgentId))
+            {
+                SendClientMessageAsync(ClientMessage.ActionComplete(networkAction.AgentId, networkAction.Step));
+            }
         }
     }
 

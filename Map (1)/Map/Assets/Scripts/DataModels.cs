@@ -122,3 +122,68 @@ public class ScoreDetail
     [JsonProperty("total_score")] public float TotalScore;
     [JsonProperty("notes")] public string Notes;
 }
+// ---------------------------------------------------------------------------
+// Action-driven synchronisation protocol models
+// ---------------------------------------------------------------------------
+
+[Serializable]
+public class ServerCommandEnvelope
+{
+    [JsonProperty("command")] public string Command;
+}
+
+[Serializable]
+public class AgentInitData
+{
+    [JsonProperty("id")] public string Id;
+    [JsonProperty("pos")] public List<float> Position;
+}
+
+[Serializable]
+public class InitializeAgentsCommand : ServerCommandEnvelope
+{
+    [JsonProperty("agents")] public List<AgentInitData> Agents;
+}
+
+[Serializable]
+public class AgentAction
+{
+    [JsonProperty("id")] public string Id;
+    [JsonProperty("type")] public string Type;
+    [JsonProperty("path")] public List<List<float>> Path;
+    [JsonProperty("pos")] public List<float> Position;
+}
+
+[Serializable]
+public class ExecuteActionsCommand : ServerCommandEnvelope
+{
+    [JsonProperty("step")] public int Step;
+    [JsonProperty("actions")] public List<AgentAction> Actions;
+}
+
+[Serializable]
+public class ClientMessage
+{
+    [JsonProperty("status")] public string Status;
+
+    [JsonProperty("agent_id", NullValueHandling = NullValueHandling.Ignore)]
+    public string AgentId;
+
+    [JsonProperty("step", NullValueHandling = NullValueHandling.Ignore)]
+    public int? Step;
+
+    public static ClientMessage InitializationComplete()
+    {
+        return new ClientMessage { Status = "initialization_complete", Step = null };
+    }
+
+    public static ClientMessage ActionComplete(string agentId, int step)
+    {
+        return new ClientMessage
+        {
+            Status = "action_complete",
+            AgentId = agentId,
+            Step = step
+        };
+    }
+}
