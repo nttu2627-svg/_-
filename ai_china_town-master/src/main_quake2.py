@@ -196,7 +196,8 @@ def build_micro_motion_payload(agents: list["TownAgent"], buildings: Dict[str, "
     return {"type": "motion", "data": {"microMotions": motions}}
 
 # ====== 模擬主流程（與 main_quake2.py 相同骨架，少量增補） ======
-async def initialize_and_simulate(params):
+async def initialize_and_simulate(params, step_sync_event: Optional[asyncio.Event] = None):
+
     global simulation_agents
     print(f"後端收到來自 Unity 的參數: {json.dumps(params, indent=2, ensure_ascii=False)}")
 
@@ -205,7 +206,7 @@ async def initialize_and_simulate(params):
     schedule_mode = 'preset' if use_preset else 'llm'
     print(f"日曆模式已設定為: '{schedule_mode}' (來自 use_default_calendar: {use_preset})")
 
-    total_sim_duration_minutes = params.get('duration', 2400)
+    total_sim_duration_minutes = params.get('duration', 960)
     min_per_step_normal_ui = params.get('step', 30)
     start_time_dt = datetime(
         params.get('year', 2024),
@@ -352,6 +353,7 @@ async def initialize_and_simulate(params):
         'disaster_logger': disaster_logger,
         'max_chat_groups': configured_max_chat
     }
+    step_index = 0
 
     while sim_state['time'] < sim_end_time_dt:
         current_time_dt = sim_state['time']
@@ -400,11 +402,17 @@ async def initialize_and_simulate(params):
                 "llmLog": _truncate_str(llm_log_raw, LOG_TAIL_LIMIT),
                 "status": f"模擬時間: {current_time_dt.strftime('%H:%M:%S')}",
                 "agentActions": agent_action_plan,
+                "stepId": step_index,
+
             }
         }
 
         shrink_update(update_payload, LONG_TEXT_LIMIT)
         yield update_payload
+        if step_sync_event is not None:
+            await step_sync_event.wait()
+            step_sync_event.clear()
+        step_index += 1
 
         step_minutes = int(params.get('step', 30))
         if sim_state.get('phase') == "Earthquake":
@@ -437,9 +445,9 @@ async def initialize_and_simulate(params):
     yield {"type": "evaluation", "data": report}
     yield {"type": "end", "message": "模擬結束"}
 
-async def stream_simulation_to_client(websocket, params, send_lock: asyncio.Lock, buildings_ref: Dict[str, "Building"]):
+async def stream_simulation_to_client(websocket, params, send_lock: asyncio.Lock, buildings_ref: Dict[str, "Building"], step_sync_event: Optional[asyncio.Event] = None):
     try:
-        async for update_data in initialize_and_simulate(params):
+        async for update_data in initialize_and_simulate(params, step_sync_event):
             shrink_update(update_data, LONG_TEXT_LIMIT)
             if not websocket.open:
                 break
@@ -506,7 +514,8 @@ async def handler(websocket, path):
     send_lock = asyncio.Lock()
     simulation_task: Optional[asyncio.Task] = None
     motion_task: Optional[asyncio.Task] = None
-
+    step_sync_event: Optional[asyncio.Event] = None
+    expected_step_id = 0
     # 供 motion_loop 讀取目前 buildings（以閉包方式提供最新參考）
     _buildings_cache: Dict[str, Building] = {}
     def get_buildings():
@@ -519,9 +528,11 @@ async def handler(websocket, path):
             await safe_send_json(websocket, payload, chunk_size=WS_CHUNK_SIZE)
 
     def _attach_task_cleanup(task: asyncio.Task):
-        nonlocal simulation_task
+        nonlocal simulation_task, step_sync_event, expected_step_id
         if simulation_task is task and task.done():
             simulation_task = None
+            step_sync_event = None
+            expected_step_id = 0
 
     try:
         async for message in websocket:
@@ -549,8 +560,11 @@ async def handler(websocket, path):
                     for loc in locs:
                         _buildings_cache[loc] = Building(loc, (0, 0))
 
+                    step_sync_event = asyncio.Event()
+                    expected_step_id = 0
+
                     simulation_task = asyncio.create_task(
-                        stream_simulation_to_client(websocket, params, send_lock, _buildings_cache)
+                        stream_simulation_to_client(websocket, params, send_lock, _buildings_cache, step_sync_event)
                     )
                     simulation_task.add_done_callback(_attach_task_cleanup)
 
@@ -563,7 +577,20 @@ async def handler(websocket, path):
                     agent_to_teleport = next((agent for agent in simulation_agents if agent.name == agent_name), None)
                     if agent_to_teleport and target_portal_name:
                         agent_to_teleport.teleport(target_portal_name)
-
+                elif command_type == "step_complete":
+                    if step_sync_event is None:
+                        continue
+                    step_id = data.get("step_id")
+                    if step_id is None:
+                        continue
+                    if step_id < expected_step_id:
+                        print(f"⚠️ 收到過期的步驟回報: 期待 {expected_step_id}, 但收到 {step_id}。已忽略。")
+                        continue
+                    if step_id != expected_step_id:
+                        print(f"⚠️ 收到不一致的步驟回報: 期待 {expected_step_id}, 但收到 {step_id}。將以客戶端回報為準。")
+                    if not step_sync_event.is_set():
+                        step_sync_event.set()
+                    expected_step_id = step_id + 1
                 # 可選：由 Unity 顯式控制「思考期間」
                 elif command_type == "start_thinking":
                     name = data.get("agent_name")

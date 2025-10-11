@@ -1135,6 +1135,7 @@ public class AgentController : MonoBehaviour
             }
             _teleportEffectCoroutine = StartCoroutine(PlayTeleportEffect());
         }
+        _simulationClient?.ReportTeleport(agentName);
 
     }
 
@@ -1176,6 +1177,8 @@ public class AgentController : MonoBehaviour
             if (IsUnknownLocation(instruction.Destination) || IsUnknownLocation(instruction.ToPortal))
             {
                 Debug.LogWarning($"[Agent {agentName}] 忽略傳送至未知地點的指令。");
+                _simulationClient?.ReportTeleport(agentName);
+
                 return;
             }
             Vector3 exitPosition = _transform.position;
@@ -1248,6 +1251,7 @@ public class AgentController : MonoBehaviour
         {
             if (IsUnknownLocation(instruction.Destination) || IsUnknownLocation(instruction.NextStep))
             {
+                _simulationClient?.ReportMovementCompleted(agentName);
                 return;
             }
             string nextStep = string.IsNullOrWhiteSpace(instruction.NextStep)
@@ -1460,12 +1464,15 @@ public class AgentController : MonoBehaviour
     {
         ShowActiveStatus("執行任務");
         ForceImmediateVisualRefresh();
+        _simulationClient?.ReportMovementStarted(agentName);
     }
 
     internal void NotifyMovementCompleted()
     {
         UpdateStatusIndicatorFromAction(_currentAction);
         ForceImmediateVisualRefresh();
+        _simulationClient?.ReportMovementCompleted(agentName);
+
     }
 
     private void ShowIdleStatus()

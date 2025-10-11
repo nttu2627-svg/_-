@@ -58,6 +58,8 @@ public class UpdateData
     [JsonProperty("llmLog")] public string LlmLog;
     [JsonProperty("status")] public string Status;
     [JsonProperty("agentActions")] public List<AgentActionInstruction> AgentActions;
+    [JsonProperty("stepId")] public int StepId;
+
 }
 
 [Serializable]

@@ -47,7 +47,17 @@ public class SimulationClient : MonoBehaviour
     private readonly Collider2D[] _spawnOverlapBuffer = new Collider2D[16];
     private ContactFilter2D _spawnContactFilter;
     private bool _spawnContactFilterConfigured;
+    private enum AgentPendingAction
+    {
+        None,
+        Move,
+        Teleport
+    }
 
+    private readonly Dictionary<string, AgentPendingAction> _pendingAgentActions =
+        new Dictionary<string, AgentPendingAction>(StringComparer.OrdinalIgnoreCase);
+    private int _pendingStepId = -1;
+    private bool _awaitingStepAck = false;
     // --- 合併最新封包（避免排隊爆量） ---
     private readonly object _pendingLock = new object();
     private UpdateData _pendingUpdate;            // 最新 update
@@ -144,11 +154,8 @@ public class SimulationClient : MonoBehaviour
             {
                 try
                 {
-                    OnStatusUpdate?.Invoke(latestUpdate.Status);
-                    OnLogUpdate?.Invoke(latestUpdate);
-                    UpdateAllAgentStates(latestUpdate.AgentStates);
-                    UpdateAllBuildingStates(latestUpdate.BuildingStates);
-                    ApplyAgentActions(latestUpdate.AgentActions);
+                   HandleUpdateData(latestUpdate);
+
                 }
                 catch (Exception ex)
                 {
@@ -554,11 +561,7 @@ public class SimulationClient : MonoBehaviour
                     if (wsMessage.Data != null)
                     {
                         var updateData = wsMessage.Data.ToObject<UpdateData>();
-                        OnStatusUpdate?.Invoke(updateData.Status);
-                        OnLogUpdate?.Invoke(updateData);
-                        UpdateAllAgentStates(updateData.AgentStates);
-                        UpdateAllBuildingStates(updateData.BuildingStates);
-                        ApplyAgentActions(updateData.AgentActions);
+                        HandleUpdateData(updateData);
                     }
                     break;
 
@@ -621,7 +624,159 @@ public class SimulationClient : MonoBehaviour
             }
         }
     }
+    private void ResetPendingStepState()
+    {
+        _pendingAgentActions.Clear();
+        _pendingStepId = -1;
+        _awaitingStepAck = false;
+    }
 
+    private void BeginSimulationStep(int stepId, List<AgentActionInstruction> agentActions)
+    {
+        _pendingStepId = stepId;
+        _awaitingStepAck = true;
+        _pendingAgentActions.Clear();
+
+        if (agentActions != null)
+        {
+            foreach (var instruction in agentActions)
+            {
+                if (instruction == null || string.IsNullOrWhiteSpace(instruction.Agent)) continue;
+
+                string key = instruction.Agent.ToUpperInvariant();
+                string command = instruction.Command?.Trim()?.ToLowerInvariant();
+
+                if (!_activeAgentControllers.ContainsKey(key))
+                {
+                    _pendingAgentActions[key] = AgentPendingAction.None;
+                    continue;
+                }
+
+                if (command == "move")
+                {
+                    _pendingAgentActions[key] = AgentPendingAction.Move;
+                }
+                else if (command == "teleport")
+                {
+                    _pendingAgentActions[key] = AgentPendingAction.Teleport;
+                }
+                else
+                {
+                    _pendingAgentActions[key] = AgentPendingAction.None;
+                }
+            }
+        }
+
+        CheckStepCompletion();
+    }
+
+    private void CheckStepCompletion()
+    {
+        if (!_awaitingStepAck)
+        {
+            return;
+        }
+
+        foreach (var entry in _pendingAgentActions.Values)
+        {
+            if (entry != AgentPendingAction.None)
+            {
+                return;
+            }
+        }
+
+        SendStepAcknowledgement();
+    }
+
+    private async void SendStepAcknowledgement()
+    {
+        if (!_awaitingStepAck)
+        {
+            return;
+        }
+
+        if (websocket == null || websocket.State != WebSocketState.Open)
+        {
+            _awaitingStepAck = false;
+            _pendingStepId = -1;
+            _pendingAgentActions.Clear();
+            return;
+        }
+
+        var payload = new Dictionary<string, object>
+        {
+            { "command", "step_complete" },
+            { "step_id", _pendingStepId }
+        };
+
+        string json = JsonConvert.SerializeObject(payload);
+
+        try
+        {
+            await websocket.SendText(json);
+            if (verboseLog)
+            {
+                Debug.Log($"[SimulationClient] Sent step_complete ack for step {_pendingStepId}.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[SimulationClient] Failed to send step_complete ack: {ex}");
+        }
+        finally
+        {
+            _pendingAgentActions.Clear();
+            _pendingStepId = -1;
+            _awaitingStepAck = false;
+        }
+    }
+
+    internal void ReportMovementStarted(string agentName)
+    {
+        if (string.IsNullOrWhiteSpace(agentName)) return;
+
+        string key = agentName.ToUpperInvariant();
+        if (!_pendingAgentActions.ContainsKey(key))
+        {
+            _pendingAgentActions[key] = AgentPendingAction.Move;
+        }
+    }
+
+    internal void ReportMovementCompleted(string agentName)
+    {
+        if (string.IsNullOrWhiteSpace(agentName)) return;
+
+        string key = agentName.ToUpperInvariant();
+        if (_pendingAgentActions.TryGetValue(key, out var pending) && pending == AgentPendingAction.Move)
+        {
+            _pendingAgentActions[key] = AgentPendingAction.None;
+            CheckStepCompletion();
+        }
+    }
+
+    internal void ReportTeleport(string agentName)
+    {
+        if (string.IsNullOrWhiteSpace(agentName)) return;
+
+        string key = agentName.ToUpperInvariant();
+        if (_pendingAgentActions.TryGetValue(key, out var pending) && pending == AgentPendingAction.Teleport)
+        {
+            _pendingAgentActions[key] = AgentPendingAction.None;
+            CheckStepCompletion();
+        }
+    }
+
+    private void HandleUpdateData(UpdateData updateData)
+    {
+        if (updateData == null) return;
+
+        OnStatusUpdate?.Invoke(updateData.Status);
+        OnLogUpdate?.Invoke(updateData);
+        UpdateAllAgentStates(updateData.AgentStates);
+        UpdateAllBuildingStates(updateData.BuildingStates);
+        BeginSimulationStep(updateData.StepId, updateData.AgentActions);
+        ApplyAgentActions(updateData.AgentActions);
+    }
     private void ApplyAgentActions(List<AgentActionInstruction> agentActions)
     {
         if (agentActions == null || agentActions.Count == 0) return;
@@ -807,7 +962,7 @@ public class SimulationClient : MonoBehaviour
             OnStatusUpdate?.Invoke("錯誤：未連接到伺服器");
             return;
         }
-
+        ResetPendingStepState();
         Debug.Log("[SimulationClient] Activating selected agents for simulation...");
         _activeAgentControllers.Clear();
         foreach (var agentName in parameters.Mbti)

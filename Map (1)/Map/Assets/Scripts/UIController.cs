@@ -252,9 +252,9 @@ public class UIController : MonoBehaviour
     /// </summary>
     private void SetDefaultValues()
     {
-        if (durationInput != null) durationInput.text = "960";
-        if (stepInput != null) stepInput.text = "30";
-        if (yearInput != null) yearInput.text = "2024";
+        if (durationInput != null) durationInput.text = "960"; // 預設總時長為 960 分鐘 (16 小時)
+        if (stepInput != null) stepInput.text = "30"; // 預設步長為 30 分鐘
+        if (yearInput != null) yearInput.text = "2024"; 
         if (monthInput != null) monthInput.text = "11";
         if (dayInput != null) dayInput.text = "18";
         if (hourInput != null) hourInput.text = "3";
