@@ -733,7 +733,7 @@ public class SimulationClient : MonoBehaviour
                     Type = actionType
                 };
 
-                controller.ExecuteNetworkMove(path);
+                //controller.ExecuteNetworkMove(path);
             }
             else
             {

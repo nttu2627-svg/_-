@@ -1,9 +1,10 @@
-// Scripts/DataModels.cs (修正版，已補全所有資料結構)
-
+// Scripts/DataModels.cs
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+// DataModels 是純資料結構，不需要 UnityEngine 或 Threading
+// 除非你有用到 Vector3，否則 UnityEngine 也可以移除，這裡保留以防萬一
 
 // --- 發送到後端 ---
 
@@ -30,12 +31,8 @@ public class SimulationParameters
     [JsonProperty("eq_json")] public string EqJson;
     [JsonProperty("eq_step")] public int EqStep;
     [JsonProperty("use_default_calendar")] public bool UseDefaultCalendar;
-        // ### 核心修正：新增一個欄位來傳遞初始位置 ###
-    // 這是一個 代理人名稱 -> 地點名稱 的字典
     [JsonProperty("initial_positions")]
     public Dictionary<string, string> InitialPositions;
-
-    // Removed invalid implicit operator for SimulationParameters
 }
 
 // --- 從後端接收 ---
@@ -81,6 +78,7 @@ public class BuildingState
     [JsonProperty("id")] public string Id;
     [JsonProperty("integrity")] public float Integrity;
 }
+
 [Serializable]
 public class AgentActionInstruction
 {
@@ -93,11 +91,6 @@ public class AgentActionInstruction
     [JsonProperty("action")] public string Action;
 }
 
-/// <summary>
-/// 【核心修正】
-/// 新增這個 class 以解決 "找不到類型" 的編譯錯誤。
-/// 這個結構對應後端在 type="earthquake" 時發送的資料。
-/// </summary>
 [Serializable]
 public class EarthquakeData
 {
@@ -122,6 +115,7 @@ public class ScoreDetail
     [JsonProperty("total_score")] public float TotalScore;
     [JsonProperty("notes")] public string Notes;
 }
+
 // ---------------------------------------------------------------------------
 // Action-driven synchronisation protocol models
 // ---------------------------------------------------------------------------

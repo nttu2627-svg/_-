@@ -370313,6 +370313,14 @@ PrefabInstance:
       value: 0.08
       objectReference: {fileID: 0}
     - target: {fileID: 2779743348215279233, guid: 5267275c0e9ab9f4b9cc43eb5d611e65, type: 3}
+      propertyPath: _avoidanceInterval
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2779743348215279233, guid: 5267275c0e9ab9f4b9cc43eb5d611e65, type: 3}
+      propertyPath: _bobUpdateInterval
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 2779743348215279233, guid: 5267275c0e9ab9f4b9cc43eb5d611e65, type: 3}
       propertyPath: _crowdCheckInterval
       value: 0.5
       objectReference: {fileID: 0}
@@ -370326,7 +370334,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2779743348215279233, guid: 5267275c0e9ab9f4b9cc43eb5d611e65, type: 3}
       propertyPath: _minStateApplyInterval
-      value: 0.1
+      value: 0.4
       objectReference: {fileID: 0}
     - target: {fileID: 3285841149331094448, guid: 5267275c0e9ab9f4b9cc43eb5d611e65, type: 3}
       propertyPath: m_Name

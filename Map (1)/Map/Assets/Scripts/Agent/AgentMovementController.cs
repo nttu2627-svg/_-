@@ -2,7 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using Cysharp.Threading.Tasks;
+using System.Threading;
 
 [DisallowMultipleComponent]
 public class AgentMovementController : MonoBehaviour
@@ -23,8 +24,14 @@ public class AgentMovementController : MonoBehaviour
 
     private const string ExteriorKey = "EXTERIOR";
 
+    [Header("Movement Settings")]
     [SerializeField, Tooltip("移動速度倍率（會乘上代理人自身的速度設定）")]
-    private float _speedMultiplier = 1f;
+    private float _speedMultiplier = 1f; // ==== 補回：遺失的變數 ====
+
+    [SerializeField, Tooltip("平滑移動時間 (數值越大越滑，建議 0.15~0.3)")]
+    private float _smoothTime = 0.2f; 
+    private Vector3 _currentVelocity; // SmoothDamp 需要的參考變數
+
     [SerializeField, Tooltip("節點抵達閾值（公尺）")]
     private float _nodeArrivalThreshold = 0.08f;
 
@@ -33,7 +40,7 @@ public class AgentMovementController : MonoBehaviour
     private Transform _transform;
     private float _baseSpeed = 4.5f;
     private float _baseArrivalThreshold = 0.05f;
-    private Coroutine _movementRoutine;
+    private CancellationTokenSource _moveCts;
     private readonly List<PathNode> _currentPath = new List<PathNode>();
     private Dictionary<string, Transform> _locationLookup;
     private Dictionary<string, List<PortalController>> _portalsByBuilding;
@@ -45,7 +52,10 @@ public class AgentMovementController : MonoBehaviour
     private static readonly List<PortalController> GlobalPortalCache = new List<PortalController>();
     private static readonly Dictionary<string, List<PortalController>> GlobalPortalsByBuilding = new Dictionary<string, List<PortalController>>(StringComparer.OrdinalIgnoreCase);
     private static float _globalPortalCacheTimestamp = -99f;
-    private const float PortalCacheDuration = 5f;    public bool IsControllingMovement => _isMoving || _movementRoutine != null;
+    private const float PortalCacheDuration = 5f;
+    
+    public bool IsControllingMovement => _isMoving; // 簡化判斷
+
 
     public void ConfigureFromAgent(AgentController agent, float moveSpeed, float arrivalThreshold)
     {
@@ -125,73 +135,123 @@ public class AgentMovementController : MonoBehaviour
         _agent?.NotifyMovementCompleted();
     }
 
-    public IEnumerator MoveAlongPath(Vector2[] nodes)
+    public async UniTaskVoid MoveAlongPathAsync(Vector2[] nodes, CancellationToken token)
     {
         if (nodes == null || nodes.Length == 0)
         {
             _isMoving = false;
-            _movementRoutine = null;
-            _hasLastRequestedTarget = false; 
-            yield break;
+            _hasLastRequestedTarget = false;
+            return;
         }
 
         _isMoving = true;
         _agent?.NotifyMovementStarted();
 
-        for (int i = 0; i < nodes.Length; i++)
+        try
         {
-            if (_transform == null)
+            for (int i = 0; i < nodes.Length; i++)
             {
-                break;
+                if (_transform == null) break;
+
+                // 檢查是否被取消
+                if (token.IsCancellationRequested) token.ThrowIfCancellationRequested();
+
+                PathNode step = _currentPath[i];
+                Vector3 target = new Vector3(nodes[i].x, nodes[i].y, _transform.position.z);
+                
+                float threshold = _nodeArrivalThreshold;
+                if (step.IsPortal && _teleportable != null)
+                {
+                    threshold = Mathf.Max(threshold, _teleportable.PortalSearchPadding);
+                }
+                threshold = Mathf.Max(threshold, _baseArrivalThreshold);
+
+                // 移動迴圈
+                while (Vector2.Distance(_transform.position, target) > threshold)
+                {
+                    // 每一幀檢查取消
+                    if (token.IsCancellationRequested) token.ThrowIfCancellationRequested();
+
+                    float maxSpeed = _baseSpeed * Mathf.Max(0.1f, _speedMultiplier);
+
+                    // 使用 SmoothDamp 替換 MoveTowards
+                    _transform.position = Vector3.SmoothDamp(
+                        _transform.position,    // 當前位置
+                        target,                 // 目標位置
+                        ref _currentVelocity,   // 當前速度 (由函數自動更新)
+                        _smoothTime,            // 平滑時間
+                        maxSpeed,               // 最大速度
+                        Time.deltaTime          // 時間增量
+                    );
+                    
+                    // 等待下一幀 (不會產生 GC)
+                    await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken: token);
+                }
+
+                _transform.position = target;
+
+                if (step.IsPortal)
+                {
+                    // 等待傳送門邏輯
+                    await ExecutePortalAsync(step.portal, token);
+                }
             }
-
-            PathNode step = _currentPath[i];
-            Vector3 target = new Vector3(nodes[i].x, nodes[i].y, _transform.position.z);
-            float threshold = _nodeArrivalThreshold;
-            if (step.IsPortal && _teleportable != null)
+            
+            // 正常走完後的邏輯
+            _agent?.NotifyMovementCompleted();
+        }
+        catch (OperationCanceledException)
+        {
+            // 被 CancelMovementInternal 中斷時會進到這裡
+            // 不需要特別報錯，這是預期行為
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[AgentMovement] 移動發生錯誤: {e}");
+        }
+        finally
+        {
+            // 不管是正常走完還是被取消，最後都會執行這裡
+            _isMoving = false;
+            _hasLastRequestedTarget = false;
+            
+            // 如果是被取消的，這裡確保 CTS 被清空 (如果是由 StartPath 觸發的取消則不需要)
+            if (_moveCts != null && _moveCts.Token == token)
             {
-                threshold = Mathf.Max(threshold, _teleportable.PortalSearchPadding);
-            }
-            threshold = Mathf.Max(threshold, _baseArrivalThreshold);
-
-            while (Vector2.Distance(_transform.position, target) > threshold)
-            {
-                float speed = _baseSpeed * Mathf.Max(0.1f, _speedMultiplier);
-                _transform.position = Vector3.MoveTowards(_transform.position, target, speed * Time.deltaTime);
-                yield return null;
-            }
-
-            _transform.position = target;
-
-            if (step.IsPortal)
-            {
-                yield return ExecutePortal(step.portal);
+                _moveCts.Dispose();
+                _moveCts = null;
             }
         }
-
-        _isMoving = false;
-        _movementRoutine = null;
-        _hasLastRequestedTarget = false;
-        _agent?.NotifyMovementCompleted();
     }
-
+    
     private void StartPath(List<PathNode> path, Vector2[] nodes)
     {
-        CancelMovementInternal();
+        CancelMovementInternal(); // 確保先停止上一次的移動
         _currentPath.Clear();
         _currentPath.AddRange(path);
-        _movementRoutine = StartCoroutine(MoveAlongPath(nodes));
+
+        // 建立新的取消權杖
+        _moveCts = new CancellationTokenSource();
+        
+        // 啟動異步移動 (Fire and Forget)
+        MoveAlongPathAsync(nodes, _moveCts.Token).Forget();
     }
 
     private void CancelMovementInternal()
     {
-        if (_movementRoutine != null)
+        if (_moveCts != null)
         {
-            StopCoroutine(_movementRoutine);
-            _movementRoutine = null;
+            _moveCts.Cancel();
+            _moveCts.Dispose();
+            _moveCts = null;
         }
         _isMoving = false;
         _currentPath.Clear();
+    }
+    
+    private void OnDestroy()
+    {
+        CancelMovementInternal();
     }
 
     private Vector2[] ExtractPositions(List<PathNode> path)
@@ -204,17 +264,15 @@ public class AgentMovementController : MonoBehaviour
         return nodes;
     }
 
-    private IEnumerator ExecutePortal(PortalController portal)
+    private async UniTask ExecutePortalAsync(PortalController portal, CancellationToken token)
     {
-        if (portal == null)
-        {
-            yield break;
-        }
+        if (portal == null) return;
 
         bool success = portal.TryTeleport(_transform, _teleportable);
         if (success)
         {
-            yield return null;
+            // 模擬傳送的一幀延遲，確保物理更新
+            await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken: token);
         }
     }
 

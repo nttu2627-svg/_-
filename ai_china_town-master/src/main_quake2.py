@@ -204,72 +204,73 @@ def build_micro_motion_payload(agents: list["TownAgent"], buildings: Dict[str, "
 
 # ====== 模擬主流程（與 main_quake2.py 相同骨架，少量增補） ======
 async def initialize_and_simulate(params, step_sync_event: Optional[asyncio.Event] = None):
+    """
+    修正重點：
+    1) 先解析 params → selected_mbti_list / available_locations / initial_positions 等，再建立 agents。
+    2) 移除/避免在變數尚未定義前就使用的那一段重複建置 agents 的程式。
+    3) DEFAULT_HOME_LOCATION 一致使用，沒給就回退到 DEFAULT_HOME_LOCATION。
+    """
     global simulation_agents
+
     print(f"後端收到來自 Unity 的參數: {json.dumps(params, indent=2, ensure_ascii=False)}")
 
-    initial_positions = params.get('initial_positions', {})
-   
-    agents = []
-    for mbti in selected_mbti_list:
-        # 從參數中獲取初始位置，預設為 Apartment_F1
-        initial_location = initial_positions.get(mbti, "Apartment_F1")
-        agent = TownAgent(mbti, initial_location, available_locations)
-        agents.append(agent)
-        print(f"代理人 {mbti} 的初始位置被設定為: {initial_location}")
-    
-    simulation_agents = agents
-
-    use_preset = params.get('use_default_calendar', False)
-    schedule_mode = 'preset' if use_preset else 'llm'
-    print(f"日曆模式已設定為: '{schedule_mode}' (來自 use_default_calendar: {use_preset})")
-
-    total_sim_duration_minutes = params.get('duration', 960)
-    min_per_step_normal_ui = params.get('step', 30)
-    start_time_dt = datetime(
-        params.get('year', 2024),
-        params.get('month', 11),
-        params.get('day', 18),
-        params.get('hour', 3),
-        params.get('minute', 0)
-    )
-    selected_mbti_list = params.get('mbti', [])
-    available_locations = params.get('locations', [])
+    # ---- 先把所有會用到的參數解析出來（順序很重要） ----
+    initial_positions: Dict[str, str] = params.get("initial_positions", {}) or {}
+    selected_mbti_list = params.get("mbti", []) or []
+    available_locations = params.get("locations", []) or []
 
     if not available_locations:
+        # 沒有地點列表，無法建立建築與座標對應
         yield {"type": "error", "message": "錯誤：Unity 未提供可用的地點列表。"}
         return
+
     if not LLM_FUNCTIONS:
         yield {"type": "error", "message": "後端LLM模組載入失敗"}
         return
 
-    yield {"type": "status", "message": "後端開始初始化代理人..."}
+    use_preset = params.get("use_default_calendar", False)
+    schedule_mode = "preset" if use_preset else "llm"
+    print(f"日曆模式已設定為: '{schedule_mode}' (來自 use_default_calendar: {use_preset})")
 
+    total_sim_duration_minutes = int(params.get("duration", 960))
+    start_time_dt = datetime(
+        int(params.get("year", 2024)),
+        int(params.get("month", 11)),
+        int(params.get("day", 18)),
+        int(params.get("hour", 3)),
+        int(params.get("minute", 0)),
+    )
+
+    # ---- 只建立一次 agents（使用已解析的 selected_mbti_list / available_locations）----
     agents = []
     for mbti in selected_mbti_list:
-        initial_location = initial_positions.get(mbti, DEFAULT_HOME_LOCATION)
-        agent = TownAgent(mbti, initial_location, available_locations)
+        init_loc = initial_positions.get(mbti, DEFAULT_HOME_LOCATION)
+        agent = TownAgent(mbti, init_loc, available_locations)
         agents.append(agent)
-        print(f"代理人 {mbti} 的初始位置被設定為: {initial_location}")
+        print(f"代理人 {mbti} 的初始位置被設定為: {init_loc}")
 
-    simulation_agents = agents
+    simulation_agents = agents  # 供其他流程（teleport / motion_loop）使用
 
+    # ---- 初始化代理人（行事曆、記憶等）----
     init_tasks = [agent.initialize_agent(start_time_dt, schedule_mode, SCHEDULE_FILE_PATH) for agent in agents]
     init_results = await asyncio.gather(*init_tasks, return_exceptions=True)
-
     for i, result in enumerate(init_results):
         if isinstance(result, Exception) or not result:
             yield {"type": "error", "message": f"代理人 {agents[i].name} 初始化失敗: {result}"}
             return
 
+    # ---- 建立建築索引（由地點列表推導）----
     buildings = {}
     for loc in available_locations:
         canonical_loc = normalize_location_name(loc)
         if canonical_loc not in buildings:
             buildings[canonical_loc] = Building(canonical_loc, (0, 0))
+
+    # 讓代理人綁定所在建築（與地圖語意）
     for agent in agents:
         agent.update_current_building(buildings)
 
-    # 新增：執行初始傳送（在模擬開始前）
+    # 初始傳送（確保一開始就處在正確入口/出口位置）
     for agent in agents:
         try:
             spawn_event = agent.ensure_spawn_position()
@@ -281,7 +282,7 @@ async def initialize_and_simulate(params, step_sync_event: Optional[asyncio.Even
         except Exception as exc:
             print(f"⚠️ [初始化傳送警告] 嘗試定位 {agent.name} 時發生錯誤: {exc}")
 
-
+    # ---- 日誌與狀態集合 ----
     disaster_logger = 災難記錄器()
 
     def get_full_status(current_buildings):
@@ -295,20 +296,20 @@ async def initialize_and_simulate(params, step_sync_event: Optional[asyncio.Even
                     "schedule": f"{agent.wake_time} ~ {agent.sleep_time}",
                     "memory": agent.memory,
                     "weeklySchedule": agent.weekly_schedule,
-                    "dailySchedule": agent.daily_schedule
-                } for agent in agents
+                    "dailySchedule": agent.daily_schedule,
+                }
+                for agent in agents
             },
             "buildingStates": {
-                name: {"id": b.id, "integrity": b.integrity}
-                for name, b in current_buildings.items()
-            }
+                name: {"id": b.id, "integrity": b.integrity} for name, b in current_buildings.items()
+            },
         }
 
     _history_log_buffer, _chat_buffer, _event_log_buffer = [], {}, []
 
     def format_log(current_time_dt, current_phase, all_asleep=False):
         current_step_log = []
-        sim_time_str = current_time_dt.strftime('%Y年%m月%d日 %H點%M分 (%A)')
+        sim_time_str = current_time_dt.strftime("%Y年%m月%d日 %H點%M分 (%A)")
         current_step_log.append(f"當前時間: {sim_time_str}")
         if current_phase in ["Earthquake", "Recovery"]:
             current_step_log.append(f"--- {current_phase.upper()} ---")
@@ -331,24 +332,26 @@ async def initialize_and_simulate(params, step_sync_event: Optional[asyncio.Even
         current_step_log.append("-" * 60)
         return "\n".join(current_step_log)
 
+    # ---- 地震事件解析 ----
     sim_end_time_dt = start_time_dt + timedelta(minutes=int(total_sim_duration_minutes))
-    eq_enabled = params.get('eq_enabled', False)
-    eq_events_json_str = params.get('eq_json', '[]')
-    eq_step_minutes_ui = params.get('eq_step', 5)
+    eq_enabled = params.get("eq_enabled", False)
+    eq_events_json_str = params.get("eq_json", "[]")
+    eq_step_minutes_ui = int(params.get("eq_step", 5))
     scheduled_events = []
-
     if eq_enabled:
         print("地震模組已啟用。正在嘗試解析地震事件...")
         try:
             events_data = json.loads(eq_events_json_str)
             print(f"成功解析地震 JSON，找到 {len(events_data)} 個事件設定。")
             for eq_data in events_data:
-                event_time = datetime.strptime(eq_data['time'], "%Y-%m-%d-%H-%M")
-                scheduled_events.append({
-                    'time_dt': event_time,
-                    'duration': int(eq_data['duration']),
-                    'intensity': float(eq_data.get('intensity', 0.7))
-                })
+                event_time = datetime.strptime(eq_data["time"], "%Y-%m-%d-%H-%M")
+                scheduled_events.append(
+                    {
+                        "time_dt": event_time,
+                        "duration": int(eq_data["duration"]),
+                        "intensity": float(eq_data.get("intensity", 0.7)),
+                    }
+                )
                 print(f"✅ 已成功排程地震於: {event_time}")
         except Exception as e:
             error_msg = f"[ERROR] 載入地震事件JSON錯誤: {e}"
@@ -357,54 +360,57 @@ async def initialize_and_simulate(params, step_sync_event: Optional[asyncio.Even
     else:
         print("地震模組未啟用。")
 
-    sim_state = {'phase': "Normal", 'time': start_time_dt, 'next_event_idx': 0, 'eq_enabled': eq_enabled}
+    # ---- 主循環 ----
+    sim_state = {"phase": "Normal", "time": start_time_dt, "next_event_idx": 0, "eq_enabled": eq_enabled}
     try:
-        configured_max_chat = int(params.get('max_chat_groups', 1))
+        configured_max_chat = int(params.get("max_chat_groups", 1))
     except (TypeError, ValueError):
         configured_max_chat = 1
     configured_max_chat = max(1, configured_max_chat)
 
     llm_context = {
-        'update_log': lambda msg, lvl: _history_log_buffer.append(f"[{lvl}] {msg}"),
-        'chat_buffer': _chat_buffer,
-        'event_log_buffer': _event_log_buffer,
-        'disaster_logger': disaster_logger,
-        'max_chat_groups': configured_max_chat
+        "update_log": lambda msg, lvl: _history_log_buffer.append(f"[{lvl}] {msg}"),
+        "chat_buffer": _chat_buffer,
+        "event_log_buffer": _event_log_buffer,
+        "disaster_logger": disaster_logger,
+        "max_chat_groups": configured_max_chat,
     }
     step_index = 0
 
-    while sim_state['time'] < sim_end_time_dt:
-        current_time_dt = sim_state['time']
-        llm_context['current_time_str'] = current_time_dt.strftime('%H-%M')
+    while sim_state["time"] < sim_end_time_dt:
+        current_time_dt = sim_state["time"]
+        llm_context["current_time_str"] = current_time_dt.strftime("%H-%M")
 
         await check_and_handle_phase_transitions(sim_state, agents, buildings, scheduled_events, llm_context)
 
         active_agents = [
-            agent for agent in agents
-            if agent.health > 0 and not agent.is_asleep(current_time_dt.strftime('%H-%M'))
+            agent for agent in agents if agent.health > 0 and not agent.is_asleep(current_time_dt.strftime("%H-%M"))
         ]
-        all_asleep = not active_agents and sim_state['phase'] == "Normal"
-        llm_context['skip_reasoning'] = all_asleep
+        all_asleep = not active_agents and sim_state["phase"] == "Normal"
+        llm_context["skip_reasoning"] = all_asleep
 
-        if not all_asleep and sim_state['phase'] in ["Normal", "PostQuakeDiscussion"]:
+        if not all_asleep and sim_state["phase"] in ["Normal", "PostQuakeDiscussion"]:
             update_tasks = []
-            if current_time_dt.hour == 3 and current_time_dt.minute == 0 and sim_state['phase'] == "Normal":
+            # 03:00 重新計畫（僅示例，可保留你原本邏輯）
+            if current_time_dt.hour == 3 and current_time_dt.minute == 0 and sim_state["phase"] == "Normal":
                 for agent in agents:
                     if agent.health > 0:
-                        update_tasks.append(agent.update_daily_schedule(current_time_dt, 'preset' if params.get('use_default_calendar', False) else 'llm', SCHEDULE_FILE_PATH))
+                        update_tasks.append(
+                            agent.update_daily_schedule(
+                                current_time_dt, "preset" if use_preset else "llm", SCHEDULE_FILE_PATH
+                            )
+                        )
             for agent in agents:
-                update_tasks.append(agent_update_wrapper(agent, active_agents, current_time_dt.strftime('%H-%M')))
+                update_tasks.append(agent_update_wrapper(agent, active_agents, current_time_dt.strftime("%H-%M")))
             await asyncio.gather(*update_tasks)
             if len(active_agents) > 1:
                 await handle_social_interactions(active_agents, llm_context, LLM_FUNCTIONS)
 
         agent_action_plan = await generate_action_instructions(agents)
-        current_log = format_log(current_time_dt, sim_state['phase'], all_asleep)
+        current_log = format_log(current_time_dt, sim_state["phase"], all_asleep)
         _history_log_buffer.append(current_log)
 
         status_data = get_full_status(buildings)
-
-        llm_log_raw = ""
         try:
             llm_log_raw = llm.get_llm_log()
         except Exception:
@@ -421,26 +427,28 @@ async def initialize_and_simulate(params, step_sync_event: Optional[asyncio.Even
                 "status": f"模擬時間: {current_time_dt.strftime('%H:%M:%S')}",
                 "agentActions": agent_action_plan,
                 "stepId": step_index,
-
-            }
+            },
         }
-
         shrink_update(update_payload, LONG_TEXT_LIMIT)
         yield update_payload
+
+        # 與 Unity 的「步進完成」同步
         if step_sync_event is not None:
             await step_sync_event.wait()
             step_sync_event.clear()
         step_index += 1
 
-        step_minutes = int(params.get('step', 30))
-        if sim_state.get('phase') == "Earthquake":
-            step_minutes = int(params.get('eq_step', 5))
-        elif sim_state.get('phase') in ["Recovery"]:
+        # 不同階段使用不同步長
+        step_minutes = int(params.get("step", 30))
+        if sim_state.get("phase") == "Earthquake":
+            step_minutes = int(params.get("eq_step", eq_step_minutes_ui))
+        elif sim_state.get("phase") in ["Recovery"]:
             step_minutes = 10
 
-        sim_state['time'] += timedelta(minutes=step_minutes)
+        sim_state["time"] += timedelta(minutes=step_minutes)
         await asyncio.sleep(0.1)
 
+    # ---- 收尾：生成評分/報告 ----
     final_agent_states = {agent.name: {"hp": agent.health} for agent in agents}
     report = disaster_logger.生成報表(final_agent_states)
     report_text = report.get("text")
