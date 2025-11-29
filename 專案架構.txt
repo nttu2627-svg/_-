@@ -16,7 +16,10 @@ Map (1)/Map/
 │   ├── 📂 Scripts/                    # 核心腳本程式碼
 │   │   ├── 📂 Agent/                  # 代理人顯示與控制
 │   │   │   ├── 📄 AgentBubbleController.cs
-│   │   │   └── 📄 AgentController.cs
+│   │   │   ├── 📄 AgentController.cs
+│   │   │   ├── 📄AgentMovementController.cs
+│   │   │   ├── 📄PixelSnap.cs
+│   │   │   └── 📄AgentVisualController.cs
 │   │   ├── 📂 Building/               # 建築互動
 │   │   │   └── 📄 BuildingController.cs
 │   │   ├── 📂 Camera/                 # 攝影機控制
@@ -29,6 +32,7 @@ Map (1)/Map/
 │   │   │   └── 📄 UIPanelController.cs
 │   │   ├── 📂 World/                  # 場景互動邏輯
 │   │   │   ├── 📄 PortalController.cs
+│   │   │   ├── 📄 PortalTrigger.cs
 │   │   │   └── 📄 Teleportable2D.cs
 │   │   ├── 📂 ThirdParty/             # 第三方套件腳本
 │   │   │   └── 📄 NativeWebSocket.cs
