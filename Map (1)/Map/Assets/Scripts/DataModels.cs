@@ -44,6 +44,27 @@ public class WebSocketMessage
     [JsonProperty("data")] public JToken Data;
     [JsonProperty("message")] public string Message;
 }
+[Serializable]
+public class StatusPayload
+{
+    [JsonProperty("scenario_state")] public string ScenarioState;
+    [JsonProperty("execution_state")] public string ExecutionState;
+    [JsonProperty("sim_time")] public string SimTime;
+
+    [JsonProperty("message", NullValueHandling = NullValueHandling.Ignore)]
+    public string Message;
+
+    public static StatusPayload FromMessage(string message)
+    {
+        return new StatusPayload
+        {
+            ScenarioState = null,
+            ExecutionState = null,
+            SimTime = null,
+            Message = message
+        };
+    }
+}
 
 [Serializable]
 public class UpdateData
@@ -53,7 +74,7 @@ public class UpdateData
     [JsonProperty("agentStates")] public Dictionary<string, AgentState> AgentStates;
     [JsonProperty("buildingStates")] public Dictionary<string, BuildingState> BuildingStates;
     [JsonProperty("llmLog")] public string LlmLog;
-    [JsonProperty("status")] public string Status;
+    [JsonProperty("status")] public StatusPayload Status;
     [JsonProperty("agentActions")] public List<AgentActionInstruction> AgentActions;
     [JsonProperty("stepId")] public int StepId;
 
@@ -153,6 +174,31 @@ public class ExecuteActionsCommand : ServerCommandEnvelope
 {
     [JsonProperty("step")] public int Step;
     [JsonProperty("actions")] public List<AgentAction> Actions;
+}
+[Serializable]
+public class AgentDestination
+{
+    [JsonProperty("x")] public float X;
+    [JsonProperty("y")] public float Y;
+    [JsonProperty("z")] public float Z;
+}
+
+[Serializable]
+public class AgentUpdateCommand
+{
+    [JsonProperty("agent_id")] public string AgentId;
+    [JsonProperty("destination")] public AgentDestination Destination;
+    [JsonProperty("action_state")] public string ActionState;
+    [JsonProperty("speed")] public float? Speed;
+    [JsonProperty("teleport")] public bool? Teleport;
+}
+
+[Serializable]
+public class AgentUpdateEnvelope
+{
+    [JsonProperty("type")] public string Type;
+    [JsonProperty("protocol")] public string Protocol;
+    [JsonProperty("updates")] public List<AgentUpdateCommand> Updates;
 }
 
 [Serializable]

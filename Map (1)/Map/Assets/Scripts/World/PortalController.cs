@@ -66,7 +66,10 @@ public class PortalController : MonoBehaviour
         new Vector2(1f, -1f).normalized,
         new Vector2(-1f, -1f).normalized
     };
-
+    public int PortalId => portalId;
+    public float Cooldown => reenterCooldown;
+    public Transform ExitTransform => exitPoint != null ? exitPoint : transform;
+    public PortalController ResolvedTarget => TargetPortal;
     void Reset()
     {
         var col = GetComponent<Collider2D>();
@@ -121,40 +124,60 @@ public class PortalController : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (_resolvedTarget == null || exitPoint == null) return;
-        if ((allowedLayers.value & (1 << other.gameObject.layer)) == 0) return;
+        TryTeleport(
+            other.transform,
+            other.GetComponent<Teleportable2D>(),
+            other.GetComponent<AgentController>(),
+            other.attachedRigidbody,
+            other,
+            true,
+            true);
+    }
 
-        // 需要 Teleportable2D（用來做冷卻標記）
-        var tp = other.GetComponent<Teleportable2D>();
-        if (tp == null) return;
+    public bool TryTeleport(
+        Transform mover,
+        Teleportable2D teleportable = null,
+        AgentController agent = null,
+        Rigidbody2D rb = null,
+        Collider2D movingCollider = null,
+        bool suppressEffects = true,
+        bool requireTeleportable = false)
+    {
+        if (mover == null)
+            return false;
 
-        if (tp.IsIgnoring) return;                                 // 剛傳送過
-        if (tp.lastPortalId == _resolvedTarget.portalId) return;   // 避免來回
+        if (_resolvedTarget == null || exitPoint == null)
+            return false;
+
+        if ((allowedLayers.value & (1 << mover.gameObject.layer)) == 0)
+            return false;
+
+        teleportable = teleportable == null ? mover.GetComponent<Teleportable2D>() : teleportable;
+        rb = rb == null ? mover.GetComponent<Rigidbody2D>() : rb;
+        movingCollider = movingCollider == null ? mover.GetComponent<Collider2D>() : movingCollider;
+
+        if (requireTeleportable && teleportable == null)
+            return false;
+
+        if (teleportable != null)
+        {
+            if (teleportable.IsIgnoring)
+                return false;                                 // 剛傳送過
+            if (teleportable.lastPortalId == _resolvedTarget.portalId)
+                return false;   // 避免來回
+        }
 
         var dst = _resolvedTarget;
         var dstExit = dst.exitPoint != null ? dst.exitPoint : dst.transform;
 
-        // 計算落點
-        var obj = other.transform;
-        Vector3 newPos;
-        if (keepLocalOffset)
-        {
-            Vector3 local = transform.InverseTransformPoint(obj.position);
-            newPos = dstExit.TransformPoint(local);
-        }
-        else
-        {
-            newPos = dstExit.position;
-        }
+        Vector3 newPos = keepLocalOffset
+            ? dstExit.TransformPoint(transform.InverseTransformPoint(mover.position))
+            : dstExit.position;
 
-        // 沿出口面向推出一點
         newPos += dstExit.right * Mathf.Max(0f, exitNudge);
+        newPos = FindSafeExitPosition(dstExit, newPos, movingCollider);
 
-        // 確保出口安全
-        newPos = FindSafeExitPosition(dstExit, newPos, other);
-
-        // 速度/旋轉處理
-        var rb = other.attachedRigidbody;
+        // 執行傳送
         Vector2 newVel = Vector2.zero;
         if (rb != null && preserveMomentum)
         {
@@ -166,28 +189,30 @@ public class PortalController : MonoBehaviour
             }
         }
 
-        float newZ = obj.eulerAngles.z;
+        float newZ = mover.eulerAngles.z;
         if (matchExitRotation)
         {
             float delta = dstExit.eulerAngles.z - transform.eulerAngles.z;
             newZ += delta;
         }
 
-        // 實際傳送（瞬間位移）
-        obj.position = newPos;
-        obj.rotation = Quaternion.Euler(0, 0, newZ);
+        mover.position = newPos;
+        mover.rotation = Quaternion.Euler(0, 0, newZ);
         if (rb != null && preserveMomentum) rb.linearVelocity = newVel;
 
-        // 通知代理人調整移動狀態（※取消動畫：suppressEffects=true）
-        if (other.TryGetComponent(out AgentController agent))
+        if (agent != null)
         {
             bool usedDoor = isDoor || (dst != null && dst.isDoor);
-            agent.OnTeleported(usedDoor, true); // <== 關鍵：一律抑制傳送動畫
+            agent.OnTeleported(usedDoor, suppressEffects); // <== 關鍵：一律抑制傳送動畫
         }
 
-        // 設定冷卻
-        tp.SetIgnore(reenterCooldown, portalId);
-        tp.SetIgnore(dst.reenterCooldown, dst.portalId);
+        if (teleportable != null)
+        {
+            teleportable.SetIgnore(reenterCooldown, portalId);
+            teleportable.SetIgnore(dst.reenterCooldown, dst.portalId);
+        }
+
+        return true;
     }
 
     private Vector3 FindSafeExitPosition(Transform dstExit, Vector3 desiredPosition, Collider2D movingCollider)

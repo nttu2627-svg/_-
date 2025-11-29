@@ -252,12 +252,12 @@ public class UIController : MonoBehaviour
     /// </summary>
     private void SetDefaultValues()
     {
-        if (durationInput != null) durationInput.text = "960"; // 預設總時長為 960 分鐘 (16 小時)
+        if (durationInput != null) durationInput.text = "600"; // 預設總時長為 600 分鐘 (10 小時)
         if (stepInput != null) stepInput.text = "30"; // 預設步長為 30 分鐘
         if (yearInput != null) yearInput.text = "2024"; 
         if (monthInput != null) monthInput.text = "11";
         if (dayInput != null) dayInput.text = "18";
-        if (hourInput != null) hourInput.text = "3";
+        if (hourInput != null) hourInput.text = "6";
         if (minuteInput != null) minuteInput.text = "0";
 
         // 預設選中前三個代理人
@@ -396,9 +396,23 @@ public class UIController : MonoBehaviour
         if (statusBarText != null) statusBarText.gameObject.SetActive(true);
         ShowMainLogDisplay();
     }
-    private void UpdateStatusBar(string status)
+    private void UpdateStatusBar(StatusPayload status)
     {
-        if (statusBarText != null) statusBarText.text = $"狀態: {status}";
+        if (statusBarText == null) return;
+
+        string scenarioState = !string.IsNullOrWhiteSpace(status?.ScenarioState)
+            ? status.ScenarioState
+            : (!string.IsNullOrWhiteSpace(status?.Message) ? status.Message : "尚未開始");
+
+        string executionState = !string.IsNullOrWhiteSpace(status?.ExecutionState)
+            ? status.ExecutionState
+            : "等待指令";
+
+        string simTime = !string.IsNullOrWhiteSpace(status?.SimTime)
+            ? status.SimTime
+            : "--:--:--";
+
+        statusBarText.text = $"狀態：{scenarioState}\n執行狀態：{executionState}\n模擬時間：{simTime}";
     }
 
     private void UpdateLogs(UpdateData data)

@@ -36,6 +36,11 @@ MOVEMENT_MANAGER: Optional["MovementController"] = None  # Forward declaration p
 UNITY_IP = "127.0.0.1"
 UNITY_PORT = 12345
 UI_SOCKET_AVAILABLE = True
+UNITY_STATUS_HOST = "0.0.0.0"
+UNITY_STATUS_PORT = 12346
+# Transport options (phase out legacy MOVE batches during rollout)
+USE_LEGACY_MOVE_PROTOCOL = bool(int(os.environ.get("UNITY_LEGACY_MOVE", "0")))
+AGENT_UPDATE_PROTOCOL = "navmesh_destination_v1"
 
 # ---------------------------
 # Current Unity scene markers (anchors) & portals
@@ -159,7 +164,21 @@ DEFAULT_AGENT_HOMES = {"ISTJ": "Apartment_F1", "ISFJ": "Apartment_F1", "INFJ": "
 # ---------------------------
 # Unity TCP helpers
 # ---------------------------
+def _send_json_payload(ip: str, port: int, payload: Dict[str, Any], delay: float = 0.0):
+    try:
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect((ip, port))
+        serialized = json.dumps(payload, ensure_ascii=False)
+        client.sendall(serialized.encode("utf-8"))
+        logger.debug("Sent: %s", serialized)
+        client.close()
+        if delay > 0:
+            time.sleep(delay)
+    except Exception as e:
+        logger.error("Socket send error: %s", e)
+
 def send_move_command(ip: str, port: int, object_positions: List[Tuple[int, float, float]], delay: float = 0.5):
+    """Legacy MOVE protocol (deprecated)."""
     try:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((ip, port))
@@ -171,15 +190,47 @@ def send_move_command(ip: str, port: int, object_positions: List[Tuple[int, floa
             time.sleep(delay)
     except Exception as e:
         logger.error("send_move_command error: %s", e)
+def send_agent_updates(ip: str, port: int, updates: List[Dict[str, Any]], delay: float = 0.0):
+    if not updates:
+        return
+    payload = {
+        "type": "agent_update",
+        "protocol": AGENT_UPDATE_PROTOCOL,
+        "updates": updates,
+    }
+    _send_json_payload(ip, port, payload, delay=delay)
 
+
+async def send_agent_updates_async(ip: str, port: int, updates: List[Dict[str, Any]], delay: float = 0.0):
+    if not updates:
+        return
+    await asyncio.to_thread(send_agent_updates, ip, port, updates, delay)
 async def send_move_command_async(ip: str, port: int, object_positions: List[Tuple[int, float, float]], delay: float = 0.5):
     if not object_positions:
         return
     await asyncio.to_thread(send_move_command, ip, port, object_positions, delay)
-
+def send_status_packet(ip: str, port: int, payload: Dict[str, Any]):
+    try:
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect((ip, port))
+        command = "STATUS:" + json.dumps(payload, ensure_ascii=False)
+        client.sendall(command.encode("utf-8"))
+        client.close()
+    except Exception as e:
+        logger.error("send_status_packet error: %s", e)
 
 class MovementController:
-    def __init__(self, ip: str, port: int, agents: List["Agent"], step_delay: float = 0.55, idle_delay: float = 0.2):
+    def __init__(
+        self,
+        ip: str,
+        port: int,
+        agents: List["Agent"],
+        step_delay: float = 0.55,
+        idle_delay: float = 0.2,
+        use_legacy_move: bool = USE_LEGACY_MOVE_PROTOCOL,
+        status_bridge: Optional["UnityStatusBridge"] = None
+        ):
+
         self.ip = ip
         self.port = port
         self._agents = agents
@@ -187,7 +238,8 @@ class MovementController:
         self.idle_delay = idle_delay
         self._stop_event = asyncio.Event()
         self._trigger_event = asyncio.Event()
-
+        self.use_legacy_move = use_legacy_move
+        self._status_bridge = status_bridge 
     @property
     def agents(self) -> List["Agent"]:
         return self._agents
@@ -217,6 +269,20 @@ class MovementController:
             await self._flush_paths(force=True)
 
     async def _flush_paths(self, force: bool = False):
+        if self.use_legacy_move:
+            await self._flush_paths_legacy(force=force)
+            return
+
+        updates: List[Dict[str, Any]] = []
+        for agent in self._agents:
+            pending = agent.consume_pending_destination(force=force)
+            if pending:
+                updates.append(pending)
+
+        if updates:
+            await send_agent_updates_async(self.ip, self.port, updates, delay=0)
+
+    async def _flush_paths_legacy(self, force: bool = False):
         agents = self._agents
         if not agents:
             return
@@ -235,6 +301,8 @@ class MovementController:
                 break
 
             sent_any = True
+            if self._status_bridge:
+                self._status_bridge.on_move_dispatched()
             await send_move_command_async(self.ip, self.port, step_batch, delay=0)
             if self._stop_event.is_set():
                 await asyncio.sleep(self.idle_delay)
@@ -248,7 +316,130 @@ class MovementController:
                 if pos:
                     final_batch.append((agent.index, float(pos[0]), float(pos[1])))
             if final_batch and not sent_any:
+                if self._status_bridge:
+                    self._status_bridge.on_move_dispatched()
                 await send_move_command_async(self.ip, self.port, final_batch, delay=0)
+
+
+class UnityStatusBridge:
+    def __init__(self, ip: str, port: int, listen_host: str = UNITY_STATUS_HOST, listen_port: int = UNITY_STATUS_PORT):
+        self.ip = ip
+        self.port = port
+        self.listen_host = listen_host
+        self.listen_port = listen_port
+        self._server: Optional[asyncio.AbstractServer] = None
+        self._move_event: asyncio.Event = asyncio.Event()
+        self._awaiting_move: bool = False
+        self.execution_state: str = "idle"
+        self._agents: List["Agent"] = []
+        self._current_time: str = ""
+
+    def attach_agents(self, agents: List["Agent"]):
+        self._agents = agents
+
+    def set_current_time(self, now_time: str):
+        self._current_time = now_time
+
+    async def start(self):
+        try:
+            self._server = await asyncio.start_server(self._handle_client, self.listen_host, self.listen_port)
+            logger.info("Unity status listener started at %s:%s", self.listen_host, self.listen_port)
+        except OSError as e:
+            logger.warning("Unable to start Unity status listener on %s:%s: %s", self.listen_host, self.listen_port, e)
+
+    async def stop(self):
+        if self._server:
+            self._server.close()
+            await self._server.wait_closed()
+            self._server = None
+
+    async def _handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        try:
+            data = await reader.read(4096)
+            message = data.decode("utf-8", errors="ignore").strip()
+            self._handle_status_message(message)
+        finally:
+            try:
+                writer.close()
+                await writer.wait_closed()
+            except Exception:
+                pass
+
+    def _handle_status_message(self, message: str):
+        if not message:
+            return
+        try:
+            payload = json.loads(message)
+            status = payload.get("status") if isinstance(payload, dict) else None
+        except json.JSONDecodeError:
+            payload = None
+            status = None
+
+        if status == "move_complete" or "move_complete" in message:
+            self.confirm_move_complete()
+        if payload:
+            self.update_execution_state(payload.get("execution_state"))
+
+    def on_move_dispatched(self):
+        if not self._awaiting_move:
+            self._move_event.clear()
+        self._awaiting_move = True
+        self.update_execution_state("moving")
+
+    def confirm_move_complete(self):
+        if self._awaiting_move:
+            self._awaiting_move = False
+        self._move_event.set()
+        self.update_execution_state()
+
+    def mark_no_pending_movement(self):
+        if not self._awaiting_move:
+            self._move_event.set()
+        self.update_execution_state()
+
+    async def await_client_confirmation(self, timeout: float = 20.0) -> bool:
+        if not self._awaiting_move and self._move_event.is_set():
+            return True
+        if not self._awaiting_move:
+            self._move_event.set()
+            return True
+        try:
+            await asyncio.wait_for(self._move_event.wait(), timeout=timeout)
+            return True
+        except asyncio.TimeoutError:
+            logger.warning("Waiting for Unity move_complete timed out after %.1f seconds", timeout)
+            self._move_event.set()
+            return False
+
+    def infer_execution_state(self) -> str:
+        agents = self._agents
+        moving = any(getattr(a, "walk_path", None) for a in agents)
+        thinking = any(getattr(a, "is_thinking", False) for a in agents)
+        if moving and thinking:
+            return "mixed"
+        if moving:
+            return "moving"
+        if thinking:
+            return "thinking"
+        return "idle"
+
+    def update_execution_state(self, state: Optional[str] = None):
+        self.execution_state = state or self.infer_execution_state()
+        payload = {
+            "execution_state": self.execution_state,
+            "now_time": self._current_time,
+            "agents": [
+                {
+                    "id": a.index,
+                    "name": a.name,
+                    "location": a.curr_place,
+                    "action": a.curr_action or a.last_action,
+                    "is_thinking": a.is_thinking,
+                }
+                for a in self._agents
+            ],
+        }
+        send_status_packet(self.ip, self.port, payload)
 
 def send_speak_command(ip: str, port: int, object_id: int, message: str):
     try:
@@ -537,6 +728,10 @@ class Agent:
 
         self.walk_path: List[Tuple[float, float]] = []
         self.last_destination: Optional[Tuple[float, float]] = None
+        self.pending_destination: Optional[Tuple[float, float, float]] = None
+        self.pending_action_state: Optional[str] = None
+        self.pending_speed: Optional[float] = None
+        self.pending_teleport: bool = False
         self.is_thinking: bool = False
         self.schedule: List[List[Any]] = []
         self.wake: str = "07-00"
@@ -566,6 +761,52 @@ class Agent:
         global MOVEMENT_MANAGER
         if MOVEMENT_MANAGER:
             MOVEMENT_MANAGER.request_push()
+    def queue_destination(
+        self,
+        destination: Tuple[float, float],
+        action_state: str = "walk",
+        teleport: bool = False,
+        speed: Optional[float] = None,
+        notify: bool = True,
+    ):
+        if not destination:
+            return
+        self.walk_path = []
+        self.position = destination
+        self.pending_destination = (float(destination[0]), float(destination[1]), 0.0)
+        self.pending_action_state = action_state or "walk"
+        self.pending_speed = float(speed) if speed is not None else None
+        self.pending_teleport = bool(teleport)
+        if notify:
+            self._notify_movement()
+
+    def consume_pending_destination(self, force: bool = False) -> Optional[Dict[str, Any]]:
+        if self.pending_destination is None and not force:
+            return None
+
+        if self.pending_destination is None:
+            if not isinstance(self.position, tuple):
+                return None
+            dest = (float(self.position[0]), float(self.position[1]), 0.0)
+        else:
+            dest = self.pending_destination
+
+        action_state = self.pending_action_state or ("walk" if self.walk_path else "idle")
+        payload: Dict[str, Any] = {
+            "agent_id": self.index,
+            "destination": {"x": dest[0], "y": dest[1], "z": dest[2]},
+            "action_state": action_state,
+        }
+        if self.pending_speed is not None:
+            payload["speed"] = self.pending_speed
+        if self.pending_teleport:
+            payload["teleport"] = True
+
+        self.pending_destination = None
+        self.pending_action_state = None
+        self.pending_speed = None
+        self.pending_teleport = False
+        return payload
 
     def _resolve_anchor_point(self, location: Optional[str]) -> Optional[Tuple[float, float]]:
         if not location:
@@ -585,15 +826,14 @@ class Agent:
         dest = add_random_noise(scene_name, self.MAP)
         self.curr_place = scene_name
         self.last_destination = dest
-        if walk and isinstance(self.position, tuple):
+        if walk and isinstance(self.position, tuple) and USE_LEGACY_MOVE_PROTOCOL:
             path = generate_walk_path(self.position, dest)
             if path:
                 self.walk_path = path
                 self._notify_movement()
                 return
-        self.walk_path = []
-        self.position = dest
-        self._notify_movement()
+        action_state = "walk" if walk else "idle"
+        self.queue_destination(dest, action_state=action_state, teleport=not walk)
 
     def has_pending_walk(self) -> bool:
         return bool(self.walk_path)
@@ -615,16 +855,20 @@ class Agent:
         target = (anchor[0] + random.uniform(-radius, radius), anchor[1] + random.uniform(-radius, radius))
         if math.hypot(target[0] - self.position[0], target[1] - self.position[1]) < 0.5:
             target = (anchor[0] + random.choice([-radius, radius]) * 0.5, anchor[1] + random.choice([-radius, radius]) * 0.5)
-        go = generate_walk_path(self.position, target, step_size=1.6, jitter=0.25)
-        back_anchor = add_random_noise(self.curr_place, self.MAP)
-        back = generate_walk_path(go[-1] if go else self.position, back_anchor, step_size=1.6, jitter=0.25)
-        seq = [p for p in go + back if isinstance(p, tuple)]
-        if seq:
-            self.walk_path.extend(seq)
-            if notify:
-                self._notify_movement()
-            return True
-        return False
+        if USE_LEGACY_MOVE_PROTOCOL:
+            go = generate_walk_path(self.position, target, step_size=1.6, jitter=0.25)
+            back_anchor = add_random_noise(self.curr_place, self.MAP)
+            back = generate_walk_path(go[-1] if go else self.position, back_anchor, step_size=1.6, jitter=0.25)
+            seq = [p for p in go + back if isinstance(p, tuple)]
+            if seq:
+                self.walk_path.extend(seq)
+                if notify:
+                    self._notify_movement()
+                return True
+            return False
+
+        self.queue_destination(target, action_state="walk", notify=notify)
+        return True
 
     def plan_micro_adjustment(self, radius: float = 1.4, notify: bool = True) -> bool:
         if self.walk_path or not isinstance(self.position, tuple):
@@ -633,13 +877,17 @@ class Agent:
             self.position[0] + random.uniform(-radius, radius),
             self.position[1] + random.uniform(-radius, radius),
         )
-        path = generate_walk_path(self.position, target, step_size=1.0, jitter=0.2)
-        if path:
-            self.walk_path.extend(path)
-            if notify:
-                self._notify_movement()
-            return True
-        return False
+        if USE_LEGACY_MOVE_PROTOCOL:
+            path = generate_walk_path(self.position, target, step_size=1.0, jitter=0.2)
+            if path:
+                self.walk_path.extend(path)
+                if notify:
+                    self._notify_movement()
+                return True
+            return False
+
+        self.queue_destination(target, action_state="walk", notify=notify)
+        return True
 
     def _plan_slow_move_to_anchor(self, notify: bool = True) -> bool:
         if self.walk_path or not isinstance(self.position, tuple):
@@ -649,13 +897,17 @@ class Agent:
             return False
         if math.hypot(anchor[0] - self.position[0], anchor[1] - self.position[1]) < 0.6:
             return False
-        path = generate_walk_path(self.position, anchor, step_size=1.2, jitter=0.2)
-        if path:
-            self.walk_path.extend(path)
-            if notify:
-                self._notify_movement()
-            return True
-        return False
+        if USE_LEGACY_MOVE_PROTOCOL:
+            path = generate_walk_path(self.position, anchor, step_size=1.2, jitter=0.2)
+            if path:
+                self.walk_path.extend(path)
+                if notify:
+                    self._notify_movement()
+                return True
+            return False
+
+        self.queue_destination(anchor, action_state="walk", notify=notify)
+        return True
 
     def plan_thinking_motion(self, notify: bool = True) -> bool:
         if self.walk_path:
@@ -808,7 +1060,7 @@ async def _handle_possible_chat(agents: List[Agent], now_time: str, weekday_labe
 # ---------------------------
 # Main simulation
 # ---------------------------
-async def run_simulation(steps: int, min_per_step: int, weekday: str):
+async def run_simulation(steps: int, min_per_step: int, weekday: str, use_legacy_move: bool = USE_LEGACY_MOVE_PROTOCOL):
     # 建立 Agents（序號 = Unity 物件 ID）
     agents: List[Agent] = []
     for idx, name in enumerate(DEFAULT_AGENT_ORDER):
@@ -817,8 +1069,13 @@ async def run_simulation(steps: int, min_per_step: int, weekday: str):
         agents.append(ag)
 
     now_time = weekday2START_TIME(weekday)
-    send_update_ui_command(UNITY_IP, UNITY_PORT, 0, f"当前时间：{now_time}")
-    movement_manager = MovementController(UNITY_IP, UNITY_PORT, agents)
+    status_bridge = UnityStatusBridge(UNITY_IP, UNITY_PORT)
+    status_bridge.attach_agents(agents)
+    status_bridge.set_current_time(now_time)
+    await status_bridge.start()
+
+    movement_manager = MovementController(UNITY_IP, UNITY_PORT, agents, status_bridge=status_bridge)
+    movement_manager = MovementController(UNITY_IP, UNITY_PORT, agents, use_legacy_move=use_legacy_move)
     global MOVEMENT_MANAGER
     MOVEMENT_MANAGER = movement_manager
     movement_task = asyncio.create_task(movement_manager.run())
@@ -826,12 +1083,14 @@ async def run_simulation(steps: int, min_per_step: int, weekday: str):
     # 每天重置的步數間隔
     day_step_interval = max(1, int(1440 / max(min_per_step, 1)))
     try:
-        for step in range(steps):
+        while step_index < steps:
+            status_bridge.set_current_time(now_time)
+            status_bridge.update_execution_state("thinking")
             weekday_label = get_weekday(now_time)
             formatted_time = format_date_time(now_time)
             send_update_ui_command(UNITY_IP, UNITY_PORT, 0, f"当前时间：{formatted_time}({weekday_label})")
 
-            if step % day_step_interval == 0:
+            if step_index % day_step_interval == 0:
                 logger.info("新的一天：%s(%s)", formatted_time, weekday_label)
                 for a in agents:
                     await _update_daily_plan(a, now_time, weekday_label)
@@ -841,8 +1100,16 @@ async def run_simulation(steps: int, min_per_step: int, weekday: str):
                 # 嘗試觸發聊天
                 await _handle_possible_chat(agents, now_time, weekday_label)
 
-            now_time = get_now_time(now_time, 1, min_per_step)
+            has_pending_walk = any(a.has_pending_walk() for a in agents)
+            if has_pending_walk:
+                status_bridge.on_move_dispatched()
+            else:
+                status_bridge.mark_no_pending_movement()
 
+            await status_bridge.await_client_confirmation(timeout=max(20.0, float(min_per_step)))
+
+            now_time = get_now_time(now_time, 1, min_per_step)
+            step_index += 1
         logger.info("模擬結束。")
     finally:
         try:
@@ -855,7 +1122,7 @@ async def run_simulation(steps: int, min_per_step: int, weekday: str):
             await LLM.close_session()
         except Exception:
             pass
-
+        await status_bridge.stop()
 # ---------------------------
 # CLI
 # ---------------------------
@@ -864,11 +1131,17 @@ def parse_arguments():
     p.add_argument("--steps", type=int, default=60, help="模擬步數")
     p.add_argument("--minutes-per-step", type=int, default=30, help="每步模擬分鐘數")
     p.add_argument("--weekday", default="星期一", help="起始星期：星期一~星期天")
+    p.add_argument(
+        "--legacy-move-protocol",
+        action="store_true",
+        default=USE_LEGACY_MOVE_PROTOCOL,
+        help="使用舊版 MOVE 批次命令（預設關閉，可透過環境變數 UNITY_LEGACY_MOVE=1 開啟）",
+    )
     return p.parse_args()
 
 def main():
     args = parse_arguments()
-    asyncio.run(run_simulation(args.steps, args.minutes_per_step, args.weekday))
+    asyncio.run(run_simulation(args.steps, args.minutes_per_step, args.weekday, use_legacy_move=args.legacy_move_protocol))
 
 if __name__ == "__main__":
     main()

@@ -24,6 +24,15 @@ public class SimulationClient : MonoBehaviour
 
     [Tooltip("是否輸出原始封包內容（大量訊息時請關閉以免卡頓）。")]
     public bool verboseLog = false;
+    [Header("Protocol Compatibility")]
+    [Tooltip("接收新版 agent_update 封包，直接交給 Unity 端自行產生路徑。")]
+    public bool acceptAgentUpdateEnvelopes = true;
+
+    [Tooltip("保留舊版 MOVE/teleport 指令流程，逐步推送座標。")]
+    public bool acceptLegacyMoveCommands = true;
+
+    [Tooltip("在 agent_update 模式下優先使用 NavMeshAgent.SetDestination。")]
+    public bool preferNavMeshForAgentUpdates = true;
 
     [Header("Scene References")]
     public Transform characterRoot;
@@ -68,7 +77,8 @@ public class SimulationClient : MonoBehaviour
 
     private readonly Dictionary<string, PendingNetworkAction> _pendingNetworkActions =
         new Dictionary<string, PendingNetworkAction>(StringComparer.OrdinalIgnoreCase);
-
+    private readonly Dictionary<string, AgentController> _agentsAwaitingMovementRelease =
+        new Dictionary<string, AgentController>(StringComparer.OrdinalIgnoreCase);
     // --- 合併最新封包（避免排隊爆量） ---
     private readonly object _pendingLock = new object();
     private UpdateData _pendingUpdate;            // 最新 update
@@ -97,7 +107,7 @@ public class SimulationClient : MonoBehaviour
     };
 
     // --- 全局靜態事件 ---
-    public static event Action<string> OnStatusUpdate;
+    public static event Action<StatusPayload> OnStatusUpdate;
     public static event Action<UpdateData> OnLogUpdate;
     public static event Action<EvaluationReport> OnEvaluationReceived;
     public static event Action<float> OnEarthquake;
@@ -494,10 +504,9 @@ public class SimulationClient : MonoBehaviour
     private async Task ConnectToServer()
     {
         websocket = new WebSocket(serverUrl);
-        websocket.OnOpen += () => EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke("已連接到伺服器"));
-        websocket.OnError += (e) => EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke($"錯誤: {e}"));
-        websocket.OnClose += (e) => EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke($"與伺服器斷開連接 (代碼: {e})"));
-
+        websocket.OnOpen += () => EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke(StatusPayload.FromMessage("已連接到伺服器")));
+        websocket.OnError += (e) => EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke(StatusPayload.FromMessage($"錯誤: {e}")));
+        websocket.OnClose += (e) => EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke(StatusPayload.FromMessage($"與伺服器斷開連接 (代碼: {e})")));
         websocket.OnMessage += (bytes) =>
         {
             var message = System.Text.Encoding.UTF8.GetString(bytes);
@@ -561,12 +570,19 @@ public class SimulationClient : MonoBehaviour
                                 lock (_pendingLock) { _pendingQuake = quake; }
                             }
                             return;
+                        case "agent_update":
+                            if (acceptAgentUpdateEnvelopes && wsMessage.Data != null)
+                            {
+                                var agentUpdate = wsMessage.Data.ToObject<AgentUpdateEnvelope>();
+                                EnqueueMainThreadAction(() => ApplyAgentUpdateEnvelope(agentUpdate));
+                            }
+                            return;
 
                         case "status":
                         case "error":
                         case "end":
                             // 非高頻訊息仍走主執行緒排程
-                            EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke(wsMessage.Message));
+                            EnqueueMainThreadAction(() => OnStatusUpdate?.Invoke(StatusPayload.FromMessage(wsMessage.Message)));
                             return;
                     }
                 }
@@ -594,7 +610,7 @@ public class SimulationClient : MonoBehaviour
             var statusMessage = JsonConvert.DeserializeObject<ClientMessage>(json);
             if (statusMessage != null && !string.IsNullOrWhiteSpace(statusMessage.Status))
             {
-                OnStatusUpdate?.Invoke(statusMessage.Status);
+                OnStatusUpdate?.Invoke(StatusPayload.FromMessage(statusMessage.Status));
             }
         }
         catch (Exception ex)
@@ -733,7 +749,8 @@ public class SimulationClient : MonoBehaviour
                     Type = actionType
                 };
 
-                //controller.ExecuteNetworkMove(path);
+                Vector3 destination = path[path.Count - 1];
+                controller.ApplyNetworkDestination(destination, null, "移動");
             }
             else
             {
@@ -854,11 +871,17 @@ public class SimulationClient : MonoBehaviour
                         OnEarthquake?.Invoke(quakeData.Intensity);
                     }
                     break;
-
+                case "agent_update":
+                    if (acceptAgentUpdateEnvelopes && wsMessage.Data != null)
+                    {
+                        var agentUpdate = wsMessage.Data.ToObject<AgentUpdateEnvelope>();
+                        ApplyAgentUpdateEnvelope(agentUpdate);
+                    }
+                    break;
                 case "status":
                 case "error":
                 case "end":
-                    OnStatusUpdate?.Invoke(wsMessage.Message);
+                    OnStatusUpdate?.Invoke(StatusPayload.FromMessage(wsMessage.Message));
                     break;
             }
         }
@@ -902,14 +925,14 @@ public class SimulationClient : MonoBehaviour
         _pendingStepId = -1;
         _awaitingStepAck = false;
         _pendingNetworkActions.Clear();
+        _agentsAwaitingMovementRelease.Clear();
     }
-
     private void BeginSimulationStep(int stepId, List<AgentActionInstruction> agentActions)
     {
         _pendingStepId = stepId;
         _awaitingStepAck = true;
         _pendingAgentActions.Clear();
-
+        _agentsAwaitingMovementRelease.Clear();
         if (agentActions != null)
         {
             foreach (var instruction in agentActions)
@@ -958,9 +981,56 @@ public class SimulationClient : MonoBehaviour
             }
         }
 
+
+        CompletePendingMovementBatch();
         SendStepAcknowledgement();
     }
 
+    private void TryFinalizeMovementBatch()
+    {
+        if (_awaitingStepAck)
+        {
+            CheckStepCompletion();
+        }
+        else
+        {
+            CompletePendingMovementBatch();
+        }
+    }
+
+    private void CompletePendingMovementBatch()
+    {
+        if (_agentsAwaitingMovementRelease.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var controller in _agentsAwaitingMovementRelease.Values)
+        {
+            controller?.CompleteMovementBatch(false);
+        }
+
+        FlushNetworkActionCompletions();
+        _agentsAwaitingMovementRelease.Clear();
+    }
+
+    private void FlushNetworkActionCompletions()
+    {
+        if (_pendingNetworkActions.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var networkAction in _pendingNetworkActions.Values)
+        {
+            if (networkAction.Step >= 0 && !string.IsNullOrWhiteSpace(networkAction.AgentId))
+            {
+                SendClientMessageAsync(ClientMessage.ActionComplete(networkAction.AgentId, networkAction.Step));
+            }
+        }
+
+        _pendingNetworkActions.Clear();
+    }
     private async void SendStepAcknowledgement()
     {
         if (!_awaitingStepAck)
@@ -1023,18 +1093,39 @@ public class SimulationClient : MonoBehaviour
         if (_pendingAgentActions.TryGetValue(key, out var pending) && pending == AgentPendingAction.Move)
         {
             _pendingAgentActions[key] = AgentPendingAction.None;
-            CheckStepCompletion();
+            _agentsAwaitingMovementRelease[key] = EnsureAgentActive(agentName);
+            TryFinalizeMovementBatch();
         }
-        if (_pendingNetworkActions.TryGetValue(key, out PendingNetworkAction networkAction))
+        else
         {
-            _pendingNetworkActions.Remove(key);
-            if (networkAction.Step >= 0 && !string.IsNullOrWhiteSpace(networkAction.AgentId))
+            if (_pendingNetworkActions.TryGetValue(key, out PendingNetworkAction networkAction))
             {
-                SendClientMessageAsync(ClientMessage.ActionComplete(networkAction.AgentId, networkAction.Step));
+                _pendingNetworkActions.Remove(key);
+                if (networkAction.Step >= 0 && !string.IsNullOrWhiteSpace(networkAction.AgentId))
+                {
+                    SendClientMessageAsync(ClientMessage.ActionComplete(networkAction.AgentId, networkAction.Step));
+                }
             }
         }
     }
 
+    internal void RegisterMovementArrival(string agentName, AgentController controller)
+    {
+        if (string.IsNullOrWhiteSpace(agentName)) return;
+
+        string key = agentName.ToUpperInvariant();
+        if (!_agentsAwaitingMovementRelease.ContainsKey(key))
+        {
+            _agentsAwaitingMovementRelease[key] = controller;
+        }
+
+        if (_pendingAgentActions.TryGetValue(key, out var pending) && pending == AgentPendingAction.Move)
+        {
+            _pendingAgentActions[key] = AgentPendingAction.None;
+        }
+
+        TryFinalizeMovementBatch();
+    }
     internal void ReportTeleport(string agentName)
     {
         if (string.IsNullOrWhiteSpace(agentName)) return;
@@ -1060,12 +1151,16 @@ public class SimulationClient : MonoBehaviour
     {
         if (updateData == null) return;
 
-        OnStatusUpdate?.Invoke(updateData.Status);
+        var statusPayload = updateData.Status ?? StatusPayload.FromMessage("模擬狀態更新");
+        OnStatusUpdate?.Invoke(statusPayload);
         OnLogUpdate?.Invoke(updateData);
         UpdateAllAgentStates(updateData.AgentStates);
         UpdateAllBuildingStates(updateData.BuildingStates);
-        BeginSimulationStep(updateData.StepId, updateData.AgentActions);  // 記錄哪些代理人要 Move/Teleport
-        ApplyAgentActions(updateData.AgentActions);                        // 轉發指令給各 AgentController
+        if (acceptLegacyMoveCommands)
+        {
+            BeginSimulationStep(updateData.StepId, updateData.AgentActions);  // 記錄哪些代理人要 Move/Teleport
+            ApplyAgentActions(updateData.AgentActions);                        // 轉發指令給各 AgentController
+        }
     }
     private void ApplyAgentActions(List<AgentActionInstruction> agentActions)
     {
@@ -1080,6 +1175,27 @@ public class SimulationClient : MonoBehaviour
             {
                 controller.ApplyActionInstruction(instruction);
             }
+        }
+    }
+    private void ApplyAgentUpdateEnvelope(AgentUpdateEnvelope envelope)
+    {
+        if (!acceptAgentUpdateEnvelopes || envelope == null || envelope.Updates == null) return;
+
+        foreach (var update in envelope.Updates)
+        {
+            if (update == null || string.IsNullOrWhiteSpace(update.AgentId)) continue;
+
+            AgentController controller = EnsureAgentActive(update.AgentId);
+            if (controller == null) continue;
+
+            Vector3 destination = controller.transform.position;
+            if (update.Destination != null)
+            {
+                destination = new Vector3(update.Destination.X, update.Destination.Y, update.Destination.Z);
+            }
+
+            bool teleport = update.Teleport.HasValue && update.Teleport.Value;
+            controller.ApplyAgentUpdate(destination, update.ActionState, teleport, preferNavMeshForAgentUpdates, update.Speed);
         }
     }
 
@@ -1249,7 +1365,7 @@ public class SimulationClient : MonoBehaviour
     {
         if (websocket == null || websocket.State != WebSocketState.Open)
         {
-            OnStatusUpdate?.Invoke("錯誤：未連接到伺服器");
+            OnStatusUpdate?.Invoke(StatusPayload.FromMessage("錯誤：未連接到伺服器"));
             return;
         }
         ResetPendingStepState();
@@ -1276,7 +1392,7 @@ public class SimulationClient : MonoBehaviour
 
         var command = new SimulationStartCommand { Params = parameters };
         string jsonCommand = JsonConvert.SerializeObject(command, Formatting.Indented);
-        OnStatusUpdate?.Invoke("已發送模擬指令，等待後端響應...");
+        OnStatusUpdate?.Invoke(StatusPayload.FromMessage("已發送模擬指令，等待後端響應..."));
         await websocket.SendText(jsonCommand);
     }
 

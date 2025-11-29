@@ -128,6 +128,23 @@ def tail_join(lines, sep="\n\n", max_chars: int = LOG_TAIL_LIMIT) -> str:
     if len(s) < sum(len(l) for l in lines) + (len(lines) - 1) * len(sep):
         s = f"...(history truncated, showing last ~{max_chars} chars)\n" + s
     return s
+def build_status_payload(sim_state: dict, current_time_dt: datetime, agent_action_plan):
+    scenario_map = {
+        "Normal": "日常",
+        "Earthquake": "地震中",
+        "Recovery": "災後恢復",
+        "PostQuakeDiscussion": "災後恢復",
+    }
+
+    scenario_state = scenario_map.get(sim_state.get("phase"), sim_state.get("phase") or "未知")
+    has_actions = bool(agent_action_plan)
+    execution_state = "移動中" if has_actions else "思考中"
+
+    return {
+        "scenario_state": scenario_state,
+        "execution_state": execution_state,
+        "sim_time": current_time_dt.strftime("%H:%M:%S"),
+    }
 
 # ====== 思考偵測與「思考中微移動」產生 ======
 THINKING_KEYWORDS = [
@@ -424,7 +441,7 @@ async def initialize_and_simulate(params, step_sync_event: Optional[asyncio.Even
                 "agentStates": status_data["agentStates"],
                 "buildingStates": status_data["buildingStates"],
                 "llmLog": _truncate_str(llm_log_raw, LOG_TAIL_LIMIT),
-                "status": f"模擬時間: {current_time_dt.strftime('%H:%M:%S')}",
+                "status": build_status_payload(sim_state, current_time_dt, agent_action_plan),
                 "agentActions": agent_action_plan,
                 "stepId": step_index,
             },

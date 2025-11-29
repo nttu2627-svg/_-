@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AI;
 using TMPro;
 using System;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using System.Text;
 using DisasterSimulation;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using UnityEngine.AI;
 
 // 定義指令類型與結構
 public enum AgentInternalCommandType { Move, Teleport, ActionOnly }
@@ -44,7 +46,9 @@ public class AgentController : MonoBehaviour
     private float _movementSpeed = 4.5f;
     private float _arrivalThreshold = 0.05f;
     private Vector3 _lastPosition;
-    
+    private NavMeshAgent _navMeshAgent;
+    private Vector3 _smoothedVelocity;
+    private float _interpolationSpeed = 10f;
     // 視覺控制 (需確保場景中有對應組件)
     private AgentVisualController _visualController; 
     
@@ -54,7 +58,7 @@ public class AgentController : MonoBehaviour
     private Camera _mainCamera;
     private SimulationClient _simulationClient;
     private AgentMovementController _movementController;
-    
+    private NavMeshAgent _navMeshAgent;    
     private string _targetLocationName;
     private string _lastValidLocationName;
     private string _currentAction;
@@ -73,7 +77,20 @@ public class AgentController : MonoBehaviour
     private string _statusLabel = "待機";
     private string _displayName;
     private bool _isCurrentlySleeping = false;
-    
+    private bool _awaitingMovementBatch = false;
+    private bool _isPortalPaused = false;
+    private bool _navMeshDriving = false;
+    private enum AgentBehaviourState
+    {
+        Idle,
+        Moving,
+        Interacting
+    }
+
+    private AgentBehaviourState _currentBehaviourState = AgentBehaviourState.Idle;
+    private CancellationTokenSource _idleCts;
+    [SerializeField, Tooltip("待機時隨機小動作的徘徊半徑")]
+    private float _idleWanderRadius = 1.5f;
     private static readonly (string english, string localized)[] LocationPrefixAliases = new (string, string)[]
     {
         ("Apartment", "公寓"), ("Apartment_F1", "公寓一樓"), ("Apartment_F2", "公寓二樓"),
@@ -94,11 +111,11 @@ public class AgentController : MonoBehaviour
         _transform = transform;
         _mainCamera = Camera.main;
         _simulationClient = FindFirstObjectByType<SimulationClient>();
-        
+
         // 初始化位置記錄，避免第一幀計算速度時暴衝
         _lastPosition = _transform.position;
         _targetPosition = _transform.position;
-
+        _smoothedVelocity = Vector3.zero;
         agentName = string.IsNullOrEmpty(agentName)
             ? gameObject.name.ToUpper()
             : agentName.ToUpper();
@@ -109,7 +126,19 @@ public class AgentController : MonoBehaviour
             _movementController = gameObject.AddComponent<AgentMovementController>();
         }
         _movementController.ConfigureFromAgent(this, _movementSpeed, _arrivalThreshold);
-
+        _navMeshAgent = GetComponent<NavMeshAgent>();
+        if (_navMeshAgent != null)
+        {
+            _navMeshAgent.updateRotation = false;
+            _navMeshAgent.updateUpAxis = false;
+            _navMeshAgent.speed = _movementSpeed;
+            _navMeshAgent.stoppingDistance = Mathf.Max(_arrivalThreshold, _navMeshAgent.stoppingDistance);
+        }
+        if (!TryGetComponent(out _navMeshAgent))
+        {
+            _navMeshAgent = gameObject.AddComponent<NavMeshAgent>();
+        }
+        ConfigureNavMeshAgent();
         // ======== 補上：初始化 VisualController ========
         if (!TryGetComponent(out _visualController))
         {
@@ -144,11 +173,12 @@ public class AgentController : MonoBehaviour
         ProcessCommandBufferLoop(_cts.Token).Forget();
 
         gameObject.SetActive(false);
+        SetBehaviourState(AgentBehaviourState.Idle);
     }
 
     private void OnDestroy()
     {
-        if (_cts != null) 
+        if (_cts != null)
         {
             _cts.Cancel();
             _cts.Dispose();
@@ -178,7 +208,13 @@ public class AgentController : MonoBehaviour
         }
         _isInitialized = true;
         SetManualLocationOverrides();
-        if (_movementController != null)
+        SetBehaviourState(AgentBehaviourState.Moving);
+
+        if (_navMeshAgent != null && _navMeshAgent.isActiveAndEnabled)
+        {
+            _navMeshAgent.SetDestination(position);
+        }
+        else if (_movementController != null)
         {
             _movementController.RegisterLocations(_locationTransforms);
         }
@@ -194,36 +230,40 @@ public class AgentController : MonoBehaviour
     {
         if (!_isInitialized || !gameObject.activeSelf) return;
 
-        // 計算並更新動畫狀態
+        Vector3 sampledVelocity = (_transform.position - _lastPosition) / Mathf.Max(Time.deltaTime, 0.0001f);
+        if (_navMeshAgent != null && _navMeshAgent.isActiveAndEnabled)
+        {
+            sampledVelocity = _navMeshAgent.velocity;
+            _targetPosition = _navMeshAgent.destination;
+        }
+
+        _smoothedVelocity = Vector3.Lerp(_smoothedVelocity, sampledVelocity, Time.deltaTime * _interpolationSpeed);
+
         if (_visualController != null)
         {
-            Vector3 velocity = (_transform.position - _lastPosition) / Time.deltaTime;
-            _visualController.UpdateVisuals(velocity);
+            _visualController.UpdateVisuals(_smoothedVelocity);
         }
+
         _lastPosition = _transform.position;
 
-        // 物理移動 (作為最後防線，通常由 MovementController 接管)
-        Vector3 currentPosition = _transform.position;
-        Vector3 toTarget = _targetPosition - currentPosition;
-        float arrivalThresholdSqr = _arrivalThreshold * _arrivalThreshold;
-
-        // 如果 MovementController 正在運作，這裡就不插手
-        if (_movementController != null && _movementController.IsControllingMovement)
+        if (_navMeshAgent == null || !_navMeshAgent.isActiveAndEnabled)
         {
-            return;
-        }
+            // 物理移動 (作為最後防線)
+            Vector3 currentPosition = _transform.position;
+            Vector3 toTarget = _targetPosition - currentPosition;
+            float arrivalThresholdSqr = _arrivalThreshold * _arrivalThreshold;
 
-        if (toTarget.sqrMagnitude <= arrivalThresholdSqr)
-        {
-            _transform.position = _targetPosition;
-            return;
-        }
+            if (toTarget.sqrMagnitude <= arrivalThresholdSqr)
+            {
+                _transform.position = _targetPosition;
+                return;
+            }
 
-        // 簡單的補間移動 (fallback)
-        _transform.position = Vector3.MoveTowards(
-            currentPosition,
-            _targetPosition,
-            Mathf.Max(0f, _movementSpeed) * Time.deltaTime);
+            _transform.position = Vector3.MoveTowards(
+                currentPosition,
+                _targetPosition,
+                Mathf.Max(0f, _movementSpeed) * Time.deltaTime);
+        }
     }
 
     void LateUpdate()
@@ -276,6 +316,24 @@ public class AgentController : MonoBehaviour
             if (string.IsNullOrWhiteSpace(alias)) continue;
             if (IsUnknownLocation(alias)) continue;
             _manualLocationOverrides.Add(alias.Trim());
+        }
+    }
+    private void ConfigureNavMeshAgent()
+    {
+        if (_navMeshAgent == null) return;
+
+        _navMeshAgent.updateRotation = false;
+        _navMeshAgent.updateUpAxis = false;
+        _navMeshAgent.speed = Mathf.Max(0.1f, _movementSpeed);
+        _navMeshAgent.stoppingDistance = Mathf.Max(0.01f, _arrivalThreshold);
+        _navMeshAgent.acceleration = Mathf.Max(1f, _movementSpeed * 2f);
+        _navMeshAgent.autoBraking = true;
+        _navMeshAgent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+
+        if (_navMeshAgent.enabled)
+        {
+            _navMeshAgent.Warp(_transform.position);
+            _navMeshAgent.ResetPath();
         }
     }
 
@@ -685,7 +743,14 @@ public class AgentController : MonoBehaviour
     {
         _transform.position = position;
         _targetPosition = position;
+        if (_navMeshAgent != null)
+        {
+            _navMeshAgent.ResetPath();
+            _navMeshAgent.nextPosition = new Vector3(position.x, position.y, _navMeshAgent.nextPosition.z);
+            _navMeshDriving = false;
+        }
         _movementController?.HandleTeleport(position);
+        ResetNavMeshPosition(position);
         SetManualLocationOverrides(locationAliases);
         _lastInstructionDestination = null;
         NotifyMovementCompleted();
@@ -697,18 +762,47 @@ public class AgentController : MonoBehaviour
         ForceImmediateVisualRefresh();
         if (!suppressEffects) _simulationClient?.ReportTeleport(agentName);
     }
+    public void PauseMovementForPortal()
+    {
+        _isPortalPaused = true;
+        _movementController?.CancelMovement();
+    }
 
+    public void ResumeMovementAfterPortal(bool syncPosition = true)
+    {
+        _isPortalPaused = false;
+        if (syncPosition)
+        {
+            SyncTargetToCurrentPosition();
+        }
+    }
     public void SyncTargetToCurrentPosition()
     {
         _targetPosition = _transform.position;
         _movementController?.HandleTeleport(_transform.position);
+        ResetNavMeshPosition(_transform.position);
         ForceImmediateVisualRefresh();
+    }
+
+    private void ResetNavMeshPosition(Vector3 position)
+    {
+        if (_navMeshAgent == null) return;
+
+        bool wasEnabled = _navMeshAgent.enabled;
+        if (!wasEnabled) _navMeshAgent.enabled = true;
+
+        _navMeshAgent.Warp(position);
+        _navMeshAgent.nextPosition = position;
+        _navMeshAgent.velocity = Vector3.zero;
+        _navMeshAgent.ResetPath();
     }
 
     public void SetActionState(string action)
     {
         _currentAction = action;
         UpdateStatusIndicatorFromAction(action);
+        if (IsIdleAction(action)) SetBehaviourState(AgentBehaviourState.Idle);
+        else SetBehaviourState(AgentBehaviourState.Interacting);
         if (bubbleController != null)
         {
             string bubbleText = BuildBubbleText(action);
@@ -717,6 +811,35 @@ public class AgentController : MonoBehaviour
                 bubbleController.顯示氣泡(bubbleText, _transform);
             }
         }
+    }
+    private void EnterAwaitingBatchCompletion(bool performingAction)
+    {
+        _awaitingMovementBatch = true;
+        _movementController?.MarkArrivalHold();
+        if (_visualController != null)
+        {
+            _visualController.EnterWaitingLoop(performingAction);
+        }
+        UpdateStatusIndicatorFromAction(_currentAction);
+        ForceImmediateVisualRefresh();
+    }
+
+    internal void CompleteMovementBatch(bool notifySimulationClient)
+    {
+        if (!_awaitingMovementBatch)
+        {
+            return;
+        }
+
+        _awaitingMovementBatch = false;
+        NotifyMovementCompleted(notifySimulationClient);
+    }
+
+    internal void OnMovementControllerArrived()
+    {
+        bool performingAction = !IsIdleAction(_currentAction);
+        EnterAwaitingBatchCompletion(performingAction);
+        _simulationClient?.RegisterMovementArrival(agentName, this);
     }
 
     internal void ForceImmediateVisualRefresh()
@@ -736,7 +859,21 @@ public class AgentController : MonoBehaviour
             _lastInstructionDestination = instruction.Destination;
         }
     }
+    public void ApplyNetworkDestination(Vector3 destination, string locationName, string actionName = null)
+    {
+        if (!_isInitialized) return;
 
+        _lastInstructionDestination = locationName;
+        SetActionState(string.IsNullOrEmpty(actionName) ? "移動" : actionName);
+        SetTargetLocation(locationName, destination, null);
+        _smoothedVelocity = Vector3.zero;
+    }
+
+    public void ApplyNetworkAction(string actionName)
+    {
+        if (!_isInitialized) return;
+        SetActionState(actionName);
+    }
     private void HandleTeleportInstruction(AgentActionInstruction instruction)
     {
         if (IsUnknownLocation(instruction.Destination) || IsUnknownLocation(instruction.ToPortal))
@@ -795,30 +932,20 @@ public class AgentController : MonoBehaviour
             return;
         }
 
-        string nextStep = string.IsNullOrWhiteSpace(instruction.NextStep) ? instruction.Destination : instruction.NextStep;
-        bool destinationChanged = !string.IsNullOrWhiteSpace(instruction.Destination) && !string.Equals(_lastInstructionDestination, instruction.Destination, StringComparison.OrdinalIgnoreCase);
-        bool pathChanged = !string.IsNullOrWhiteSpace(nextStep) && !string.Equals(_targetLocationName, nextStep, StringComparison.OrdinalIgnoreCase);
-
-        if (destinationChanged || pathChanged)
+        string destinationKey = string.IsNullOrWhiteSpace(instruction.Destination) ? instruction.NextStep : instruction.Destination;
+        if (TryGetLocationPosition(destinationKey, out Vector3 destination, out Transform destinationTransform))
         {
-            if (destinationChanged && TryGetLocationPosition(instruction.Origin, out Vector3 originPosition, out _))
-            {
-                _transform.position = originPosition;
-                _movementController?.HandleTeleport(originPosition);
-            }
-
-            if (TryGetLocationPosition(nextStep, out Vector3 nextPosition, out Transform nextTransform))
-            {
-                SetTargetLocation(nextStep, nextPosition, nextTransform);
-            }
-            else if (TryGetLocationPosition(instruction.Destination, out Vector3 destinationPosition, out Transform destinationTransform))
-            {
-                SetTargetLocation(instruction.Destination, destinationPosition, destinationTransform);
-            }
-            _lastInstructionDestination = instruction.Destination;
+            SetTargetLocation(destinationKey, destination, destinationTransform);
+            _lastInstructionDestination = destinationKey;
         }
+        else if (TryParseVector3(destinationKey, out Vector3 destinationCoords))
+        {
+            _lastInstructionDestination = destinationKey;
+            SetTargetLocation(destinationKey, destinationCoords, null);
+        }
+
         SetActionState(string.IsNullOrEmpty(instruction.Action) ? "移動" : instruction.Action);
-    } 
+    }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -848,6 +975,7 @@ public class AgentController : MonoBehaviour
         _isCurrentlySleeping = false;
         _targetPosition = _transform.position;
         if (nameTextUGUI != null) nameTextUGUI.gameObject.SetActive(false);
+        SetBehaviourState(AgentBehaviourState.Idle);
     }
 
     void OnDisable()
@@ -855,20 +983,76 @@ public class AgentController : MonoBehaviour
         _isCurrentlySleeping = false;
         if (nameTextUGUI != null) nameTextUGUI.gameObject.SetActive(false);
         SetManualLocationOverrides();
+        StopIdleMicroActions();
     }
 
     internal void NotifyMovementStarted()
     {
         ShowActiveStatus("執行任務");
         ForceImmediateVisualRefresh();
+        SetBehaviourState(AgentBehaviourState.Moving);
         _simulationClient?.ReportMovementStarted(agentName);
     }
 
-    internal void NotifyMovementCompleted()
+    internal void NotifyMovementCompleted(bool notifySimulationClient = true)
     {
         UpdateStatusIndicatorFromAction(_currentAction);
         ForceImmediateVisualRefresh();
+        if (notifySimulationClient)
+        {
+            _simulationClient?.ReportMovementCompleted(agentName);
+        }
+        if (IsIdleAction(_currentAction)) SetBehaviourState(AgentBehaviourState.Idle);
+        else SetBehaviourState(AgentBehaviourState.Interacting);
         _simulationClient?.ReportMovementCompleted(agentName);
+    }
+    public void ApplyAgentUpdate(Vector3 destination, string actionState, bool teleport, bool preferNavMeshAgent, float? speedOverride)
+    {
+        if (!_isInitialized) return;
+
+        if (teleport)
+        {
+            TeleportTo(destination, true);
+            SetActionState(string.IsNullOrWhiteSpace(actionState) ? "傳送" : actionState);
+            return;
+        }
+
+        string resolvedAction = string.IsNullOrWhiteSpace(actionState) ? "移動" : actionState;
+        bool isIdle = string.Equals(resolvedAction, "idle", StringComparison.OrdinalIgnoreCase);
+
+        if (isIdle)
+        {
+            _movementController?.CancelMovement();
+            if (_navMeshAgent != null)
+            {
+                _navMeshAgent.isStopped = true;
+                _navMeshAgent.ResetPath();
+                _navMeshDriving = false;
+            }
+            SetActionState(resolvedAction);
+            NotifyMovementCompleted();
+            return;
+        }
+
+        SetActionState(resolvedAction);
+
+        if (preferNavMeshAgent && _navMeshAgent != null)
+        {
+            if (speedOverride.HasValue)
+            {
+                _navMeshAgent.speed = Mathf.Max(0.1f, speedOverride.Value);
+            }
+            _navMeshAgent.isStopped = false;
+            _navMeshAgent.SetDestination(destination);
+            _navMeshDriving = true;
+            NotifyMovementStarted();
+        }
+        else if (_movementController != null)
+        {
+            _movementController.RequestPathTo(null, destination, null);
+        }
+
+        _targetPosition = destination;
     }
 
     private void ShowIdleStatus()
@@ -934,7 +1118,83 @@ public class AgentController : MonoBehaviour
         if (lower.Contains("evacuate") || lower.Contains("避難") || lower.Contains("subway")) return "🚇 " + trimmed;
         return trimmed;
     }
+    private void SetBehaviourState(AgentBehaviourState newState)
+    {
+        if (_currentBehaviourState == newState) return;
+        _currentBehaviourState = newState;
 
+        if (newState == AgentBehaviourState.Idle)
+        {
+            StartIdleMicroActions();
+        }
+        else
+        {
+            StopIdleMicroActions();
+            if (newState == AgentBehaviourState.Moving)
+            {
+                _navMeshAgent?.ResetPath();
+            }
+        }
+    }
+
+    private void StartIdleMicroActions()
+    {
+        StopIdleMicroActions();
+        _idleCts = new CancellationTokenSource();
+        IdleMicroActionLoop(_idleCts.Token).Forget();
+    }
+
+    private void StopIdleMicroActions()
+    {
+        if (_idleCts != null)
+        {
+            _idleCts.Cancel();
+            _idleCts.Dispose();
+            _idleCts = null;
+        }
+    }
+
+    private async UniTaskVoid IdleMicroActionLoop(CancellationToken token)
+    {
+        while (!token.IsCancellationRequested)
+        {
+            float delay = UnityEngine.Random.Range(1.5f, 3.5f);
+            try { await UniTask.Delay(TimeSpan.FromSeconds(delay), cancellationToken: token); }
+            catch (OperationCanceledException) { break; }
+            if (token.IsCancellationRequested || _currentBehaviourState != AgentBehaviourState.Idle) break;
+
+            int action = UnityEngine.Random.Range(0, 3);
+            switch (action)
+            {
+                case 0:
+                    _visualController?.PlayEmote("HeadTurn");
+                    break;
+                case 1:
+                    _visualController?.PlayEmote("Stretch");
+                    break;
+                default:
+                    await PerformIdleWander(token);
+                    break;
+            }
+        }
+    }
+
+    private async UniTask PerformIdleWander(CancellationToken token)
+    {
+        if (_navMeshAgent == null || !_navMeshAgent.isActiveAndEnabled) return;
+
+        Vector2 randomOffset = UnityEngine.Random.insideUnitCircle * _idleWanderRadius;
+        Vector3 wanderTarget = new Vector3(_transform.position.x + randomOffset.x, _transform.position.y + randomOffset.y, _transform.position.z);
+        _navMeshAgent.SetDestination(wanderTarget);
+
+        float wanderThreshold = Mathf.Max(_arrivalThreshold, 0.05f);
+        while (!token.IsCancellationRequested && _navMeshAgent.remainingDistance > wanderThreshold && _currentBehaviourState == AgentBehaviourState.Idle)
+        {
+            await UniTask.Yield(PlayerLoopTiming.Update, token);
+        }
+
+        _navMeshAgent.ResetPath();
+    }
     private async UniTaskVoid ProcessCommandBufferLoop(CancellationToken token)
     {
         while (!token.IsCancellationRequested)
@@ -960,6 +1220,10 @@ public class AgentController : MonoBehaviour
 
     private async UniTask ExecuteCommandAsync(AgentCommand cmd, CancellationToken token)
     {
+        if (_awaitingMovementBatch)
+        {
+            CompleteMovementBatch(false);
+        }
         if (!string.IsNullOrEmpty(cmd.ActionName)) SetActionState(cmd.ActionName);
 
         if (cmd.Type == AgentInternalCommandType.Move)
@@ -967,25 +1231,40 @@ public class AgentController : MonoBehaviour
             SetTargetLocation(cmd.TargetLocationName, cmd.TargetPosition, cmd.TargetTransform);
             NotifyMovementStarted();
             await WaitUntilArrival(token);
-            NotifyMovementCompleted();
+            bool performingAction = !IsIdleAction(cmd.ActionName);
+            EnterAwaitingBatchCompletion(performingAction);
+            _simulationClient?.RegisterMovementArrival(agentName, this);
         }
         else if (cmd.Type == AgentInternalCommandType.Teleport)
         {
             TeleportTo(cmd.TargetPosition);
-            await UniTask.Delay(500, cancellationToken: token); 
+            await UniTask.Delay(500, cancellationToken: token);
         }
         else if (cmd.Type == AgentInternalCommandType.ActionOnly)
         {
-            await UniTask.Delay(500, cancellationToken: token); 
+            await UniTask.Delay(500, cancellationToken: token);
         }
     }
 
     private async UniTask WaitUntilArrival(CancellationToken token)
     {
         float sqrThreshold = _arrivalThreshold * _arrivalThreshold;
-        await UniTask.WaitUntil(() => 
+        await UniTask.WaitUntil(() =>
         {
             if (token.IsCancellationRequested) return true;
+            if (_navMeshAgent != null && _navMeshAgent.isActiveAndEnabled)
+            {
+                if (_navMeshAgent.pathPending) return false;
+                if (_navMeshAgent.remainingDistance <= _arrivalThreshold)
+                {
+                    if (!_navMeshAgent.hasPath || _navMeshAgent.velocity.sqrMagnitude < 0.01f)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
             float dist = Vector3.SqrMagnitude(_transform.position - _targetPosition);
             return dist <= sqrThreshold;
         }, cancellationToken: token);

@@ -134,7 +134,11 @@ public class AgentMovementController : MonoBehaviour
         _hasLastRequestedTarget = false;
         _agent?.NotifyMovementCompleted();
     }
-
+    public void MarkArrivalHold()
+    {
+        _isMoving = false;
+        _hasLastRequestedTarget = false;
+    }
     public async UniTaskVoid MoveAlongPathAsync(Vector2[] nodes, CancellationToken token)
     {
         if (nodes == null || nodes.Length == 0)
@@ -198,7 +202,7 @@ public class AgentMovementController : MonoBehaviour
             }
             
             // 正常走完後的邏輯
-            _agent?.NotifyMovementCompleted();
+            _agent?.OnMovementControllerArrived();
         }
         catch (OperationCanceledException)
         {
