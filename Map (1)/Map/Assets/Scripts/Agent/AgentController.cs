@@ -8,7 +8,7 @@ using System.Text;
 using DisasterSimulation;
 using Cysharp.Threading.Tasks;
 using System.Threading;
-using UnityEngine.AI;
+
 
 // 定義指令類型與結構
 public enum AgentInternalCommandType { Move, Teleport, ActionOnly }
@@ -46,7 +46,7 @@ public class AgentController : MonoBehaviour
     private float _movementSpeed = 4.5f;
     private float _arrivalThreshold = 0.05f;
     private Vector3 _lastPosition;
-    private NavMeshAgent _navMeshAgent;
+    private UnityEngine.AI.NavMeshAgent _navMeshAgent;
     private Vector3 _smoothedVelocity;
     private float _interpolationSpeed = 10f;
     // 視覺控制 (需確保場景中有對應組件)
@@ -57,8 +57,7 @@ public class AgentController : MonoBehaviour
 
     private Camera _mainCamera;
     private SimulationClient _simulationClient;
-    private AgentMovementController _movementController;
-    private NavMeshAgent _navMeshAgent;    
+    private AgentMovementController _movementController; 
     private string _targetLocationName;
     private string _lastValidLocationName;
     private string _currentAction;
@@ -126,7 +125,7 @@ public class AgentController : MonoBehaviour
             _movementController = gameObject.AddComponent<AgentMovementController>();
         }
         _movementController.ConfigureFromAgent(this, _movementSpeed, _arrivalThreshold);
-        _navMeshAgent = GetComponent<NavMeshAgent>();
+        _navMeshAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
         if (_navMeshAgent != null)
         {
             _navMeshAgent.updateRotation = false;
@@ -136,7 +135,7 @@ public class AgentController : MonoBehaviour
         }
         if (!TryGetComponent(out _navMeshAgent))
         {
-            _navMeshAgent = gameObject.AddComponent<NavMeshAgent>();
+            _navMeshAgent = gameObject.AddComponent<UnityEngine.AI.NavMeshAgent>();
         }
         ConfigureNavMeshAgent();
         // ======== 補上：初始化 VisualController ========
@@ -212,7 +211,8 @@ public class AgentController : MonoBehaviour
 
         if (_navMeshAgent != null && _navMeshAgent.isActiveAndEnabled)
         {
-            _navMeshAgent.SetDestination(position);
+            // 將目的地設為當前位置，確保初始化時不會意外移動
+            _navMeshAgent.SetDestination(_transform.position);
         }
         else if (_movementController != null)
         {
@@ -229,9 +229,9 @@ public class AgentController : MonoBehaviour
     void Update()
     {
         if (!_isInitialized || !gameObject.activeSelf) return;
-
+        if (_isPortalPaused) return;
         Vector3 sampledVelocity = (_transform.position - _lastPosition) / Mathf.Max(Time.deltaTime, 0.0001f);
-        if (_navMeshAgent != null && _navMeshAgent.isActiveAndEnabled)
+        if (_navMeshAgent != null && _navMeshAgent.isActiveAndEnabled && _navMeshDriving)
         {
             sampledVelocity = _navMeshAgent.velocity;
             _targetPosition = _navMeshAgent.destination;
@@ -328,7 +328,7 @@ public class AgentController : MonoBehaviour
         _navMeshAgent.stoppingDistance = Mathf.Max(0.01f, _arrivalThreshold);
         _navMeshAgent.acceleration = Mathf.Max(1f, _movementSpeed * 2f);
         _navMeshAgent.autoBraking = true;
-        _navMeshAgent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+        _navMeshAgent.obstacleAvoidanceType = UnityEngine.AI.ObstacleAvoidanceType.NoObstacleAvoidance;
 
         if (_navMeshAgent.enabled)
         {
@@ -636,6 +636,7 @@ public class AgentController : MonoBehaviour
         _targetLocationName = locationName;
         _targetPosition = position;
         _lastValidLocationName = locationName;
+        _navMeshDriving = _movementController == null && _navMeshAgent != null && _navMeshAgent.isActiveAndEnabled;
         if (_movementController != null)
         {
             _movementController.RequestPathTo(locationName, position, locationTransform);
@@ -781,6 +782,7 @@ public class AgentController : MonoBehaviour
         _targetPosition = _transform.position;
         _movementController?.HandleTeleport(_transform.position);
         ResetNavMeshPosition(_transform.position);
+        _navMeshDriving = false;
         ForceImmediateVisualRefresh();
     }
 
@@ -1186,7 +1188,7 @@ public class AgentController : MonoBehaviour
         Vector2 randomOffset = UnityEngine.Random.insideUnitCircle * _idleWanderRadius;
         Vector3 wanderTarget = new Vector3(_transform.position.x + randomOffset.x, _transform.position.y + randomOffset.y, _transform.position.z);
         _navMeshAgent.SetDestination(wanderTarget);
-
+        _navMeshDriving = true;
         float wanderThreshold = Mathf.Max(_arrivalThreshold, 0.05f);
         while (!token.IsCancellationRequested && _navMeshAgent.remainingDistance > wanderThreshold && _currentBehaviourState == AgentBehaviourState.Idle)
         {
@@ -1194,6 +1196,7 @@ public class AgentController : MonoBehaviour
         }
 
         _navMeshAgent.ResetPath();
+        _navMeshDriving = false;
     }
     private async UniTaskVoid ProcessCommandBufferLoop(CancellationToken token)
     {
@@ -1252,17 +1255,17 @@ public class AgentController : MonoBehaviour
         await UniTask.WaitUntil(() =>
         {
             if (token.IsCancellationRequested) return true;
-            if (_navMeshAgent != null && _navMeshAgent.isActiveAndEnabled)
+            if (_navMeshAgent != null && _navMeshAgent.isActiveAndEnabled && _navMeshDriving)
             {
                 if (_navMeshAgent.pathPending) return false;
-                if (_navMeshAgent.remainingDistance <= _arrivalThreshold)
+                if (_navMeshAgent.hasPath)
                 {
-                    if (!_navMeshAgent.hasPath || _navMeshAgent.velocity.sqrMagnitude < 0.01f)
+                    if (_navMeshAgent.remainingDistance <= _arrivalThreshold && _navMeshAgent.velocity.sqrMagnitude < 0.01f)
                     {
                         return true;
                     }
+                    return false;
                 }
-                return false;
             }
 
             float dist = Vector3.SqrMagnitude(_transform.position - _targetPosition);
