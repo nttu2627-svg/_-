@@ -152,7 +152,7 @@ class 災難記錄器:
             ax1.set_xticklabels(agents, fontweight='bold')
             ax1.legend(loc='upper right', bbox_to_anchor=(1.1, 1))
             ax1.grid(axis='y', linestyle='--', alpha=0.3)
-            ax1.set_ylim(0, 12) # 預留空間給標籤
+            ax1.set_ylim(0, 30) # 預留空間給標籤
 
             # --- 下半部：次數圖表 ---
             rects_c = []
