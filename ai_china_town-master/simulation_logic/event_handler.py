@@ -1,4 +1,4 @@
-# simulation_logic/event_handler.py (在您的版本基礎上加入偵錯日誌)
+# simulation_logic/event_handler.py
 
 import random
 from datetime import timedelta
@@ -34,6 +34,7 @@ def generate_disaster_report(buildings, initial_report=False):
     
     report.append("----------------------")
     return "\n".join(report)
+
 def generate_mbti_conflict_events(sim_state, agents, current_time):
     if not agents:
         return []
@@ -123,9 +124,6 @@ async def check_and_handle_phase_transitions(sim_state, agents, buildings, sched
     if phase == "Normal" and sim_state.get('eq_enabled', False) and sim_state.get('next_event_idx', 0) < len(scheduled_events):
         next_eq = scheduled_events[sim_state['next_event_idx']]
         
-        # ### 核心偵錯日誌 ###
-        # 每一分鐘的模擬時間，在後端終端機印出一次時間比對狀態，幫助我們確認。
-        # current_time.second == 0 這個條件可以確保即使模擬步伐很小，也只會每分鐘印一次。
         should_log = False
         if current_time.second == 0:
             last_log_time = sim_state.get('_last_event_check_log')
@@ -140,8 +138,6 @@ async def check_and_handle_phase_transitions(sim_state, agents, buildings, sched
 
         # 核心判斷邏輯
         if current_time >= next_eq['time_dt']:
-            # ### 核心偵錯日誌 ###
-            # 當條件滿足時，在後端終端機印出一個非常明顯的觸發訊號。
             print(f"🔥🔥🔥 [觸發] 地震事件觸發！當前時間 {current_time} >= 排程時間 {next_eq['time_dt']} 🔥🔥🔥")
 
             sim_state['phase'] = "Earthquake"
@@ -151,6 +147,10 @@ async def check_and_handle_phase_transitions(sim_state, agents, buildings, sched
             sim_state['mbti_conflict_tracker'] = {} 
             update_log(f"!!! 地震開始 !!! 強度: {next_eq['intensity']:.2f}. 持續 {next_eq['duration']} 分鐘.", "EVENT")
             
+            # [NEW] Broadcast to Unity & Update Agent Brains
+            if 'broadcast' in llm_context:
+                llm_context['broadcast']("event", {"type": "EARTHQUAKE_START", "intensity": next_eq['intensity']})
+            
             if disaster_logger:
                 disaster_logger.設定災難開始(current_time)
             
@@ -158,6 +158,10 @@ async def check_and_handle_phase_transitions(sim_state, agents, buildings, sched
             
             pronunciatio_tasks = []
             for agent in agents:
+                # [NEW] Update Agent Brain State
+                if hasattr(agent, 'update_disaster_state'):
+                    agent.update_disaster_state("EARTHQUAKE_START")
+
                 original_hp = agent.health
                 was_asleep = agent.is_asleep(current_time.strftime('%H-%M'))
                 
@@ -185,7 +189,6 @@ async def check_and_handle_phase_transitions(sim_state, agents, buildings, sched
 
     # 2. 處理地震中狀態，並檢查是否結束
     if phase == "Earthquake":
-        # ... (此區塊邏輯與您提供的版本完全相同，無需修改)
         quake_details = sim_state.get('quake_details')
         if not quake_details: 
             sim_state['phase'] = 'Normal'
@@ -202,6 +205,11 @@ async def check_and_handle_phase_transitions(sim_state, agents, buildings, sched
             sim_state['phase'] = "Recovery"
             sim_state['recovery_end_time'] = current_time + timedelta(minutes=60)
             update_log(f"!!! 地震結束 @ {current_time.strftime('%H:%M')} !!!", "EVENT")
+            
+            # [NEW] Broadcast End
+            if 'broadcast' in llm_context:
+                llm_context['broadcast']("event", {"type": "EARTHQUAKE_END"})
+
             update_log(generate_disaster_report(buildings, initial_report=False), "REPORT")
             
             summary_tasks = [run_gpt_prompt_summarize_disaster(agent.name, agent.MBTI, agent.health, agent.disaster_experience_log) for agent in agents if agent.disaster_experience_log]
@@ -211,6 +219,9 @@ async def check_and_handle_phase_transitions(sim_state, agents, buildings, sched
             for i, agent in enumerate(agent_with_log):
                 summary = summaries[i]
                 agent.memory += f"\n[災難記憶] {summary}"
+                # [NEW] Update Agent Brain State
+                if hasattr(agent, 'update_disaster_state'):
+                    agent.update_disaster_state("EARTHQUAKE_END")
 
             sim_state['quake_details'] = None
             sim_state.pop('mbti_conflict_tracker', None)
@@ -218,7 +229,6 @@ async def check_and_handle_phase_transitions(sim_state, agents, buildings, sched
 
     # 3. 處理恢復階段，並檢查是否結束
     if phase == "Recovery":
-        # ... (此區塊邏輯與您提供的版本完全相同，無需修改)
         recovery_tasks = [agent.perform_recovery_step_action(agents, buildings, disaster_logger, current_time) for agent in agents if agent.health > 0]
         recovery_logs = await asyncio.gather(*recovery_tasks)
         for log in recovery_logs:
@@ -233,7 +243,6 @@ async def check_and_handle_phase_transitions(sim_state, agents, buildings, sched
             
     # 4. 處理災後討論階段，並檢查是否結束
     if phase == "PostQuakeDiscussion" and current_time >= sim_state.get('discussion_end_time', current_time):
-        # ... (此區塊邏輯與您提供的版本完全相同，無需修改)
         sim_state['phase'] = "Normal"
         update_log("災後討論期結束，恢復正常。", "EVENT")
         return

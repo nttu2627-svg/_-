@@ -9,6 +9,7 @@ namespace DisasterSimulation
     public class LogPanelController : MonoBehaviour
     {
         [SerializeField]
+        [Tooltip("日誌面板物件")]
         private GameObject logPanel;
 
         private void Reset()

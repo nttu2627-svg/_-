@@ -1,8 +1,9 @@
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Events;
+using Unity.AI.Navigation;
 
-[RequireComponent(typeof(Collider))]
+[RequireComponent(typeof(Collider2D))] 
 public class PortalTrigger : MonoBehaviour
 {
     [System.Serializable]
@@ -22,26 +23,54 @@ public class PortalTrigger : MonoBehaviour
     public float cinematicTeleportDistance = 8f;
 
     [Header("Transitions & Fades")]
-    [Tooltip("傳送時是否觸發淡出/淡入事件。")]
-    public bool useFadeOnTeleport = true;
-
-    [Tooltip("淡入淡出建議的時長（秒），供外部 UI / Cinemachine 事件使用。")]
-    public float fadeDuration = 0.35f;
-
-    [Header("Hooks")]
-    public BoolEvent onInteriorStateChanged;
+    public bool useFadeOnTeleport = false;
+    public UnityEvent onTransitionStarted;
     public UnityEvent onFadeOutRequested;
     public UnityEvent onFadeInRequested;
-    public UnityEvent onTransitionStarted;
     public UnityEvent onTransitionCompleted;
+    public BoolEvent onInteriorStateChanged;
 
-    private void Reset()
+    [Header("Disaster Response")]
+    [Tooltip("此入口對應的 NavMeshLink (用於動態斷路)")]
+    public NavMeshLink navLink;
+    public Transform entryFocusPoint; // 門前的引導點 (解決穿牆)
+    private bool isBlocked = false;
+
+    private void Awake()
     {
-        portal = GetComponent<PortalController>();
-        var col = GetComponent<Collider>();
+        // 嘗試獲取 3D Collider
+        Collider col = GetComponent<Collider>();
         if (col != null)
         {
             col.isTrigger = true;
+        }
+
+        // 嘗試獲取 2D Collider (因為你有用到 OnTriggerEnter2D)
+        Collider2D col2D = GetComponent<Collider2D>();
+        if (col2D != null)
+        {
+            col2D.isTrigger = true;
+        }
+        
+        if (navLink == null)
+        {
+            navLink = GetComponent<NavMeshLink>();
+        }
+    }
+
+    // 當災難系統判定此門塌陷時調用
+    public void SetCollapse(bool collapsed)
+    {
+        isBlocked = collapsed;
+        // 關鍵：停用 Link 會強制 Unity 重新計算所有經過此處的路徑
+        if (navLink != null)
+        {
+            navLink.enabled = !collapsed;
+        }
+        
+        if (collapsed)
+        {
+            Debug.Log($"[PortalTrigger] {name} has collapsed! Rerouting agents...");
         }
     }
 
@@ -64,6 +93,7 @@ public class PortalTrigger : MonoBehaviour
         if (agent == null)
             return;
 
+        // 假設 Teleportable2D 是你專案中的另一個腳本
         var teleportable = other.GetComponent<Teleportable2D>();
         if (teleportable != null && teleportable.IsIgnoring)
             return;
@@ -83,6 +113,7 @@ public class PortalTrigger : MonoBehaviour
             onFadeOutRequested?.Invoke();
         }
 
+        // 確保 TryTeleport 參數與你的 PortalController 定義匹配
         bool teleported = portal.TryTeleport(
             other.transform,
             teleportable,
@@ -130,7 +161,10 @@ public class PortalTrigger : MonoBehaviour
         if (mover.TryGetComponent(out NavMeshAgent navAgent))
         {
             Transform exit = exitPortal.ExitTransform;
+            // 確保 exitNudge 存在於你的 PortalController
             Vector3 destination = exit.position + exit.right * Mathf.Max(0f, portal != null ? portal.exitNudge : 0f);
+            
+            // 使用 Warp 移動 NavMeshAgent 避免被導航系統拉回
             navAgent.Warp(destination);
         }
     }

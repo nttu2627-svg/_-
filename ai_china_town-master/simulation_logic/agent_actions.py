@@ -119,6 +119,30 @@ async def generate_action_instructions(all_agents):
 
     instructions = []
     for agent in all_agents:
+        # [NEW] Disaster FSM Handling
+        disaster_state = getattr(agent, "current_disaster_state", "NORMAL")
+        
+        if disaster_state == "EVENT_ONSET":
+            # System 1: Reflex
+            instructions.append({
+                "agent": agent.name,
+                "command": "REFLEX_ACTION",
+                "action": "DUCK", # Simulated System 1 output
+                "target": "Desk"
+            })
+            continue
+        elif disaster_state == "RECOVERY":
+            # System 2: Recovery Navigation
+            # For now, we guide them to home or a safe zone
+            target = agent.home or "Exterior"
+            instructions.append({
+                "agent": agent.name,
+                "command": "NAVIGATE",
+                "target": target,
+                "action": "Evacuating"
+            })
+            continue
+
         sync_events = list(getattr(agent, "sync_events", []))
         if sync_events:
             for event in sync_events:

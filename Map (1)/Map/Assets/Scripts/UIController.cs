@@ -14,6 +14,12 @@ using UnityEngine.Events;
 /// </summary>
 public class UIController : MonoBehaviour
 {
+    public static UIController Instance; // 簡單單例以便存取
+    [Tooltip("顯示資訊的文字組件")]
+    public TextMeshProUGUI infoText;     // 指向 UI 上的 Text 元件
+    private string _currentScenarioState = "日常";
+    private string _currentExecutionState = "待機";
+    private string _currentTime = "00:00:00";
     [Header("核心依賴 (必須賦值)")]
     [Tooltip("場景中的 CameraManager 實例，用於控制攝影機")]
     public CameraManager cameraManager;
@@ -27,17 +33,27 @@ public class UIController : MonoBehaviour
     public Transform locationRoot;
 
     [Header("UI 面板 (可選，用於隱藏)")]
+    [Tooltip("時間設定面板")]
     public GameObject timeSettingsPanel;
+    [Tooltip("控制面板")]
     public GameObject controlPanel;
 
     [Header("UI 輸入/輸出元件 (必須賦值)")]
+    [Tooltip("持續時間輸入框")]
     public TMP_InputField durationInput;
+    [Tooltip("步長輸入框")]
     public TMP_InputField stepInput;
+    [Tooltip("年份輸入框")]
     public TMP_InputField yearInput;
+    [Tooltip("月份輸入框")]
     public TMP_InputField monthInput;
+    [Tooltip("日期輸入框")]
     public TMP_InputField dayInput;
+    [Tooltip("小時輸入框")]
     public TMP_InputField hourInput;
+    [Tooltip("分鐘輸入框")]
     public TMP_InputField minuteInput;
+    [Tooltip("開始按鈕")]
     public Button startButton;
 
     [Header("動態生成UI所需 (必須賦值)")]
@@ -47,9 +63,13 @@ public class UIController : MonoBehaviour
     public Transform mbtiToggleGroupParent;
 
     [Header("顯示區域 (必須賦值)")]
+    [Tooltip("狀態欄文字")]
     public TextMeshProUGUI statusBarText;
+    [Tooltip("主要日誌視圖")]
     public LogScrollView mainLogView;
+    [Tooltip("歷史日誌視圖")]
     public LogScrollView historyLogView;
+    [Tooltip("LLM 日誌視圖")]
     public LogScrollView llmLogView;
     [Header("Log 容器 (可選)")]
     [Tooltip("LogPanels 的父物件；若不指定，將以分頁還原方式個別控制三個日誌視圖")]
@@ -63,7 +83,9 @@ public class UIController : MonoBehaviour
     [Tooltip("啟動前隱藏的攝影機按鈕面板")]
     public GameObject cameraButtonsPanel;
     public Button mainLogButton;
+    [Tooltip("歷史日誌按鈕")]
     public Button historyLogButton;
+    [Tooltip("LLM 日誌按鈕")]
     public Button llmLogButton;
     // 原始按鈕顏色，用於切換時恢復
     private Color _mainLogButtonColor;
@@ -72,10 +94,13 @@ public class UIController : MonoBehaviour
     private const float ActiveDarkenFactor = 0.8f;
 
     [Header("事件相關 UI (可選)")]
+    [Tooltip("地震 JSON 輸入框")]
     public TMP_InputField eqJsonInput;
+    [Tooltip("地震步長下拉選單")]
     public TMP_Dropdown eqStepDropdown;
 
     [Header("行事曆設定")]
+    [Tooltip("使用預設行事曆開關")]
     public Toggle useDefaultCalendarToggle;
 
 
@@ -396,9 +421,37 @@ public class UIController : MonoBehaviour
         if (statusBarText != null) statusBarText.gameObject.SetActive(true);
         ShowMainLogDisplay();
     }
+    // [說明: 更新完整面板]
+    public void UpdateStatus(string scenario, string execution, string time)
+    {
+        _currentScenarioState = scenario;
+        _currentExecutionState = execution;
+        _currentTime = time;
+        RefreshUI();
+    }
+    // [說明: 只更新執行狀態 (例如從 移動中 -> 思考中)]
+    public void UpdateExecutionState(string execution)
+    {
+        _currentExecutionState = execution;
+        RefreshUI();
+    }
+
+    private void RefreshUI()
+    {
+        infoText.text = $"狀態：{_currentScenarioState}\n" +
+                        $"執行狀態：{_currentExecutionState}\n" +
+                        $"模擬時間：{_currentTime}";
+    }
     private void UpdateStatusBar(StatusPayload status)
     {
         if (statusBarText == null) return;
+
+        // If Message is present and looks like a full status message, use it directly.
+        if (!string.IsNullOrWhiteSpace(status?.Message) && status.Message.StartsWith("狀態："))
+        {
+            statusBarText.text = status.Message;
+            return;
+        }
 
         string scenarioState = !string.IsNullOrWhiteSpace(status?.ScenarioState)
             ? status.ScenarioState
@@ -574,7 +627,23 @@ public class UIController : MonoBehaviour
             _uiToggleButton.onClick.AddListener(ToggleUIVisibility);
         }
 
-        Debug.Log($"[UIController] 已成功生成 {cameraNames.Count() + 3} 個攝影機控制按鈕。");
+        // [User Request] Emergency Step Button (Top Right / In Camera Group)
+        GameObject forceStepButtonGO = Instantiate(cameraButtonPrefab, cameraButtonGroupParent);
+        forceStepButtonGO.name = "Button_ForceStep";
+        TextMeshProUGUI forceStepText = forceStepButtonGO.GetComponentInChildren<TextMeshProUGUI>();
+        if (forceStepText != null) forceStepText.text = "強制下一步 (Debug)";
+        Button forceStepButton = forceStepButtonGO.GetComponent<Button>();
+        if (forceStepButton != null)
+        {
+            // Set color to warning color (e.g. orange/red) to distinguish
+            forceStepButton.image.color = new Color(1f, 0.5f, 0f); 
+            forceStepButton.onClick.AddListener(() => 
+            {
+                if (simulationClient != null) simulationClient.ForceStepComplete();
+            });
+        }
+
+        Debug.Log($"[UIController] 已成功生成 {cameraNames.Count() + 4} 個攝影機控制按鈕。");
     }
 
     private void ToggleStatusBar()

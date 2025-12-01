@@ -244,6 +244,7 @@ GameObject:
   - component: {fileID: 20833349}
   - component: {fileID: 20833351}
   - component: {fileID: 20833350}
+  - component: {fileID: 20833352}
   m_Layer: 0
   m_Name: base
   m_TagString: Untagged
@@ -84804,6 +84805,22 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!114 &20833352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 20833348}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 0
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff
 --- !u!4 &27671935 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2240726327299525023, guid: 88ef7b38684afb44fb37999038f662fd, type: 3}
@@ -84825,6 +84842,7 @@ GameObject:
   - component: {fileID: 34490404}
   - component: {fileID: 34490406}
   - component: {fileID: 34490405}
+  - component: {fileID: 34490407}
   m_Layer: 0
   m_Name: "\u9910\u5EF3_\u5BA4\u5167"
   m_TagString: Untagged
@@ -84841,7 +84859,7 @@ Transform:
   m_GameObject: {fileID: 34490403}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -73.00139, y: 0.972929, z: 0}
+  m_LocalPosition: {x: -73.00139, y: 1.254, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -84881,6 +84899,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &34490406
 BoxCollider2D:
@@ -84926,8 +84947,42 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 4, y: 4}
+  m_Size: {x: 4, y: 5}
   m_EdgeRadius: 0
+--- !u!114 &34490407
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 34490403}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &35448139
 GameObject:
   m_ObjectHideFlags: 0
@@ -84939,6 +84994,7 @@ GameObject:
   - component: {fileID: 35448140}
   - component: {fileID: 35448142}
   - component: {fileID: 35448141}
+  - component: {fileID: 35448143}
   m_Layer: 0
   m_Name: "\u5065\u8EAB\u623F_\u5BA4\u5916"
   m_TagString: Untagged
@@ -84955,7 +85011,7 @@ Transform:
   m_GameObject: {fileID: 35448139}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 97.5, y: 15.17, z: 0}
+  m_LocalPosition: {x: 97.5, y: 14.398, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -84995,6 +85051,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &35448142
 BoxCollider2D:
@@ -85042,6 +85101,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 2, y: 2}
   m_EdgeRadius: 0
+--- !u!114 &35448143
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 35448139}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &36681684
 GameObject:
   m_ObjectHideFlags: 0
@@ -85197,6 +85290,7 @@ GameObject:
   - component: {fileID: 45979693}
   - component: {fileID: 45979695}
   - component: {fileID: 45979694}
+  - component: {fileID: 45979696}
   m_Layer: 0
   m_Name: "\u516C\u5BD3\u5074\u9580_\u5BA4\u5916"
   m_TagString: Untagged
@@ -85213,7 +85307,7 @@ Transform:
   m_GameObject: {fileID: 45979692}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 6.06, y: -10.34, z: 0}
+  m_LocalPosition: {x: 6.06, y: -11.766, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -85253,6 +85347,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &45979695
 BoxCollider2D:
@@ -85300,6 +85397,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 2, y: 2}
   m_EdgeRadius: 0
+--- !u!114 &45979696
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 45979692}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &51172282
 GameObject:
   m_ObjectHideFlags: 0
@@ -85312,6 +85443,7 @@ GameObject:
   - component: {fileID: 51172285}
   - component: {fileID: 51172284}
   - component: {fileID: 51172286}
+  - component: {fileID: 51172287}
   m_Layer: 0
   m_Name: "\u516C\u5BD3"
   m_TagString: Untagged
@@ -89867,6 +89999,22 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 18.607239, y: 19.341187}
   m_EdgeRadius: 0
+--- !u!114 &51172287
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 51172282}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 1
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff
 --- !u!1 &61735747
 GameObject:
   m_ObjectHideFlags: 0
@@ -89878,6 +90026,7 @@ GameObject:
   - component: {fileID: 61735748}
   - component: {fileID: 61735750}
   - component: {fileID: 61735749}
+  - component: {fileID: 61735751}
   m_Layer: 0
   m_Name: "\u516C\u5BD3\u4E8C\u6A13_\u5BA4\u5167"
   m_TagString: Untagged
@@ -89894,7 +90043,7 @@ Transform:
   m_GameObject: {fileID: 61735747}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -117.08, y: -46.82, z: 0}
+  m_LocalPosition: {x: -117.08, y: -43.644, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -89934,6 +90083,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &61735750
 BoxCollider2D:
@@ -89981,6 +90133,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 4, y: 2}
   m_EdgeRadius: 0
+--- !u!114 &61735751
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 61735747}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &67121532 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1232352475317298594, guid: 0e30d72778da19e42932ece0fd1696f4, type: 3}
@@ -92469,6 +92655,7 @@ GameObject:
   - component: {fileID: 100302154}
   - component: {fileID: 100302156}
   - component: {fileID: 100302155}
+  - component: {fileID: 100302157}
   m_Layer: 0
   m_Name: "\u5B78\u6821\u9580\u53E3_\u5BA4\u5916"
   m_TagString: Untagged
@@ -92485,7 +92672,7 @@ Transform:
   m_GameObject: {fileID: 100302153}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 106.4, y: -33, z: 0}
+  m_LocalPosition: {x: 106.4, y: -38.54, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -92525,6 +92712,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &100302156
 BoxCollider2D:
@@ -92570,8 +92760,42 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 12, y: 6}
+  m_Size: {x: 16, y: 6}
   m_EdgeRadius: 0
+--- !u!114 &100302157
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100302153}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &112939192
 GameObject:
   m_ObjectHideFlags: 0
@@ -92702,6 +92926,7 @@ GameObject:
   - component: {fileID: 118241707}
   - component: {fileID: 118241706}
   - component: {fileID: 118241708}
+  - component: {fileID: 118241709}
   m_Layer: 0
   m_Name: "\u9910\u5EF3"
   m_TagString: Untagged
@@ -94169,6 +94394,22 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 8.308487, y: 9.210828}
   m_EdgeRadius: 0
+--- !u!114 &118241709
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 118241704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 1
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff
 --- !u!1 &119105681
 GameObject:
   m_ObjectHideFlags: 0
@@ -94180,6 +94421,7 @@ GameObject:
   - component: {fileID: 119105682}
   - component: {fileID: 119105684}
   - component: {fileID: 119105683}
+  - component: {fileID: 119105685}
   m_Layer: 0
   m_Name: "\u8D85\u5E02\u53F3\u9580_\u5BA4\u5167"
   m_TagString: Untagged
@@ -94236,6 +94478,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &119105684
 BoxCollider2D:
@@ -94283,6 +94528,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 2, y: 2}
   m_EdgeRadius: 0
+--- !u!114 &119105685
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 119105681}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &128622015
 GameObject:
   m_ObjectHideFlags: 0
@@ -95684,7 +95963,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -20.999512, y: 248}
+  m_AnchoredPosition: {x: -21.000122, y: 248}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &261948045
@@ -96889,6 +97168,7 @@ GameObject:
   - component: {fileID: 269792532}
   - component: {fileID: 269792534}
   - component: {fileID: 269792533}
+  - component: {fileID: 269792535}
   m_Layer: 0
   m_Name: "\u8D85\u5E02\u5DE6\u9580_\u5BA4\u5167"
   m_TagString: Untagged
@@ -96945,6 +97225,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &269792534
 BoxCollider2D:
@@ -96992,6 +97275,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 2, y: 2}
   m_EdgeRadius: 0
+--- !u!114 &269792535
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 269792531}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &278712504 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6905063021838728090, guid: 88ef7b38684afb44fb37999038f662fd, type: 3}
@@ -97388,6 +97705,7 @@ GameObject:
   - component: {fileID: 294731880}
   - component: {fileID: 294731882}
   - component: {fileID: 294731881}
+  - component: {fileID: 294731883}
   m_Layer: 0
   m_Name: "\u516C\u5BD3\u5927\u9580_\u5BA4\u5916"
   m_TagString: Untagged
@@ -97404,7 +97722,7 @@ Transform:
   m_GameObject: {fileID: 294731879}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.3999996, y: -9.01, z: 0}
+  m_LocalPosition: {x: -3.3999996, y: -10.611, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -97444,6 +97762,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &294731882
 BoxCollider2D:
@@ -97491,6 +97812,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 2, y: 2}
   m_EdgeRadius: 0
+--- !u!114 &294731883
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 294731879}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &305130260
 GameObject:
   m_ObjectHideFlags: 0
@@ -99188,8 +99543,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u7E3D\u6A21\u64EC\u6642\u9577\n(\u5206\u9418)"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 465e04bf68309ee49a4e7d857f56b6cd, type: 2}
-  m_sharedMaterial: {fileID: -2267303238136500162, guid: 465e04bf68309ee49a4e7d857f56b6cd, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -102871,7 +103226,7 @@ MonoBehaviour:
     CustomLookAtTarget: 0
   Lens:
     FieldOfView: 34
-    OrthographicSize: 32.9
+    OrthographicSize: 25
     NearClipPlane: 0.3
     FarClipPlane: 1000
     Dutch: 0
@@ -102898,7 +103253,7 @@ Transform:
   m_GameObject: {fileID: 406263411}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -87.36, y: -49.21, z: -10}
+  m_LocalPosition: {x: -87.36, y: -50.9, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -102920,6 +103275,7 @@ GameObject:
   - component: {fileID: 411578504}
   - component: {fileID: 411578506}
   - component: {fileID: 411578505}
+  - component: {fileID: 411578507}
   m_Layer: 0
   m_Name: "\u5730\u9435\u53F3\u5165\u53E3_\u5BA4\u5916"
   m_TagString: Untagged
@@ -102976,6 +103332,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &411578506
 BoxCollider2D:
@@ -103023,6 +103382,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 3, y: 3}
   m_EdgeRadius: 0
+--- !u!114 &411578507
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 411578503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &416081037
 GameObject:
   m_ObjectHideFlags: 0
@@ -103626,6 +104019,7 @@ GameObject:
   - component: {fileID: 440017227}
   - component: {fileID: 440017226}
   - component: {fileID: 440017228}
+  - component: {fileID: 440017229}
   m_Layer: 0
   m_Name: "\u5B78\u6821"
   m_TagString: Untagged
@@ -112841,6 +113235,22 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 32.63211, y: 23.907703}
   m_EdgeRadius: 0
+--- !u!114 &440017229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 440017224}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 1
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff
 --- !u!1 &448026704
 GameObject:
   m_ObjectHideFlags: 0
@@ -113177,6 +113587,7 @@ GameObject:
   - component: {fileID: 457494163}
   - component: {fileID: 457494165}
   - component: {fileID: 457494164}
+  - component: {fileID: 457494166}
   m_Layer: 0
   m_Name: "all\u5730\u677F"
   m_TagString: Untagged
@@ -155383,6 +155794,22 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!114 &457494166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 457494162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 0
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff
 --- !u!1 &466312098
 GameObject:
   m_ObjectHideFlags: 0
@@ -159748,6 +160175,7 @@ GameObject:
   - component: {fileID: 507269405}
   - component: {fileID: 507269406}
   - component: {fileID: 507269407}
+  - component: {fileID: 507269408}
   m_Layer: 0
   m_Name: "\u516C\u5BD3\u5927\u9580_\u5BA4\u5167"
   m_TagString: Untagged
@@ -159850,7 +160278,44 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
+--- !u!114 &507269408
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 507269404}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -159959,7 +160424,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 29.2
+  orthographic size: 19
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -159984,7 +160449,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 189.7, y: -94.5, z: -20}
+  m_LocalPosition: {x: 176.5, y: -89.3, z: -20}
   m_LocalScale: {x: 0.79212147, y: 0.80555, z: 0.80555}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -160227,6 +160692,7 @@ GameObject:
   - component: {fileID: 531332182}
   - component: {fileID: 531332181}
   - component: {fileID: 531332180}
+  - component: {fileID: 531332183}
   m_Layer: 0
   m_Name: "all\u7246\u58C1"
   m_TagString: Untagged
@@ -165266,6 +165732,22 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &531332183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 531332176}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 1
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff
 --- !u!1 &541120583
 GameObject:
   m_ObjectHideFlags: 0
@@ -165477,6 +165959,7 @@ GameObject:
   - component: {fileID: 548701728}
   - component: {fileID: 548701727}
   - component: {fileID: 548701729}
+  - component: {fileID: 548701730}
   m_Layer: 0
   m_Name: "\u5730\u9435"
   m_TagString: Untagged
@@ -166704,6 +167187,22 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 9.245239, y: 9.902008}
   m_EdgeRadius: 0
+--- !u!114 &548701730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 548701725}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 0
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff
 --- !u!1 &579487911 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3098070831861198717, guid: c146aaec3ea5155419fcf08e9a94c9b6, type: 3}
@@ -166796,7 +167295,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1337941227}
   m_HandleRect: {fileID: 1337941226}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -167169,6 +167668,7 @@ GameObject:
   - component: {fileID: 622623951}
   - component: {fileID: 622623954}
   - component: {fileID: 622623953}
+  - component: {fileID: 622623955}
   m_Layer: 0
   m_Name: "\u5730\u9435\u53F3\u6A13\u68AF_\u5BA4\u5167"
   m_TagString: Untagged
@@ -167185,7 +167685,7 @@ Transform:
   m_GameObject: {fileID: 622623950}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 78.03999, y: -32.58, z: 0}
+  m_LocalPosition: {x: 78.03999, y: -36.264, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -167226,6 +167726,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &622623954
 BoxCollider2D:
@@ -167273,6 +167776,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 4, y: 4}
   m_EdgeRadius: 0
+--- !u!114 &622623955
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 622623950}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &646301106
 GameObject:
   m_ObjectHideFlags: 0
@@ -252166,6 +252703,7 @@ GameObject:
   - component: {fileID: 688758321}
   - component: {fileID: 688758323}
   - component: {fileID: 688758322}
+  - component: {fileID: 688758324}
   m_Layer: 0
   m_Name: "\u8D85\u5E02\u5074\u9580_\u5BA4\u5916"
   m_TagString: Untagged
@@ -252222,6 +252760,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &688758323
 BoxCollider2D:
@@ -252269,6 +252810,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 3, y: 3}
   m_EdgeRadius: 0
+--- !u!114 &688758324
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 688758320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &689464111
 GameObject:
   m_ObjectHideFlags: 0
@@ -252464,7 +253039,7 @@ MonoBehaviour:
     CustomLookAtTarget: 0
   Lens:
     FieldOfView: 34
-    OrthographicSize: 23.5
+    OrthographicSize: 16.9
     NearClipPlane: 0.3
     FarClipPlane: 1000
     Dutch: 0
@@ -252491,7 +253066,7 @@ Transform:
   m_GameObject: {fileID: 713778152}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 52.2, y: 93.7, z: -10}
+  m_LocalPosition: {x: 48.32, y: 102.54, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -252608,8 +253183,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u6B65\u9577(\u5206\u9418/\u6B65)\n"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 465e04bf68309ee49a4e7d857f56b6cd, type: 2}
-  m_sharedMaterial: {fileID: -2267303238136500162, guid: 465e04bf68309ee49a4e7d857f56b6cd, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -252787,6 +253362,7 @@ GameObject:
   - component: {fileID: 742033993}
   - component: {fileID: 742033995}
   - component: {fileID: 742033994}
+  - component: {fileID: 742033996}
   m_Layer: 0
   m_Name: "\u516C\u5BD3\u9802\u6A13_\u5BA4\u5167"
   m_TagString: Untagged
@@ -252803,7 +253379,7 @@ Transform:
   m_GameObject: {fileID: 742033992}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -117.08, y: -13.62, z: 0}
+  m_LocalPosition: {x: -117.08, y: -14.51, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -252843,6 +253419,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &742033995
 BoxCollider2D:
@@ -252888,8 +253467,42 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 4, y: 2}
+  m_Size: {x: 4, y: 4}
   m_EdgeRadius: 0
+--- !u!114 &742033996
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 742033992}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &754542144
 GameObject:
   m_ObjectHideFlags: 0
@@ -252904,6 +253517,7 @@ GameObject:
   - component: {fileID: 754542150}
   - component: {fileID: 754542149}
   - component: {fileID: 754542148}
+  - component: {fileID: 754542151}
   m_Layer: 0
   m_Name: "\u516C\u5BD3\u7246\u58C1"
   m_TagString: Untagged
@@ -261288,6 +261902,22 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &754542151
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 754542144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 1
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff
 --- !u!1 &765505024
 GameObject:
   m_ObjectHideFlags: 0
@@ -261596,7 +262226,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1922061739}
   m_HandleRect: {fileID: 1922061738}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -261909,6 +262539,7 @@ GameObject:
   - component: {fileID: 845866368}
   - component: {fileID: 845866367}
   - component: {fileID: 845866369}
+  - component: {fileID: 845866370}
   m_Layer: 0
   m_Name: "\u8D85\u5E02"
   m_TagString: Untagged
@@ -265300,6 +265931,22 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 18.144104, y: 11.642986}
   m_EdgeRadius: 0
+--- !u!114 &845866370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 845866365}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 1
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff
 --- !u!1 &858873162
 GameObject:
   m_ObjectHideFlags: 0
@@ -265449,6 +266096,7 @@ GameObject:
   - component: {fileID: 865705792}
   - component: {fileID: 865705791}
   - component: {fileID: 865705790}
+  - component: {fileID: 865705793}
   m_Layer: 0
   m_Name: "\u5730\u9435\u7246\u58C1 \u512A\u51480"
   m_TagString: Untagged
@@ -271202,6 +271850,22 @@ TilemapCollider2D:
   m_MaximumTileChangeCount: 1000
   m_ExtrusionFactor: 0
   m_UseDelaunayMesh: 0
+--- !u!114 &865705793
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 865705786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 1
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff
 --- !u!1 &871617830
 GameObject:
   m_ObjectHideFlags: 0
@@ -271789,6 +272453,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d9c1930a737c6343b892728e57bb666, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  infoText: {fileID: 0}
   cameraManager: {fileID: 2115111599}
   cameraController: {fileID: 519420035}
   simulationClient: {fileID: 2115111595}
@@ -282482,6 +283147,7 @@ GameObject:
   - component: {fileID: 966772180}
   - component: {fileID: 966772182}
   - component: {fileID: 966772181}
+  - component: {fileID: 966772183}
   m_Layer: 0
   m_Name: "\u516C\u5BD3\u9802\u6A13_\u5BA4\u5916"
   m_TagString: Untagged
@@ -282498,7 +283164,7 @@ Transform:
   m_GameObject: {fileID: 966772179}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.4, y: 4.42, z: 0}
+  m_LocalPosition: {x: -2.29, y: 4.77, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -282538,6 +283204,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &966772182
 BoxCollider2D:
@@ -282583,8 +283252,42 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 1.5, y: 2}
   m_EdgeRadius: 0
+--- !u!114 &966772183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 966772179}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &970693350
 GameObject:
   m_ObjectHideFlags: 0
@@ -283124,7 +283827,7 @@ MonoBehaviour:
     CustomLookAtTarget: 0
   Lens:
     FieldOfView: 34
-    OrthographicSize: 50
+    OrthographicSize: 25
     NearClipPlane: 0.3
     FarClipPlane: 1000
     Dutch: 0
@@ -283246,6 +283949,7 @@ GameObject:
   - component: {fileID: 1010822663}
   - component: {fileID: 1010822665}
   - component: {fileID: 1010822664}
+  - component: {fileID: 1010822666}
   m_Layer: 0
   m_Name: "\u516C\u5BD3\u4E00\u6A13_\u5BA4\u5167"
   m_TagString: Untagged
@@ -283262,7 +283966,7 @@ Transform:
   m_GameObject: {fileID: 1010822662}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -67.92, y: -13.82, z: 0}
+  m_LocalPosition: {x: -67.92, y: -17.265, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -283301,7 +284005,10 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
-  exitAdjustmentStep: 0.18
+  exitAdjustmentStep: 0.3
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &1010822665
 BoxCollider2D:
@@ -283347,8 +284054,42 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 4, y: 2}
+  m_Size: {x: 2, y: 2}
   m_EdgeRadius: 0
+--- !u!114 &1010822666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1010822662}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &1013688063
 GameObject:
   m_ObjectHideFlags: 0
@@ -283360,6 +284101,7 @@ GameObject:
   - component: {fileID: 1013688064}
   - component: {fileID: 1013688066}
   - component: {fileID: 1013688065}
+  - component: {fileID: 1013688067}
   m_Layer: 0
   m_Name: "\u5730\u9435\u7246\u58C1 \u512A\u51481"
   m_TagString: Untagged
@@ -283576,6 +284318,22 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!114 &1013688067
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1013688063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 1
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff
 --- !u!1 &1014847090
 GameObject:
   m_ObjectHideFlags: 0
@@ -286047,7 +286805,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1362950302}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.99999994
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -286102,6 +286860,7 @@ GameObject:
   - component: {fileID: 1131333550}
   - component: {fileID: 1131333549}
   - component: {fileID: 1131333551}
+  - component: {fileID: 1131333552}
   m_Layer: 0
   m_Name: "\u91AB\u9662"
   m_TagString: Untagged
@@ -294175,6 +294934,22 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 27.69394, y: 23.778717}
   m_EdgeRadius: 0
+--- !u!114 &1131333552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1131333547}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 1
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff
 --- !u!1 &1136885626
 GameObject:
   m_ObjectHideFlags: 0
@@ -296724,7 +297499,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 14, y: 327}
-  m_SizeDelta: {x: 600, y: 300}
+  m_SizeDelta: {x: 1200, y: 450}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1239840198
 GameObject:
@@ -296880,6 +297655,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1244289812}
   - component: {fileID: 1244289813}
+  - component: {fileID: 1244289814}
   m_Layer: 0
   m_Name: "\u516C\u5BD3_\u9802\u6A13Bounds"
   m_TagString: Untagged
@@ -296948,6 +297724,22 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 15, y: 6}
   m_EdgeRadius: 0
+--- !u!114 &1244289814
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1244289811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 0
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff
 --- !u!1 &1246541474
 GameObject:
   m_ObjectHideFlags: 0
@@ -297529,6 +298321,7 @@ GameObject:
   - component: {fileID: 1262132152}
   - component: {fileID: 1262132154}
   - component: {fileID: 1262132153}
+  - component: {fileID: 1262132155}
   m_Layer: 0
   m_Name: "\u5065\u8EAB\u623F_\u5BA4\u5167"
   m_TagString: Untagged
@@ -297585,6 +298378,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &1262132154
 BoxCollider2D:
@@ -297632,6 +298428,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 4, y: 3}
   m_EdgeRadius: 0
+--- !u!114 &1262132155
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1262132151}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &1262540692
 GameObject:
   m_ObjectHideFlags: 0
@@ -297899,8 +298729,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u200B"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 465e04bf68309ee49a4e7d857f56b6cd, type: 2}
-  m_sharedMaterial: {fileID: -2267303238136500162, guid: 465e04bf68309ee49a4e7d857f56b6cd, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -298138,6 +298968,7 @@ GameObject:
   - component: {fileID: 1296125348}
   - component: {fileID: 1296125350}
   - component: {fileID: 1296125349}
+  - component: {fileID: 1296125351}
   m_Layer: 0
   m_Name: "\u8D85\u5E02\u5074\u9580_\u5BA4\u5167"
   m_TagString: Untagged
@@ -298194,6 +299025,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &1296125350
 BoxCollider2D:
@@ -298241,6 +299075,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 3, y: 4}
   m_EdgeRadius: 0
+--- !u!114 &1296125351
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1296125347}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &1309427446
 GameObject:
   m_ObjectHideFlags: 0
@@ -298375,6 +299243,7 @@ GameObject:
   - component: {fileID: 1314059535}
   - component: {fileID: 1314059537}
   - component: {fileID: 1314059536}
+  - component: {fileID: 1314059538}
   m_Layer: 0
   m_Name: "\u5730\u9435\u5DE6\u5165\u53E3_\u5BA4\u5916"
   m_TagString: Untagged
@@ -298431,6 +299300,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &1314059537
 BoxCollider2D:
@@ -298478,6 +299350,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 3, y: 3}
   m_EdgeRadius: 0
+--- !u!114 &1314059538
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314059534}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &1322774268
 GameObject:
   m_ObjectHideFlags: 0
@@ -299377,6 +300283,7 @@ GameObject:
   - component: {fileID: 1459439343}
   - component: {fileID: 1459439345}
   - component: {fileID: 1459439344}
+  - component: {fileID: 1459439346}
   m_Layer: 0
   m_Name: Park
   m_TagString: Untagged
@@ -305335,6 +306242,22 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!114 &1459439346
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1459439342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 0
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff
 --- !u!1 &1464172698
 GameObject:
   m_ObjectHideFlags: 0
@@ -305585,8 +306508,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u200B"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 465e04bf68309ee49a4e7d857f56b6cd, type: 2}
-  m_sharedMaterial: {fileID: -2267303238136500162, guid: 465e04bf68309ee49a4e7d857f56b6cd, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -305761,6 +306684,86 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Padding: {x: -8, y: -5, z: -8, w: -5}
   m_Softness: {x: 0, y: 0}
+--- !u!1 &1540483013
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1540483016}
+  - component: {fileID: 1540483015}
+  - component: {fileID: 1540483014}
+  m_Layer: 0
+  m_Name: NavMesh
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1540483014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1540483013}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70bd44a44cd62c64fbfc1eea95b24880, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideByGrid: 0
+  m_UseMeshPrefab: {fileID: 0}
+  m_CompressBounds: 0
+  m_OverrideVector: {x: 1, y: 1, z: 1}
+--- !u!114 &1540483015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1540483013}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e04976799df50f54ba128eff723155a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_AgentTypeID: 0
+  m_CollectObjects: 0
+  m_Size: {x: 10, y: 10, z: 10}
+  m_Center: {x: 0, y: 2, z: 0}
+  m_LayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_UseGeometry: 0
+  m_DefaultArea: 1
+  m_IgnoreNavMeshAgent: 1
+  m_IgnoreNavMeshObstacle: 1
+  m_OverrideTileSize: 0
+  m_TileSize: 256
+  m_OverrideVoxelSize: 0
+  m_VoxelSize: 0.16666667
+  m_BuildHeightMesh: 0
+  m_MinRegionArea: 0
+  m_HideEditorLogs: 0
+  m_NavMeshData: {fileID: 23800000, guid: de576c98938e92b4db7505dbc918c57c, type: 2}
+--- !u!4 &1540483016
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1540483013}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 131.57767, y: -9.323245, z: 0.20666915}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1547652368
 GameObject:
   m_ObjectHideFlags: 0
@@ -305850,6 +306853,7 @@ GameObject:
   - component: {fileID: 1556597201}
   - component: {fileID: 1556597203}
   - component: {fileID: 1556597202}
+  - component: {fileID: 1556597204}
   m_Layer: 0
   m_Name: "\u5730\u9435\u4E0B\u5165\u53E3_\u5BA4\u5916"
   m_TagString: Untagged
@@ -305906,6 +306910,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &1556597203
 BoxCollider2D:
@@ -305953,6 +306960,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 3, y: 3}
   m_EdgeRadius: 0
+--- !u!114 &1556597204
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1556597200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &1562251427
 GameObject:
   m_ObjectHideFlags: 0
@@ -306110,8 +307151,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1144071438}
   m_HandleRect: {fileID: 1144071437}
   m_Direction: 0
-  m_Value: 1
-  m_Size: 0.99999994
+  m_Value: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -306165,6 +307206,7 @@ GameObject:
   - component: {fileID: 1577578545}
   - component: {fileID: 1577578547}
   - component: {fileID: 1577578546}
+  - component: {fileID: 1577578548}
   m_Layer: 0
   m_Name: "\u516C\u5BD3\u5074\u9580_\u5BA4\u5167"
   m_TagString: Untagged
@@ -306221,6 +307263,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &1577578547
 BoxCollider2D:
@@ -306268,6 +307313,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 2, y: 2}
   m_EdgeRadius: 0
+--- !u!114 &1577578548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1577578544}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &1592166290
 GameObject:
   m_ObjectHideFlags: 0
@@ -306881,6 +307960,7 @@ GameObject:
   - component: {fileID: 1620143445}
   - component: {fileID: 1620143447}
   - component: {fileID: 1620143446}
+  - component: {fileID: 1620143448}
   m_Layer: 0
   m_Name: "\u8D85\u5E02\u5DE6\u9580_\u5BA4\u5916"
   m_TagString: Untagged
@@ -306897,7 +307977,7 @@ Transform:
   m_GameObject: {fileID: 1620143444}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.87, y: 15.88, z: 0}
+  m_LocalPosition: {x: 1.976, y: 14.448, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -306937,6 +308017,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &1620143447
 BoxCollider2D:
@@ -306984,6 +308067,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 2, y: 2}
   m_EdgeRadius: 0
+--- !u!114 &1620143448
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1620143444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &1637326330
 GameObject:
   m_ObjectHideFlags: 0
@@ -307424,7 +308541,7 @@ MonoBehaviour:
     CustomLookAtTarget: 0
   Lens:
     FieldOfView: 34
-    OrthographicSize: 15
+    OrthographicSize: 8.4
     NearClipPlane: 0.3
     FarClipPlane: 1000
     Dutch: 0
@@ -307451,7 +308568,7 @@ Transform:
   m_GameObject: {fileID: 1669161569}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -96.4, y: 9.8, z: -10}
+  m_LocalPosition: {x: -94.86, y: 13.91, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -308446,6 +309563,7 @@ GameObject:
   - component: {fileID: 1758924541}
   - component: {fileID: 1758924543}
   - component: {fileID: 1758924542}
+  - component: {fileID: 1758924544}
   m_Layer: 0
   m_Name: "\u5730\u9435\u4E0A\u5165\u53E3_\u5BA4\u5916"
   m_TagString: Untagged
@@ -308502,6 +309620,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &1758924543
 BoxCollider2D:
@@ -308549,6 +309670,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 3, y: 3}
   m_EdgeRadius: 0
+--- !u!114 &1758924544
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1758924540}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &1765392829
 GameObject:
   m_ObjectHideFlags: 0
@@ -308630,7 +309785,7 @@ MonoBehaviour:
     CustomLookAtTarget: 0
   Lens:
     FieldOfView: 34
-    OrthographicSize: 37.3
+    OrthographicSize: 25
     NearClipPlane: 0.3
     FarClipPlane: 1000
     Dutch: 0
@@ -308732,7 +309887,7 @@ Transform:
   m_GameObject: {fileID: 1776648495}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -85.2, y: 42.8, z: -10}
+  m_LocalPosition: {x: -89.42, y: 52.38, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -314988,6 +316143,7 @@ GameObject:
   - component: {fileID: 1880271331}
   - component: {fileID: 1880271330}
   - component: {fileID: 1880271329}
+  - component: {fileID: 1880271332}
   m_Layer: 0
   m_Name: "\u5B78\u6821\u7246\u58C1 \u512A\u51480"
   m_TagString: Untagged
@@ -316736,6 +317892,22 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &1880271332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1880271325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 1
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff
 --- !u!1 &1885437867
 GameObject:
   m_ObjectHideFlags: 0
@@ -327884,6 +329056,8 @@ GameObject:
   - component: {fileID: 1955313266}
   - component: {fileID: 1955313268}
   - component: {fileID: 1955313267}
+  - component: {fileID: 1955313270}
+  - component: {fileID: 1955313269}
   m_Layer: 0
   m_Name: "\u9910\u5EF3_\u5BA4\u5916"
   m_TagString: Untagged
@@ -327900,7 +329074,7 @@ Transform:
   m_GameObject: {fileID: 1955313265}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 96.95, y: -5.1, z: 0}
+  m_LocalPosition: {x: 96.95, y: -6.758, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -327940,6 +329114,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &1955313268
 BoxCollider2D:
@@ -327987,6 +329164,74 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 2, y: 2}
   m_EdgeRadius: 0
+--- !u!114 &1955313269
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1955313265}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
+--- !u!114 &1955313270
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1955313265}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &1956966950
 GameObject:
   m_ObjectHideFlags: 0
@@ -337995,6 +339240,7 @@ GameObject:
   - component: {fileID: 2039587356}
   - component: {fileID: 2039587355}
   - component: {fileID: 2039587359}
+  - component: {fileID: 2039587360}
   m_Layer: 0
   m_Name: "\u5065\u8EAB\u623F"
   m_TagString: Untagged
@@ -339612,6 +340858,22 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 10.3991165, y: 10.105133}
   m_EdgeRadius: 0
+--- !u!114 &2039587360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2039587353}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 1
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff
 --- !u!1 &2047430317
 GameObject:
   m_ObjectHideFlags: 0
@@ -339694,8 +340956,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1592166292}
   m_HandleRect: {fileID: 1592166291}
   m_Direction: 0
-  m_Value: 1
-  m_Size: 0.99999994
+  m_Value: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -353184,6 +354446,7 @@ GameObject:
   - component: {fileID: 2055940892}
   - component: {fileID: 2055940894}
   - component: {fileID: 2055940893}
+  - component: {fileID: 2055940895}
   m_Layer: 0
   m_Name: "\u8D85\u5E02\u53F3\u9580_\u5BA4\u5916"
   m_TagString: Untagged
@@ -353200,7 +354463,7 @@ Transform:
   m_GameObject: {fileID: 2055940891}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 8.03, y: 15.88, z: 0}
+  m_LocalPosition: {x: 8.03, y: 14.437, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -353240,6 +354503,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &2055940894
 BoxCollider2D:
@@ -353287,6 +354553,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 2, y: 2}
   m_EdgeRadius: 0
+--- !u!114 &2055940895
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2055940891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &2058319591
 GameObject:
   m_ObjectHideFlags: 0
@@ -353421,6 +354721,7 @@ GameObject:
   - component: {fileID: 2061852938}
   - component: {fileID: 2061852940}
   - component: {fileID: 2061852939}
+  - component: {fileID: 2061852941}
   m_Layer: 0
   m_Name: "\u5B78\u6821\u9580\u53E3_\u5BA4\u5167"
   m_TagString: Untagged
@@ -353477,6 +354778,9 @@ MonoBehaviour:
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
   exitAdjustmentStep: 0.18
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &2061852940
 BoxCollider2D:
@@ -353524,6 +354828,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 6, y: 4}
   m_EdgeRadius: 0
+--- !u!114 &2061852941
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2061852937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &2069770107
 GameObject:
   m_ObjectHideFlags: 0
@@ -353566,7 +354904,7 @@ MonoBehaviour:
     CustomLookAtTarget: 0
   Lens:
     FieldOfView: 34
-    OrthographicSize: 29.2
+    OrthographicSize: 19
     NearClipPlane: 0.3
     FarClipPlane: 1000
     Dutch: 0
@@ -353593,7 +354931,7 @@ Transform:
   m_GameObject: {fileID: 2069770107}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 189.7, y: -94.5, z: -10}
+  m_LocalPosition: {x: 176.5, y: -89.3, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -353800,6 +355138,7 @@ GameObject:
   - component: {fileID: 2092898279}
   - component: {fileID: 2092898282}
   - component: {fileID: 2092898281}
+  - component: {fileID: 2092898283}
   m_Layer: 0
   m_Name: "\u5730\u9435\u5DE6\u6A13\u68AF_\u5BA4\u5167"
   m_TagString: Untagged
@@ -353816,7 +355155,7 @@ Transform:
   m_GameObject: {fileID: 2092898278}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 55.970005, y: -48.980003, z: 0}
+  m_LocalPosition: {x: 55.970005, y: -50.272, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -353846,17 +355185,20 @@ MonoBehaviour:
   exitNudge: 0.08
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
-  matchExitRotation: 0
-  keepLocalOffset: 0
+  matchExitRotation: 1
+  keepLocalOffset: 1
   isDoor: 0
   doorReenterCooldown: 0.08
   portalReenterCooldown: 0.18
-  exitClearRadius: 0.25
+  exitClearRadius: 1.5
   exitObstructionLayers:
     serializedVersion: 2
     m_Bits: 4294967295
   maxExitAdjustmentIterations: 6
-  exitAdjustmentStep: 0.18
+  exitAdjustmentStep: 0.5
+  pushOutRadius: 1.5
+  pushOutForce: 2
+  pushCheckInterval: 0.2
   portalId: -1
 --- !u!61 &2092898282
 BoxCollider2D:
@@ -353904,6 +355246,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 4, y: 4}
   m_EdgeRadius: 0
+--- !u!114 &2092898283
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2092898278}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c10cfd668fbf648ab1f1fb0c1034bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portal: {fileID: 0}
+  allowNavMeshWalkThrough: 1
+  forceTeleport: 0
+  cinematicTeleportDistance: 8
+  useFadeOnTeleport: 0
+  onTransitionStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeOutRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onFadeInRequested:
+    m_PersistentCalls:
+      m_Calls: []
+  onTransitionCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onInteriorStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  navLink: {fileID: 0}
+  entryFocusPoint: {fileID: 0}
 --- !u!1 &2094829653
 GameObject:
   m_ObjectHideFlags: 0
@@ -372434,7 +373810,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 152560532998731691, guid: bd7cc41d7473ca043916c0d350320b34, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 2182307630478868873, guid: bd7cc41d7473ca043916c0d350320b34, type: 3}
@@ -372525,6 +373902,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 0}
+    - {fileID: 2961125275546048098, guid: e06f126f17c72554587a7bd7070f1202, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 172083099875514264, guid: e06f126f17c72554587a7bd7070f1202, type: 3}
@@ -372615,6 +373993,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 0}
+    - {fileID: 542134199381509289, guid: 0e30d72778da19e42932ece0fd1696f4, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 8458068755622540013, guid: 0e30d72778da19e42932ece0fd1696f4, type: 3}
@@ -372705,6 +374084,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 0}
+    - {fileID: 2597256464831453175, guid: 0c669f88ff8c24c4982dff46546d2889, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 1499861215563532469, guid: 0c669f88ff8c24c4982dff46546d2889, type: 3}
@@ -372793,7 +374173,8 @@ PrefabInstance:
       propertyPath: _minStateApplyInterval
       value: 0.1
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8708813543279947938, guid: 9dc0a7a6670db61429f85a94440420e3, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 7166648610932995511, guid: 9dc0a7a6670db61429f85a94440420e3, type: 3}
@@ -372882,7 +374263,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: ENFJ
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 4890314870283905990, guid: 1181e4f171a7e6d42b38b95f81c2fb27, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 2368903395518839884, guid: 1181e4f171a7e6d42b38b95f81c2fb27, type: 3}
@@ -372973,6 +374355,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 0}
+    - {fileID: 7484798358582990685, guid: 88ef7b38684afb44fb37999038f662fd, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 2240726327299525023, guid: 88ef7b38684afb44fb37999038f662fd, type: 3}
@@ -373063,6 +374446,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 0}
+    - {fileID: 3846724821824676553, guid: 09ce2497c5a3fdc499167ea698d85869, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 1831943433232235516, guid: 09ce2497c5a3fdc499167ea698d85869, type: 3}
@@ -373153,6 +374537,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 0}
+    - {fileID: 1376958706952093344, guid: 54affd3826eb914468a12b7a2c6c8581, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 3198493330115524579, guid: 54affd3826eb914468a12b7a2c6c8581, type: 3}
@@ -373241,7 +374626,8 @@ PrefabInstance:
       propertyPath: _minStateApplyInterval
       value: 0.1
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 6507137148296338785, guid: c146aaec3ea5155419fcf08e9a94c9b6, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 2572755003919536366, guid: c146aaec3ea5155419fcf08e9a94c9b6, type: 3}
@@ -373332,6 +374718,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 0}
+    - {fileID: 5002564605579508614, guid: be71fba2e2d391c419ff9a963f846d68, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 4024332823171769124, guid: be71fba2e2d391c419ff9a963f846d68, type: 3}
@@ -373420,7 +374807,8 @@ PrefabInstance:
       propertyPath: _minStateApplyInterval
       value: 0.1
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 3454907395159231637, guid: 744a98cc5bd6f4c419298982a0181c0e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 705336902671774275, guid: 744a98cc5bd6f4c419298982a0181c0e, type: 3}
@@ -373529,7 +374917,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8838828912356518111, guid: 5267275c0e9ab9f4b9cc43eb5d611e65, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 8686683329284691776, guid: 5267275c0e9ab9f4b9cc43eb5d611e65, type: 3}
@@ -373618,7 +375007,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: INFP
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 5633069696793430675, guid: b1ee6ed5dd096df4db6db9f6c66cf648, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 1497052188475442, guid: b1ee6ed5dd096df4db6db9f6c66cf648, type: 3}
@@ -373709,6 +375099,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 0}
+    - {fileID: 6692348121579385463, guid: 4baa29d6cdcd9134cb5831bef9684f0c, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 8910713237239962116, guid: 4baa29d6cdcd9134cb5831bef9684f0c, type: 3}
@@ -373799,6 +375190,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 0}
+    - {fileID: 5651491447286277048, guid: ab4bf00fda6669642940c923cbd95387, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 2484263225277154895, guid: ab4bf00fda6669642940c923cbd95387, type: 3}
@@ -373828,3 +375220,4 @@ SceneRoots:
   - {fileID: 933741532}
   - {fileID: 117155774}
   - {fileID: 336773073}
+  - {fileID: 1540483016}

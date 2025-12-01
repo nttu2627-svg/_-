@@ -7,7 +7,8 @@ public class SceneController : MonoBehaviour
 {
 
     [Header("室外定義")]
-    [Tooltip("请在此处输入所有明确属于 '室外' 的地点名称")]
+    [Header("室外定義")]
+    [Tooltip("請在此處輸入所有明確屬於 '室外' 的地點名稱")]
     public List<string> exteriorLocationNames = new List<string> { "公園", "地鐵路口", "馬路" };
 
     private bool _isShowingInterior = false;

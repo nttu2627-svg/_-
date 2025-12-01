@@ -13,6 +13,7 @@ using Newtonsoft.Json.Linq;
 public class SimulationClient : MonoBehaviour
 {
     [Header("Connection Settings")]
+    [Tooltip("WebSocket 伺服器網址")]
     public string serverUrl = "ws://localhost:8765";
 
     [Header("Performance Settings (Unity 6)")]
@@ -24,6 +25,14 @@ public class SimulationClient : MonoBehaviour
 
     [Tooltip("是否輸出原始封包內容（大量訊息時請關閉以免卡頓）。")]
     public bool verboseLog = false;
+    // --- 新增變數用於同步 ---
+    // [已移除 unused] private bool _waitingForAgentsToFinish = false;
+    private List<AgentController> _allAgents = new List<AgentController>();
+    private WebSocket websocket;
+
+    // 事件
+    public static event Action<StatusPayload> OnStatusUpdate;
+    public static event Action<UpdateData> OnLogUpdate;
     [Header("Protocol Compatibility")]
     [Tooltip("接收新版 agent_update 封包，直接交給 Unity 端自行產生路徑。")]
     public bool acceptAgentUpdateEnvelopes = true;
@@ -35,14 +44,20 @@ public class SimulationClient : MonoBehaviour
     public bool preferNavMeshForAgentUpdates = true;
 
     [Header("Scene References")]
+    [Tooltip("角色根節點")]
     public Transform characterRoot;
+    [Tooltip("地點根節點")]
     public Transform locationRoot;
+    [Tooltip("建築物根節點")]
     public Transform buildingRoot;
     [Tooltip("額外的地點根節點 (例如 '傳送點' 群組)，會一併掃描加入位置查找表。")]
     public Transform[] additionalLocationRoots;
 
+    // [NEW] 新增狀態變數
+    private string _currentScenarioState = "日常"; // 範例：日常, 地震中
+    private string _currentExecutionState = "思考中"; // 範例：思考中, 移動中
+    private string _lastSimTime = "00:00:00";
     // 私有變數
-    private WebSocket websocket;
     private readonly Queue<Action> _mainThreadActions = new Queue<Action>();
     private readonly Dictionary<string, AgentController> _sceneAgentControllers = new Dictionary<string, AgentController>();
     private readonly Dictionary<string, AgentController> _activeAgentControllers = new Dictionary<string, AgentController>();
@@ -107,8 +122,6 @@ public class SimulationClient : MonoBehaviour
     };
 
     // --- 全局靜態事件 ---
-    public static event Action<StatusPayload> OnStatusUpdate;
-    public static event Action<UpdateData> OnLogUpdate;
     public static event Action<EvaluationReport> OnEvaluationReceived;
     public static event Action<float> OnEarthquake;
 
@@ -202,8 +215,98 @@ public class SimulationClient : MonoBehaviour
                 }
             }
         }
+        if (_awaitingStepAck)
+        {
+            // [Fix] Always check for physical movement/stuck state when waiting for step ack,
+            // even if we think we are waiting for agent actions (they might be stuck).
+            CheckPhysicalMovementCompletion();
+        }
+    }
+    private void CheckPhysicalMovementCompletion()
+    {
+        int movingCount = 0;
+
+        foreach (var kvp in _activeAgentControllers)
+        {
+            var agent = kvp.Value;
+            if (agent == null || !agent.gameObject.activeSelf) continue;
+
+            if (agent.IsMoving)
+            {
+                movingCount++;
+            }
+        }
+
+        // [User Request] 1. If all agents are idle (or stuck) for > 5 seconds, advance.
+        // If movingCount == 0, they are physically idle.
+        if (movingCount == 0)
+        {
+            _idleTimer += Time.deltaTime;
+        }
+        else
+        {
+            _idleTimer = 0f;
+        }
+
+        bool timeoutReached = _idleTimer > 5.0f;
+
+        // Check if we are blocked by pending actions
+        bool hasPendingActions = _pendingAgentActions.Values.Any(a => a != AgentPendingAction.None);
+
+        // If we have pending actions, we usually wait.
+        // But if timeout reached, we force clear.
+        if (hasPendingActions)
+        {
+            if (timeoutReached)
+            {
+                Debug.LogWarning($"[SimulationClient] Idle timeout (5s) reached with pending actions. Forcing clearance.");
+                _pendingAgentActions.Clear(); // Force clear
+                hasPendingActions = false;
+            }
+            else
+            {
+                // Still waiting for actions and not timed out
+                return;
+            }
+        }
+
+        // [User Request] If only 1 agent is left moving (potentially stuck), proceed anyway.
+        // Also proceed if timeout reached.
+        if (movingCount <= 1 || timeoutReached)
+        {
+            if (timeoutReached)
+            {
+                Debug.Log($"[SimulationClient] Idle timeout (5s) reached. Forcing step completion.");
+            }
+
+            // 所有人都到了 (或只剩一個) -> 發送握手訊號給 Python
+            Debug.Log($"[SimulationClient] Physical movement complete (Moving: {movingCount}). Sending ACK.");
+            SendStepAcknowledgement();
+            _idleTimer = 0f; // Reset
+
+            // 切換狀態為思考中
+            UpdateUIState(_currentScenarioState, "思考中", _lastSimTime);
+        }
     }
 
+    // [User Request] Emergency button to force next step
+    public void ForceStepComplete()
+    {
+        Debug.Log("[SimulationClient] Force Step Complete triggered by user.");
+
+        // [User Request] Teleport all agents to their current target
+        foreach (var kvp in _activeAgentControllers)
+        {
+            var agent = kvp.Value;
+            if (agent != null && agent.gameObject.activeSelf)
+            {
+                agent.ForceTeleportToCurrentTarget();
+            }
+        }
+
+        SendStepAcknowledgement();
+        UpdateUIState(_currentScenarioState, "強制推進", _lastSimTime);
+    }
     private void OnApplicationQuit()
     {
         if (websocket != null && websocket.State == WebSocketState.Open)
@@ -688,6 +791,18 @@ public class SimulationClient : MonoBehaviour
 
         SendClientMessageAsync(ClientMessage.InitializationComplete());
     }
+    // [MODIFIED] 優化 UI 狀態更新方法 (約第 680 行附近)
+    private void UpdateUIState(string scenario, string execution, string time)
+    {
+        _currentScenarioState = scenario;
+        _currentExecutionState = execution;
+        _lastSimTime = time;
+
+        // 格式化字串符合 Prompt 要求
+        string fullStatusMsg = $"狀態：{scenario}\n執行狀態：{execution}\n模擬時間：{time}";
+        
+        OnStatusUpdate?.Invoke(StatusPayload.FromMessage(fullStatusMsg));
+    }
 
     private void ProcessExecuteActions(ExecuteActionsCommand command)
     {
@@ -980,10 +1095,6 @@ public class SimulationClient : MonoBehaviour
                 return;
             }
         }
-
-
-        CompletePendingMovementBatch();
-        SendStepAcknowledgement();
     }
 
     private void TryFinalizeMovementBatch()
@@ -1049,7 +1160,8 @@ public class SimulationClient : MonoBehaviour
         var payload = new Dictionary<string, object>
         {
             { "command", "step_complete" },
-            { "step_id", _pendingStepId }
+            { "step_id", _pendingStepId },
+            { "status", "move_complete" } // [NEW] 增加狀態標識
         };
 
         string json = JsonConvert.SerializeObject(payload);
@@ -1151,8 +1263,19 @@ public class SimulationClient : MonoBehaviour
     {
         if (updateData == null) return;
 
-        var statusPayload = updateData.Status ?? StatusPayload.FromMessage("模擬狀態更新");
-        OnStatusUpdate?.Invoke(statusPayload);
+        string simTime = updateData.Status?.SimTime ?? _lastSimTime;
+        string scenario = updateData.Status?.Message ?? _currentScenarioState; // 假設 Message 欄位傳送 "日常" 等狀態
+
+        // 當收到 UpdateData，代表後端算完了，開始前端的移動回合
+        if (updateData.AgentActions != null && updateData.AgentActions.Count > 0)
+        {
+            UpdateUIState(scenario, "移動中", simTime);
+        }
+        else
+        {
+            // 沒有動作，可能只是單純時間更新
+            UpdateUIState(scenario, "思考/移動中", simTime);
+        }
         OnLogUpdate?.Invoke(updateData);
         UpdateAllAgentStates(updateData.AgentStates);
         UpdateAllBuildingStates(updateData.BuildingStates);

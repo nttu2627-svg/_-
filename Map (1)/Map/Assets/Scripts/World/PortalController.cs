@@ -5,7 +5,8 @@ using UnityEngine;
 public class PortalController : MonoBehaviour
 {
     [Header("配對方式（二選一，優先使用 targetPortal）")]
-    public PortalController targetPortal;          // 直接拖引用（推薦）
+    [Tooltip("目標傳送門 (直接拖曳引用)")]
+    public PortalController targetPortal;
     [Tooltip("若未指定 targetPortal，會用這些名字在場景中尋找（Awake 僅解析一次）")]
     public string[] targetPortalNames;
 
@@ -21,13 +22,21 @@ public class PortalController : MonoBehaviour
     }
 
     [Header("出口與行為")]
+    [Tooltip("出口點（若為空會在 Reset 自動建立子物件）")]
     public Transform exitPoint;                    // 出口點（若為空會在 Reset 自動建立子物件）
+    [Tooltip("允許被傳送的層級")]
     public LayerMask allowedLayers = ~0;           // 允許被傳送的層
+    [Tooltip("傳送後忽略觸發秒數（防回彈/抖動）")]
     public float reenterCooldown = 0.15f;          // 傳送後忽略觸發秒數（防回彈/抖動）
+    [Tooltip("出口沿 exitPoint.right 推開的距離")]
     public float exitNudge = 0.08f;                // 出口沿 exitPoint.right 推開的距離
+    [Tooltip("是否保留速度")]
     public bool preserveMomentum = true;           // 是否保留速度
+    [Tooltip("依門的角度差旋轉速度向量")]
     public bool rotateMomentumWithPortal = true;   // 依門的角度差旋轉速度向量
+    [Tooltip("把物件 Z 旋轉對齊出口角度差")]
     public bool matchExitRotation = false;         // 把物件 Z 旋轉對齊出口角度差
+    [Tooltip("依「進門的相對位置」映射到出口")]
     public bool keepLocalOffset = false;           // 依「進門的相對位置」映射到出口
 
     [Header("門類型設定")]
@@ -47,6 +56,14 @@ public class PortalController : MonoBehaviour
     public int maxExitAdjustmentIterations = 6;
     [Tooltip("每次調整時沿出口方向或鄰近方向偏移的距離。")]
     public float exitAdjustmentStep = 0.18f;
+
+    [Header("Push Out Effect")]
+    [Tooltip("推擠半徑")]
+    public float pushOutRadius = 5.0f;
+    [Tooltip("推擠力道")]
+    public float pushOutForce = 2.0f;
+    [Tooltip("推擠檢查間隔 (秒)")]
+    public float pushCheckInterval = 0.2f;
 
     [SerializeField, Tooltip("可保留為 -1 交由程式產生")]
     private int portalId = -1;
@@ -113,6 +130,57 @@ public class PortalController : MonoBehaviour
 
         if (_resolvedTarget == null)
             Debug.LogError($"[{name}] 無法解析目標傳送門，請設定 targetPortal 或有效的 targetPortalNames。");
+    }
+
+    void OnEnable()
+    {
+        StartCoroutine(PushOutRoutine());
+    }
+
+    void OnDisable()
+    {
+        StopAllCoroutines();
+    }
+
+    private System.Collections.IEnumerator PushOutRoutine()
+    {
+        var wait = new WaitForSeconds(pushCheckInterval);
+        while (true)
+        {
+            yield return wait;
+            PushAgentsFromExit();
+        }
+    }
+
+    private void PushAgentsFromExit()
+    {
+        Transform exit = ExitTransform;
+        if (exit == null) return;
+
+        Collider2D[] hits = Physics2D.OverlapCircleAll(exit.position, pushOutRadius);
+        foreach (var hit in hits)
+        {
+            if (hit == null) continue;
+            var agent = hit.GetComponent<AgentController>();
+            if (agent != null && agent.isActiveAndEnabled)
+            {
+                // 計算推擠方向：從出口指向代理人
+                Vector3 direction = agent.transform.position - exit.position;
+                
+                // 如果重疊，則預設沿著出口前方推
+                if (direction.sqrMagnitude < 0.01f)
+                {
+                    direction = exit.right; 
+                }
+
+                // 施加推力 (使用 NavMeshAgent.Move)
+                var navAgent = agent.GetComponent<UnityEngine.AI.NavMeshAgent>();
+                if (navAgent != null && navAgent.isActiveAndEnabled)
+                {
+                    navAgent.Move(direction.normalized * pushOutForce * Time.deltaTime);
+                }
+            }
+        }
     }
 
     private void ConfigureCooldown()

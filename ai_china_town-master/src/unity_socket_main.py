@@ -7,7 +7,7 @@ Unity socket bridge (cleaned for current Unity front-end)
 - "Apartment" target defaults to F1
 - Safe LLM loader to avoid OllamaAgent __init__ arg mismatch during import
 """
-
+import websockets
 import argparse
 import asyncio
 import json
@@ -37,7 +37,7 @@ UNITY_IP = "127.0.0.1"
 UNITY_PORT = 12345
 UI_SOCKET_AVAILABLE = True
 UNITY_STATUS_HOST = "0.0.0.0"
-UNITY_STATUS_PORT = 12346
+UNITY_STATUS_PORT = 8765
 # Transport options (phase out legacy MOVE batches during rollout)
 USE_LEGACY_MOVE_PROTOCOL = bool(int(os.environ.get("UNITY_LEGACY_MOVE", "0")))
 AGENT_UPDATE_PROTOCOL = "navmesh_destination_v1"
@@ -95,6 +95,8 @@ RAW_PORTAL_MARKERS: List[Dict[str, Any]] = [
     {"name": "餐廳_室內", "position": (-73.00139, 0.972929), "targets": ["餐廳_室外"]},
     {"name": "餐廳_室外", "position": (96.95, -5.1), "targets": ["餐廳_室內"]},
 ]
+current_step_id = 0
+current_sim_time = datetime(2024, 11, 18, 6, 0) # 早上 6 點開始
 
 def _build_coordinate_lookup():
     coordinate_map: Dict[str, Any] = {}
@@ -1138,10 +1140,115 @@ def parse_arguments():
         help="使用舊版 MOVE 批次命令（預設關閉，可透過環境變數 UNITY_LEGACY_MOVE=1 開啟）",
     )
     return p.parse_args()
+current_step_id = 0
+current_sim_time = datetime(2024, 11, 18, 6, 0) # 早上 6 點開始
 
-def main():
-    args = parse_arguments()
-    asyncio.run(run_simulation(args.steps, args.minutes_per_step, args.weekday, use_legacy_move=args.legacy_move_protocol))
+def run_one_simulation_step():
+    """
+    執行一步模擬，回傳給 Unity 的數據封包。
+    """
+    global current_step_id, current_sim_time
+    
+    current_step_id += 1
+    current_sim_time += timedelta(minutes=30)
+    time_str = current_sim_time.strftime("%Y-%m-%d %H:%M")
+
+    # 模擬資料：讓 Agent 隨機移動
+    import random
+    
+    # 範例 Agent 動作
+    agents_actions = []
+    
+    # 假設有兩個 Agent: ISTJ, ISFJ
+    # 隨機產生一個座標 (NavMesh 範圍內)
+    targets = [
+        {"name": "ISTJ", "x": random.uniform(-10, 10), "y": random.uniform(-10, 10)},
+        {"name": "ISFJ", "x": random.uniform(-10, 10), "y": random.uniform(-10, 10)}
+    ]
+
+    for t in targets:
+        agents_actions.append({
+            "Agent": t["name"],
+            "Command": "move",
+            "Destination": f"({t['x']:.2f}, {t['y']:.2f}, 0)",
+            "Action": "Walking"
+        })
+
+    # 建構封包 (符合 Unity UpdateData 結構)
+    payload = {
+        "stepId": current_step_id,
+        "status": {
+            "message": "模擬進行中",
+            "executionState": "Moving",
+            "simTime": time_str
+        },
+        "agentActions": agents_actions,
+        "type": "update" # 標記類型
+    }
+    
+    return payload
+
+
+async def handler(websocket):
+    logger.info("Unity Client Connected")
+    
+    try:
+        # 簡單的握手或等待 Start 指令 (可選)
+        # await websocket.recv() 
+
+        # 進入模擬主迴圈
+        while True:
+            # --- 1. 思考階段 (Thinking Phase) ---
+            logger.info(f"--- Step {current_step_id + 1} Thinking ---")
+            
+            # 產生模擬數據
+            step_data = run_one_simulation_step()
+            
+            # --- 2. 發送指令 (Moving Phase) ---
+            json_data = json.dumps(step_data)
+            await websocket.send(json_data)
+            logger.info(f"Sent Step {step_data['stepId']} data. Waiting for Unity completion...")
+
+            # --- 3. 等待前端完成 (Wait for Handshake) ---
+            # 設定超時，避免前端卡死 (例如 60秒)
+            try:
+                await asyncio.wait_for(wait_for_client_confirmation(websocket), timeout=60.0)
+                logger.info("Unity confirmed move complete. Proceeding to next step.")
+            except asyncio.TimeoutError:
+                logger.warning("WARNING: Unity client timed out! Forcing next step.")
+
+            # 稍微暫停，避免過快
+            await asyncio.sleep(0.5)
+
+    except websockets.exceptions.ConnectionClosed:
+        logger.info("Unity Client Disconnected")
+    except Exception as e:
+        logger.error(f"Server Error: {e}")
+
+    async def wait_for_client_confirmation(websocket):
+        """
+        持續接收訊息，直到收到 type: move_complete
+        """
+    async for message in websocket:
+        try:
+            data = json.loads(message)
+            # 檢查是否為移動完成訊號
+            if data.get("type") == "move_complete":
+                return # 跳出等待，回到主迴圈
+            
+            # 處理其他訊息 (如 StartSimulation 指令)
+            if data.get("command") == "start_simulation":
+                logger.info("Received Start Command")
+                # 可在此重置狀態
+        except json.JSONDecodeError:
+            pass
+async def main():
+    logger.info(f"Starting WebSocket Server on {UNITY_STATUS_HOST}:{UNITY_STATUS_PORT}")
+    async with websockets.serve(handler, UNITY_STATUS_HOST, UNITY_STATUS_PORT):
+        await asyncio.get_running_loop().create_future()  # run forever
 
 if __name__ == "__main__":
-    main()
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("Server stopped by user.")

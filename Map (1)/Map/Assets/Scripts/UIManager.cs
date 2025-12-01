@@ -28,6 +28,7 @@ public class UIManager : MonoBehaviour
     }
 
     [SerializeField]
+    [Tooltip("面板列表")]
     private List<PanelEntry> panels = new List<PanelEntry>();
 
     private Dictionary<PanelType, Panel> panelLookup;

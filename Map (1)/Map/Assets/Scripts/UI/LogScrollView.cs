@@ -9,7 +9,9 @@ using UnityEngine.UI;
 public class LogScrollView : MonoBehaviour
 {
     [Header("核心依賴 (必須賦值)")]
+    [Tooltip("Scroll Rect 組件")]
     public ScrollRect scrollRect;
+    [Tooltip("日誌項目 Prefab")]
     public LogEntry entryPrefab;
     [Tooltip("物件池的大小，建議值為螢幕可見數量的兩倍左右")]
     public int poolSize = 20;

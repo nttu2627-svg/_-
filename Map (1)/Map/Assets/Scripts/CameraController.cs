@@ -9,14 +9,19 @@ using System.Collections;
 public class CameraController : MonoBehaviour
 {
     [Header("Movement Settings")]
+    [Tooltip("鍵盤移動速度")]
     public float keyMoveSpeed = 25f;
     [Tooltip("场景边界（建议是含 Composite Collider 2D 的 Tilemap）")]
     public Collider2D mapBounds;
 
     [Header("Zoom Settings")]
+    [Tooltip("縮放速度")]
     public float zoomSpeed = 10f;
+    [Tooltip("最小縮放值")]
     public float minZoom = 2f;
+    [Tooltip("最大縮放值")]
     public float maxZoom = 20f;
+    [Tooltip("縮放平滑度")]
     public float zoomSmoothing = 5f;
 
     [Header("Follow Settings")]
@@ -26,9 +31,13 @@ public class CameraController : MonoBehaviour
     public Transform[] cycleTargets;
 
     [Header("Earthquake Effects")]
+    [Tooltip("地震震動持續時間")]
     public float shakeDuration = 1f;
+    [Tooltip("地震震動強度")]
     public float shakeMagnitude = 0.5f;
+    [Tooltip("音效來源")]
     public AudioSource audioSource;
+    [Tooltip("地震音效片段")]
     public AudioClip earthquakeClip;
 
     // 私有变量

@@ -401,30 +401,6 @@ class TownAgent:
         if self.mental_state != "helping": return None
 
         nearby_injured = [
-            other for other in other_agents
-            if other.id != self.id and other.health > 0 and other.mental_state != "unconscious" and other.is_injured and self.Is_nearby(other.get_position())
-        ]
-        if not nearby_injured: return None
-
-        target_agent = min(nearby_injured, key=lambda x: x.health)
-        heal_amount = min(100 - target_agent.health, random.randint(10, 20))
-        target_agent.health += heal_amount
-        log_event = f"协助 Agent {target_agent.id} (+{heal_amount} HP -> {target_agent.health})"
-        self.disaster_experience_log.append(f"协助：帮助了 {target_agent.id}")
-
-        if target_agent.health >= 50:
-            target_agent.is_injured = False
-            if target_agent.mental_state in ["panicked", "injured"]:
-                 target_agent.mental_state = "alert"
-                 target_agent.curr_action = "recovering"
-                 target_agent.curr_action_pronunciatio = "😌"
-                 log_event += f" (Agent {target_agent.id} 状态稳定)"
-                 self.disaster_experience_log.append(f"{target_agent.id} 状态稳定。")
-        return log_event
-
-    def perform_recovery_step_action(self, other_agents, buildings_dict):
-        """Action performed during each step of the 1-hour recovery phase."""
-        if self.mental_state == "unconscious": return f"  {self.name} 依然昏迷。"
 
         log_prefix = f"  {self.name} ({self.MBTI}):"
         action_desc = ""

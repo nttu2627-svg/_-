@@ -21,13 +21,15 @@ public class AgentCommand
     public string ActionName;
     public bool UseTeleport;
 }
-
+[RequireComponent(typeof(NavMeshAgent))]
 public class AgentController : MonoBehaviour
 {
     [HideInInspector]
+    [Tooltip("代理人名稱")]
     public string agentName;
 
     [HideInInspector]
+    [Tooltip("顯示名稱的 UI 文字組件")]
     public TextMeshProUGUI nameTextUGUI;
 
     [Header("氣泡 (可選)")]
@@ -79,6 +81,10 @@ public class AgentController : MonoBehaviour
     private bool _awaitingMovementBatch = false;
     private bool _isPortalPaused = false;
     private bool _navMeshDriving = false;
+    private bool _isMoving = false;        // 用於判斷是否正在移動
+    private Vector3 _originalScale;        // 用於擠壓動畫
+    private float _wobbleTime = 0f;        // 用於動畫計時
+    private const float TELEPORT_THRESHOLD = 5.0f; // 超過此距離則瞬移
     private enum AgentBehaviourState
     {
         Idle,
@@ -100,16 +106,18 @@ public class AgentController : MonoBehaviour
     // 佇列系統
     private Queue<AgentCommand> _commandQueue = new Queue<AgentCommand>();
     private CancellationTokenSource _cts;
-    // [已移除 unused] private bool _isProcessing;
 
     // 公開屬性
     public AgentMovementController MovementController => _movementController;
+    public bool IsMoving => _isMoving; // [Fix] Expose IsMoving property
+    public string TargetLocationName => _targetLocationName; // [New] Expose TargetLocationName
 
     void Awake()
     {
         _transform = transform;
         _mainCamera = Camera.main;
         _simulationClient = FindFirstObjectByType<SimulationClient>();
+        _originalScale = transform.localScale; // [修改 2] 初始化原始縮放大小
 
         // 初始化位置記錄，避免第一幀計算速度時暴衝
         _lastPosition = _transform.position;
@@ -226,8 +234,32 @@ public class AgentController : MonoBehaviour
         }
     }
 
+    // Fail-safe variables
+    private float _stuckTimer = 0f;
+    private const float STUCK_TIME_THRESHOLD = 5.0f;
+    private const float STUCK_VELOCITY_THRESHOLD = 0.1f;
+    private const float PORTAL_DETECTION_RADIUS = 3.0f;
+
     void Update()
     {
+        // 1. 檢查移動狀態
+        CheckMovementStatus();
+
+        // 2. 處理面朝方向 (Flip)
+        HandleFacingDirection();
+
+        // 3. 程式化動畫 (Liveliness)
+        HandleProceduralAnimation();
+
+        // 4. 解決重疊 (Resolve Overlap)
+        if (!_isMoving)
+        {
+            ResolveOverlap();
+        }
+
+        // 5. [New] Check if stuck near portal
+        CheckAndResolvePortalStuck();
+
         if (!_isInitialized || !gameObject.activeSelf) return;
         if (_isPortalPaused) return;
         Vector3 sampledVelocity = (_transform.position - _lastPosition) / Mathf.Max(Time.deltaTime, 0.0001f);
@@ -266,6 +298,89 @@ public class AgentController : MonoBehaviour
         }
     }
 
+    private void CheckAndResolvePortalStuck()
+    {
+        if (!_isMoving || _navMeshAgent == null || !_navMeshAgent.isActiveAndEnabled)
+        {
+            _stuckTimer = 0f;
+            return;
+        }
+
+        // If moving fast enough, reset timer
+        if (_navMeshAgent.velocity.sqrMagnitude > STUCK_VELOCITY_THRESHOLD)
+        {
+            _stuckTimer = 0f;
+            return;
+        }
+
+        // Accumulate stuck time
+        _stuckTimer += Time.deltaTime;
+
+        if (_stuckTimer > STUCK_TIME_THRESHOLD)
+        {
+            // Check for nearby portals
+            Collider[] hits = Physics.OverlapSphere(transform.position, PORTAL_DETECTION_RADIUS);
+            foreach (var hit in hits)
+            {
+                PortalTrigger portalTrigger = hit.GetComponent<PortalTrigger>();
+                if (portalTrigger != null && portalTrigger.portal != null && portalTrigger.portal.TargetPortal != null)
+                {
+                    Debug.LogWarning($"[Agent {agentName}] Stuck near portal {portalTrigger.name} for {STUCK_TIME_THRESHOLD}s. Forcing teleport.");
+                    
+                    Transform exitTransform = portalTrigger.portal.TargetPortal.ExitTransform;
+                    if (exitTransform != null)
+                    {
+                        // [User Request] Push out at least 1.5 tiles (units)
+                        // Try to find a valid position in the forward direction of the exit
+                        Vector3 pushDirection = exitTransform.forward; 
+                        Vector3 targetPos = exitTransform.position + pushDirection * 1.5f;
+
+                        // Ensure valid NavMesh position (SamplePosition finds nearest valid point)
+                        if (UnityEngine.AI.NavMesh.SamplePosition(targetPos, out UnityEngine.AI.NavMeshHit navHit, 2.0f, UnityEngine.AI.NavMesh.AllAreas))
+                        {
+                            targetPos = navHit.position;
+                        }
+                        else
+                        {
+                            // Fallback: try sampling around the exit if forward push fails
+                             if (UnityEngine.AI.NavMesh.SamplePosition(exitTransform.position, out navHit, 2.0f, UnityEngine.AI.NavMesh.AllAreas))
+                             {
+                                 targetPos = navHit.position;
+                             }
+                             else
+                             {
+                                 targetPos = exitTransform.position;
+                             }
+                        }
+
+                        _navMeshAgent.Warp(targetPos);
+                        _navMeshAgent.ResetPath();
+                        if (_targetPosition != Vector3.zero)
+                        {
+                            _navMeshAgent.SetDestination(_targetPosition);
+                        }
+                        _stuckTimer = 0f;
+                        return;
+                    }
+                }
+            }
+            // Reset if no portal found or after check
+             _stuckTimer = 0f;
+        }
+    }
+
+    // [User Request] Force teleport to target (for Emergency Button)
+    public void ForceTeleportToCurrentTarget()
+    {
+        if (_navMeshAgent != null && _navMeshAgent.isActiveAndEnabled && _targetPosition != Vector3.zero)
+        {
+            Debug.Log($"[Agent {agentName}] Force teleporting to target: {_targetPosition}");
+            _navMeshAgent.Warp(_targetPosition);
+            _navMeshAgent.ResetPath();
+            _navMeshAgent.SetDestination(_targetPosition);
+        }
+    }
+
     void LateUpdate()
     {
         if (_isInitialized && gameObject.activeSelf && nameTextUGUI != null && _mainCamera != null)
@@ -273,9 +388,145 @@ public class AgentController : MonoBehaviour
             UpdateNameplatePosition();
         }
     }
+/// <summary>
+    /// 使用 NavMeshAgent 移動至目標，過遠則傳送
+    /// </summary>
+    public void MoveTo(Vector3 targetPosition, bool isTeleport = false)
+    {
+        if (_navMeshAgent == null || !gameObject.activeSelf) return;
+
+        // 確保 Agent 在 NavMesh 上
+        if (!_navMeshAgent.isOnNavMesh)
+        {
+            _navMeshAgent.Warp(transform.position);
+        }
+
+        float distance = Vector3.Distance(transform.position, targetPosition);
+
+        if (isTeleport || distance > TELEPORT_THRESHOLD)
+        {
+            _navMeshAgent.Warp(targetPosition);
+            _navMeshAgent.isStopped = true;
+            _isMoving = false;
+            // 傳送後重置動畫
+            transform.localScale = _originalScale; 
+        }
+        else
+        {
+            _navMeshAgent.SetDestination(targetPosition);
+            _navMeshAgent.isStopped = false;
+            _isMoving = true;
+            // [關鍵] 為了讓狀態機知道它正在移動
+            SetBehaviourState(AgentBehaviourState.Moving);
+        }
+    }
+
+    // 檢查是否到達目的地
+    private void CheckMovementStatus()
+    {
+        if (_isMoving)
+        {
+            // 檢查路徑是否計算完成且剩餘距離小於停止距離
+            if (!_navMeshAgent.pathPending && _navMeshAgent.remainingDistance <= _navMeshAgent.stoppingDistance)
+            {
+                if (!_navMeshAgent.hasPath || _navMeshAgent.velocity.sqrMagnitude == 0f)
+                {
+                    _isMoving = false;
+                    _navMeshAgent.isStopped = true;
+                    // 到達後切回 Idle
+                    SetBehaviourState(AgentBehaviourState.Idle);
+                }
+            }
+        }
+    }
+
+    private void HandleFacingDirection()
+    {
+        if (Mathf.Abs(_smoothedVelocity.x) > 0.1f)
+        {
+            float targetScaleX = Mathf.Sign(_smoothedVelocity.x) * Mathf.Abs(_originalScale.x);
+            // 保持 y, z 不變，只翻轉 x
+            Vector3 currentScale = transform.localScale;
+            if (Mathf.Abs(currentScale.x - targetScaleX) > 0.01f)
+            {
+                transform.localScale = new Vector3(targetScaleX, currentScale.y, currentScale.z);
+            }
+        }
+    }
+
+    private void HandleProceduralAnimation()
+    {
+        // 只有在真正移動且速度足夠時才播放走路動畫
+        if (_isMoving && _navMeshAgent.velocity.sqrMagnitude > 0.1f)
+        {
+            // 走路：快速擠壓與彈跳 (Squash & Stretch)
+            _wobbleTime += Time.deltaTime * 15f;
+            float squash = Mathf.Abs(Mathf.Sin(_wobbleTime)) * 0.15f; 
+            
+            // y 軸變長 (彈跳)，x 軸變窄 (擠壓)，保持體積感
+            float currentSignX = Mathf.Sign(transform.localScale.x);
+            transform.localScale = new Vector3(
+                currentSignX * (Mathf.Abs(_originalScale.x) - squash * 0.5f), 
+                _originalScale.y + squash, 
+                _originalScale.z
+            );
+        }
+        else
+        {
+            // 閒置：緩慢呼吸 (Breathing)
+            float breath = Mathf.Sin(Time.time * 2f) * 0.05f;
+            float currentSignX = Mathf.Sign(transform.localScale.x);
+            
+            transform.localScale = new Vector3(
+                currentSignX * Mathf.Abs(_originalScale.x), 
+                _originalScale.y + breath, 
+                _originalScale.z
+            );
+        }
+    }
+
+    private void ResolveOverlap()
+    {
+        if (_navMeshAgent == null || !_navMeshAgent.isActiveAndEnabled) return;
+
+        // 尋找附近的代理人
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, 0.5f);
+        Vector3 separation = Vector3.zero;
+        int count = 0;
+
+        foreach (var hit in hits)
+        {
+            if (hit.gameObject == gameObject) continue;
+            
+            // 只避開其他 Agent
+            if (hit.GetComponent<AgentController>() != null)
+            {
+                Vector3 direction = transform.position - hit.transform.position;
+                float distance = direction.magnitude;
+                
+                // 如果重疊非常嚴重 (距離接近 0)，給一個隨機方向
+                if (distance < 0.01f)
+                {
+                    direction = UnityEngine.Random.insideUnitCircle.normalized;
+                    distance = 0.01f;
+                }
+
+                // 距離越近，推力越大
+                separation += direction.normalized / distance;
+                count++;
+            }
+        }
+
+        if (count > 0)
+        {
+            // 施加推力
+            _navMeshAgent.Move(separation * Time.deltaTime * 1.0f);
+        }
+    }
 
     private void UpdateNameplatePosition()
     {
+        if (nameTextUGUI == null || _mainCamera == null) return;
         float padding = 0.02f; 
         Vector3 viewportPoint = _mainCamera.WorldToViewportPoint(_transform.position);
 
@@ -328,12 +579,26 @@ public class AgentController : MonoBehaviour
         _navMeshAgent.stoppingDistance = Mathf.Max(0.01f, _arrivalThreshold);
         _navMeshAgent.acceleration = Mathf.Max(1f, _movementSpeed * 2f);
         _navMeshAgent.autoBraking = true;
+        _navMeshAgent.acceleration = Mathf.Max(1f, _movementSpeed * 2f);
+        _navMeshAgent.autoBraking = true;
+        // [修改] 啟用高品質避障
         _navMeshAgent.obstacleAvoidanceType = UnityEngine.AI.ObstacleAvoidanceType.NoObstacleAvoidance;
 
         if (_navMeshAgent.enabled)
         {
-            _navMeshAgent.Warp(_transform.position);
-            _navMeshAgent.ResetPath();
+            // [關鍵修復] 加入安全檢查
+            if (_navMeshAgent.isOnNavMesh)
+            {
+                _navMeshAgent.ResetPath();
+            }
+            else
+            {
+                // 嘗試把自己拉回 NavMesh
+                if (UnityEngine.AI.NavMesh.SamplePosition(_transform.position, out UnityEngine.AI.NavMeshHit hit, 2.0f, UnityEngine.AI.NavMesh.AllAreas))
+                {
+                    _navMeshAgent.Warp(hit.position);
+                }
+            }
         }
     }
 
@@ -734,7 +999,13 @@ public class AgentController : MonoBehaviour
         }
         return false;
     }
-
+private void UpdateNameColor()
+    {
+        if (nameTextUGUI == null) return;
+        bool isActive = !string.IsNullOrEmpty(_currentAction) && !_currentAction.ToLower().Contains("idle");
+        nameTextUGUI.color = isActive ? _activeNameColor : _idleNameColor;
+        nameTextUGUI.text = $"{agentName} [{_currentAction}]";
+    }
     public void TeleportTo(Vector3 position, params string[] locationAliases)
     {
         TeleportTo(position, false, locationAliases);
@@ -790,15 +1061,45 @@ public class AgentController : MonoBehaviour
     {
         if (_navMeshAgent == null) return;
 
-        bool wasEnabled = _navMeshAgent.enabled;
-        if (!wasEnabled) _navMeshAgent.enabled = true;
+        // 1. 確保 Agent 是開啟的，否則操作無效
+        if (!_navMeshAgent.gameObject.activeSelf) 
+        {
+            _transform.position = position;
+            return;
+        }
 
-        _navMeshAgent.Warp(position);
-        _navMeshAgent.nextPosition = position;
-        _navMeshAgent.velocity = Vector3.zero;
-        _navMeshAgent.ResetPath();
+        if (!_navMeshAgent.enabled) _navMeshAgent.enabled = true;
+
+        // 2. [關鍵修復] 不要直接 Warp 到目標座標，而是找 "最近的 NavMesh 地面"
+        // 參數 5.0f 是搜尋半徑，NavMesh.AllAreas 表示搜尋所有圖層
+        if (UnityEngine.AI.NavMesh.SamplePosition(position, out UnityEngine.AI.NavMeshHit hit, 5.0f, UnityEngine.AI.NavMesh.AllAreas))
+        {
+            // 找到了合法位置，傳送過去
+            _navMeshAgent.Warp(hit.position);
+            _navMeshAgent.nextPosition = hit.position;
+            _navMeshAgent.velocity = Vector3.zero;
+
+            // 3. 只有在真正位於 NavMesh 上時才重置路徑
+            if (_navMeshAgent.isOnNavMesh)
+            {
+                _navMeshAgent.ResetPath();
+            }
+        }
+        else
+        {
+            // 如果找不到 NavMesh (例如傳送到虛空)，強制設定 Transform 防止報錯，但無法導航
+            Debug.LogWarning($"[Agent {agentName}] Teleport target {position} is not on NavMesh!");
+            _navMeshAgent.enabled = false; // 先關閉避免報錯
+            _transform.position = position;
+            _navMeshAgent.enabled = true;  // 再開啟嘗試恢復
+        }
     }
-
+// --- 供 SimulationClient 查詢狀態 ---
+    public bool IsMovementComplete()
+    {
+        // 如果正在 NavMesh 移動 (_isMoving) 或者還在指令佇列中等待 (_navMeshAgent.hasPath)
+        return !_isMoving && (!_navMeshAgent.hasPath || _navMeshAgent.velocity.sqrMagnitude < 0.1f);
+    }
     public void SetActionState(string action)
     {
         _currentAction = action;
@@ -1134,7 +1435,11 @@ public class AgentController : MonoBehaviour
             StopIdleMicroActions();
             if (newState == AgentBehaviourState.Moving)
             {
-                _navMeshAgent?.ResetPath();
+                // [關鍵修復] 只有在 NavMesh 上且啟動時才 ResetPath
+                if (_navMeshAgent != null && _navMeshAgent.isActiveAndEnabled && _navMeshAgent.isOnNavMesh)
+                {
+                    _navMeshAgent.ResetPath();
+                }
             }
         }
     }
@@ -1248,6 +1553,123 @@ public class AgentController : MonoBehaviour
             await UniTask.Delay(500, cancellationToken: token);
         }
     }
+
+    // --- Disaster Response FSM ---
+    public enum AgentDisasterState { Normal, Thinking, Acting, Panic, Recovery }
+    private AgentDisasterState _currentState = AgentDisasterState.Normal;
+    private bool _isWaitingForBrain = false;
+
+    public void HandleEarthquakeStart(float intensity)
+    {
+        // 強制中斷所有 Coroutine (System 1 Interrupt)
+        StopAllCoroutines();
+        if (_cts != null) _cts.Cancel();
+        _cts = new CancellationTokenSource();
+        ProcessCommandBufferLoop(_cts.Token).Forget(); // Restart loop
+
+        // 物理凍結
+        if (_navMeshAgent != null && _navMeshAgent.isActiveAndEnabled)
+        {
+            _navMeshAgent.isStopped = true;
+            _navMeshAgent.velocity = Vector3.zero;
+        }
+
+        // 進入 Panic 狀態
+        _currentState = AgentDisasterState.Panic;
+        _visualController?.PlayEmote("Panic"); // 假設有 Panic 動畫或是氣泡
+
+        // 立即向 Python 發送高優先級感官數據 (模擬)
+        // 實際發送邏輯由 SimulationClient 處理，這裡我們只更新狀態
+        _isWaitingForBrain = true;
+        Debug.Log($"[Agent {agentName}] EARTHQUAKE START! Panic Mode.");
+    }
+
+    public void HandleEarthquakeEnd()
+    {
+        _currentState = AgentDisasterState.Recovery;
+        Debug.Log($"[Agent {agentName}] Earthquake Ended. Entering Recovery Mode.");
+        // 通知大腦震動結束，切換回 System 2
+        // _simulationClient?.SendEvent(agentName, "EARTHQUAKE_END");
+    }
+
+    public void ReceiveCommand(string jsonPayload)
+    {
+        _isWaitingForBrain = false;
+
+        if (jsonPayload.Contains("REFLEX_ACTION"))
+        {
+            if (jsonPayload.Contains("DUCK"))
+            {
+                StartCoroutine(ExecuteReflex("DUCK"));
+            }
+        }
+        else if (jsonPayload.Contains("NAVIGATE"))
+        {
+            // System 2: Extract target from JSON (Simplified)
+            string target = ExtractValueFromJson(jsonPayload, "target");
+            if (!string.IsNullOrEmpty(target))
+            {
+                StartCoroutine(ExecuteNavigation(target));
+            }
+        }
+    }
+
+    private string ExtractValueFromJson(string json, string key)
+    {
+        string keyPattern = $"\"{key}\": \"";
+        int startIndex = json.IndexOf(keyPattern);
+        if (startIndex == -1) return null;
+        startIndex += keyPattern.Length;
+        int endIndex = json.IndexOf("\"", startIndex);
+        if (endIndex == -1) return null;
+        return json.Substring(startIndex, endIndex - startIndex);
+    }
+
+    private System.Collections.IEnumerator ExecuteNavigation(string targetName)
+    {
+        _currentState = AgentDisasterState.Acting;
+        Debug.Log($"[Agent {agentName}] System 2 Navigation to {targetName}");
+        
+        // Reuse existing Move command logic
+        // We need to find the transform for the targetName. 
+        // Assuming SimulationClient or a global manager has this info, but here we might need to search.
+        GameObject targetObj = GameObject.Find(targetName);
+        if (targetObj != null)
+        {
+            AgentCommand cmd = new AgentCommand
+            {
+                Type = AgentInternalCommandType.Move,
+                TargetLocationName = targetName,
+                TargetTransform = targetObj.transform,
+                TargetPosition = targetObj.transform.position,
+                ActionName = "Walk"
+            };
+            _commandQueue.Enqueue(cmd);
+        }
+        else
+        {
+            Debug.LogWarning($"[Agent {agentName}] Could not find target object: {targetName}");
+        }
+
+        yield return null;
+        _currentState = AgentDisasterState.Normal; // Return to normal after initiating navigation
+    }
+
+    private System.Collections.IEnumerator ExecuteReflex(string action)
+    {
+        _currentState = AgentDisasterState.Acting;
+        if (action == "DUCK")
+        {
+            _visualController?.PlayEmote("Duck"); // 假設有 Duck 動畫
+            yield return new WaitForSeconds(3.0f); // 保持姿勢 3 秒
+        }
+        
+        _currentState = AgentDisasterState.Thinking;
+        // Reflex 完成後，主動請求下一步指示
+        // _simulationClient?.ReportActionComplete(agentName);
+    }
+
+    // --- End Disaster Response FSM ---
 
     private async UniTask WaitUntilArrival(CancellationToken token)
     {

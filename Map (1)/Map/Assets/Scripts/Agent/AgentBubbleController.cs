@@ -9,11 +9,15 @@ namespace DisasterSimulation
     public class 思考氣泡控制器 : MonoBehaviour
     {
         [Header("UI 組件")]
+        [Tooltip("氣泡 Canvas Group")]
         public CanvasGroup 氣泡CanvasGroup;
+        [Tooltip("氣泡文字組件")]
         public TextMeshProUGUI 氣泡文字;
 
         [Header("外觀設定")]
+        [Tooltip("氣泡顯示時間 (秒)")]
         public float 顯示時間 = 3f;
+        [Tooltip("氣泡相對於目標的偏移量")]
         public Vector3 偏移 = new Vector3(0f, 2f, 0f);
 
         private Coroutine 隱藏協程;

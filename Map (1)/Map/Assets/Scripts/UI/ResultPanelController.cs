@@ -12,7 +12,9 @@ namespace DisasterSimulation.UI
     /// </summary>
     public class ResultPanelController : MonoBehaviour
     {
+        [Tooltip("表格根節點")]
         public Transform tableRoot;
+        [Tooltip("表格列 Prefab")]
         public GameObject rowPrefab;
 
         private Dictionary<string, ScoreDetail> _scores;

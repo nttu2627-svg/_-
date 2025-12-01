@@ -1,5 +1,6 @@
 # simulation_logic/agent_classes.py (完整最終版)
 
+from argparse import Action
 import random
 import os
 import json
@@ -278,45 +279,26 @@ class TownAgent:
         return bonus
 
     def find_path(self, destination):
-        if not destination or destination == self.curr_place:
-            return self.curr_place
+        previous_target = getattr(self, "target_place", None)
+        current_location = self.curr_place or previous_target or self.home or ""
+        current_location = normalize_location_name(current_location)
+        sleep_keywords = ["睡", "sleep", "Sleep"]
+
+        if not destination or destination == current_location:
+            return current_location
 
         destination_str = str(destination)
         destination_str = normalize_location_name(destination_str)
         if destination_str and destination_str.lower() == "subway":
             if self.curr_place == "Subway" or (self.curr_place and "地鐵" in self.curr_place):
                 return "Subway"
-            return "地鐵左入口_室外"
-        
-        is_current_outdoors = self.is_location_outdoors(self.curr_place)
-        is_destination_outdoors = self.is_location_outdoors(destination_str)
 
-        if is_current_outdoors == is_destination_outdoors:
-            return destination_str
-        
-        elif is_current_outdoors and not is_destination_outdoors:
-            entry_portal = LOCATION_ENTRY_PORTALS.get(destination_str)
-            if not entry_portal:
-                base_key = destination_str.split('_')[0]
-                entry_portal = LOCATION_ENTRY_PORTALS.get(base_key, destination_str)
-            if entry_portal in PORTAL_CONNECTIONS or entry_portal in self.available_locations:
-                return entry_portal
-            return destination_str
+        if any(keyword in destination_str for keyword in sleep_keywords):
+            if destination_str not in self.available_locations:
+                return self.home or current_location
 
-            
-        else:
-            if self.curr_place in PORTAL_CONNECTIONS:
-                return self.curr_place
-            
-            building_name = self.curr_place.split('_')[0]
-            main_exit = f"{building_name}大門_室內"
-            if main_exit in PORTAL_CONNECTIONS:
-                return main_exit
-            for portal in PORTAL_CONNECTIONS.keys():
-                if portal.startswith(building_name) and "_室內" in portal:
-                    return portal
-        
         return destination_str
+
     def resolve_destination(self, action, destination):
         """Normalize ambiguous destinations to meaningful map locations."""
         previous_target = getattr(self, "target_place", None)

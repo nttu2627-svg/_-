@@ -4,11 +4,15 @@ using UnityEngine;
 
 public class BuildingController : MonoBehaviour
 {
+    [Tooltip("建築物名稱")]
     public string buildingName;
 
     [Header("Damage Models")]
+    [Tooltip("正常狀態模型")]
     public GameObject normalState;
+    [Tooltip("受損狀態模型")]
     public GameObject damagedState;
+    [Tooltip("毀壞狀態模型")]
     public GameObject destroyedState;
     void Start()
     {
