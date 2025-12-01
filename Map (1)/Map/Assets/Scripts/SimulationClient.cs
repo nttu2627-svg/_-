@@ -1015,6 +1015,22 @@ public class SimulationClient : MonoBehaviour
         lock (_mainThreadActions) { _mainThreadActions.Enqueue(action); }
     }
 
+    // [Fix] Track fixed positions for area locations to prevent bunching
+    private readonly Dictionary<string, Vector3> _agentFixedPositions = new Dictionary<string, Vector3>();
+
+    private Vector3? GetRandomPositionInBounds(string boundsName)
+    {
+        Collider2D bounds = FindBoundsColliderByName(boundsName);
+        if (bounds != null)
+        {
+            if (TryGetRandomPointInsideCollider(bounds, out Vector3 point))
+            {
+                return point;
+            }
+        }
+        return null;
+    }
+
     private void UpdateAllAgentStates(Dictionary<string, AgentState> agentStates)
     {
         if (agentStates == null) return;
@@ -1022,6 +1038,38 @@ public class SimulationClient : MonoBehaviour
         {
             if (agentStates.TryGetValue(activeControllerPair.Key, out AgentState state))
             {
+                // [Fix] If location is Apartment area, use sticky random position
+                if (!string.IsNullOrEmpty(state.Location))
+                {
+                    string loc = state.Location.Trim();
+                    // Check for Apartment F1/F2 aliases
+                    bool isF1 = loc.Equals("Apartment_F1", StringComparison.OrdinalIgnoreCase) || loc.Equals("公寓一樓", StringComparison.OrdinalIgnoreCase);
+                    bool isF2 = loc.Equals("Apartment_F2", StringComparison.OrdinalIgnoreCase) || loc.Equals("公寓二樓", StringComparison.OrdinalIgnoreCase);
+
+                    if (isF1 || isF2)
+                    {
+                        string key = $"{activeControllerPair.Key}_{loc}";
+                        if (!_agentFixedPositions.TryGetValue(key, out Vector3 fixedPos))
+                        {
+                            // Try to find bounds
+                            string boundsName = isF1 ? "公寓_一樓Bounds" : "公寓_二樓Bounds";
+                            Vector3? randomPos = GetRandomPositionInBounds(boundsName);
+                            
+                            if (randomPos.HasValue)
+                            {
+                                fixedPos = randomPos.Value;
+                                _agentFixedPositions[key] = fixedPos;
+                            }
+                        }
+
+                        if (_agentFixedPositions.ContainsKey(key))
+                        {
+                            // Override location with vector string so AgentController moves to the specific point
+                            state.Location = $"{_agentFixedPositions[key].x},{_agentFixedPositions[key].y},{_agentFixedPositions[key].z}";
+                        }
+                    }
+                }
+
                 activeControllerPair.Value.UpdateState(state);
             }
         }
@@ -1400,6 +1448,9 @@ public class SimulationClient : MonoBehaviour
         Collider2D firstFloorBounds = FindBoundsColliderByName("公寓_一樓Bounds");
         Collider2D secondFloorBounds = FindBoundsColliderByName("公寓_二樓Bounds");
 
+        Debug.Log($"[SpawnDebug] F1 Bounds: {(firstFloorBounds != null ? firstFloorBounds.name : "null")}, F2 Bounds: {(secondFloorBounds != null ? secondFloorBounds.name : "null")}");
+        Debug.Log($"[SpawnDebug] F1 Transform: {(firstFloor != null ? firstFloor.name : "null")}, F2 Transform: {(secondFloor != null ? secondFloor.name : "null")}");
+
         if (firstFloor == null && secondFloor == null && firstFloorBounds == null && secondFloorBounds == null)
         {
             Debug.LogWarning("[SimulationClient] 未能找到 Apartment_F1 或 Apartment_F2 的 LocationMarker，改用隨機範圍傳送。");
@@ -1432,10 +1483,13 @@ public class SimulationClient : MonoBehaviour
 
         int firstFloorQuota = Mathf.Min(8, activeControllers.Count);
         var firstFloorPositions = GenerateSpawnPositions(firstFloor, firstFloorQuota, firstFloorBounds);
+        Debug.Log($"[SpawnDebug] Generated {firstFloorPositions.Count} positions for F1 (Quota: {firstFloorQuota})");
+        
         firstFloorQuota = Mathf.Min(firstFloorQuota, firstFloorPositions.Count);
 
         int remaining = Mathf.Max(0, activeControllers.Count - firstFloorQuota);
         var secondFloorPositions = GenerateSpawnPositions(secondFloor, remaining, secondFloorBounds);
+        Debug.Log($"[SpawnDebug] Generated {secondFloorPositions.Count} positions for F2 (Quota: {remaining})");
 
         int firstIndex = 0;
         int secondIndex = 0;

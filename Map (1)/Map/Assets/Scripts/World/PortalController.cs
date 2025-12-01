@@ -59,7 +59,7 @@ public class PortalController : MonoBehaviour
 
     [Header("Push Out Effect")]
     [Tooltip("推擠半徑")]
-    public float pushOutRadius = 5.0f;
+    public float pushOutRadius = 2.0f;
     [Tooltip("推擠力道")]
     public float pushOutForce = 2.0f;
     [Tooltip("推擠檢查間隔 (秒)")]
