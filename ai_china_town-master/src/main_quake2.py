@@ -425,7 +425,7 @@ async def initialize_and_simulate(params, step_sync_event: Optional[asyncio.Even
         # 優化：如果判定為 fast_forward，直接給出空指令或簡單移動指令，避免呼叫 LLM
         if llm_context.get("skip_reasoning", False):
             # 快速模式：不呼叫 LLM 生成複雜指令，僅維持現狀或簡單移動
-            agent_action_plan = {} # 前端會依據 agentStates 更新位置，不需要額外指令
+            agent_action_plan = [] # 前端會依據 agentStates 更新位置，不需要額外指令
         else:
             agent_action_plan = await generate_action_instructions(agents)
         
