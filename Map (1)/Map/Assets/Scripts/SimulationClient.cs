@@ -57,6 +57,10 @@ public class SimulationClient : MonoBehaviour
     private string _currentScenarioState = "日常"; // 範例：日常, 地震中
     private string _currentExecutionState = "思考中"; // 範例：思考中, 移動中
     private string _lastSimTime = "00:00:00";
+    
+    // [FIX] 補上漏掉的計時器變數
+    private float _idleTimer = 0f; 
+
     // 私有變數
     private readonly Queue<Action> _mainThreadActions = new Queue<Action>();
     private readonly Dictionary<string, AgentController> _sceneAgentControllers = new Dictionary<string, AgentController>();
