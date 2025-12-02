@@ -179,7 +179,14 @@ public class PortalController : MonoBehaviour
                 if (navAgent != null && navAgent.isActiveAndEnabled)
                 {
                     navAgent.Move(direction.normalized * pushOutForce * Time.deltaTime);
+                    // [額外建議] 防止 Agent 立刻對抗推力
+                    // 如果 Agent 當前沒有路徑，或者距離目標很近，這行可以確保它不會亂跑
+                    if (!navAgent.hasPath || navAgent.remainingDistance < 0.1f)
+                    {
+                        navAgent.velocity = Vector3.zero; 
+                    }
                 }
+                
             }
         }
     }
