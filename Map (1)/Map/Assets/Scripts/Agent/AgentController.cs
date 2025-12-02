@@ -8,7 +8,7 @@ using System.Text;
 using DisasterSimulation;
 using Cysharp.Threading.Tasks;
 using System.Threading;
-
+using System.Collections; // 必須引用
 
 // 定義指令類型與結構
 public enum AgentInternalCommandType { Move, Teleport, ActionOnly }
@@ -32,6 +32,12 @@ public struct ReactionData
 [RequireComponent(typeof(NavMeshAgent))]
 public class AgentController : MonoBehaviour
 {
+    [Header("狀態監控")]
+    // 公開屬性供外部讀取，但不允許外部直接修改
+    public bool IsStunned { get; private set; } = false;
+
+    private NavMeshAgent _navAgent;
+    private Coroutine _currentStunCoroutine;
     [HideInInspector]
     [Tooltip("代理人名稱")]
     public string agentName;
@@ -251,8 +257,11 @@ public class AgentController : MonoBehaviour
     private const float STUCK_VELOCITY_THRESHOLD = 0.1f;
     private const float PORTAL_DETECTION_RADIUS = 3.0f;
 
-    void Update()
+void Update()
     {
+        // [修正 1] 正確的暈眩檢查：如果暈眩中，直接暫停 Update 的導航邏輯
+        if (IsStunned) return;
+
         // 1. 檢查移動狀態
         CheckMovementStatus();
 
@@ -268,16 +277,18 @@ public class AgentController : MonoBehaviour
             ResolveOverlap();
         }
 
-        // 5. [New] Check if stuck near portal
+        // 5. 檢查是否卡在傳送門附近
         CheckAndResolvePortalStuck();
 
         if (!_isInitialized || !gameObject.activeSelf) return;
         if (_isPortalPaused) return;
+
+        // 計算平滑速度與視覺更新
         Vector3 sampledVelocity = (_transform.position - _lastPosition) / Mathf.Max(Time.deltaTime, 0.0001f);
         if (_navMeshAgent != null && _navMeshAgent.isActiveAndEnabled && _navMeshDriving)
         {
             sampledVelocity = _navMeshAgent.velocity;
-            _targetPosition = _navMeshAgent.destination;
+            _targetPosition = _navMeshAgent.destination; // 更新目標點以便同步
         }
 
         _smoothedVelocity = Vector3.Lerp(_smoothedVelocity, sampledVelocity, Time.deltaTime * _interpolationSpeed);
@@ -289,9 +300,9 @@ public class AgentController : MonoBehaviour
 
         _lastPosition = _transform.position;
 
+        // 物理移動兜底 (如果沒有 NavMeshAgent)
         if (_navMeshAgent == null || !_navMeshAgent.isActiveAndEnabled)
         {
-            // 物理移動 (作為最後防線)
             Vector3 currentPosition = _transform.position;
             Vector3 toTarget = _targetPosition - currentPosition;
             float arrivalThresholdSqr = _arrivalThreshold * _arrivalThreshold;
@@ -309,59 +320,97 @@ public class AgentController : MonoBehaviour
         }
     }
 
+// [修正 2] 新增公開方法供外部呼叫
+    public void Stun(float duration)
+    {
+        // 如果已經在暈眩中，先停止舊的協程
+        if (_currentStunCoroutine != null)
+        {
+            StopCoroutine(_currentStunCoroutine);
+        }
+        
+        // 啟動新的暈眩協程
+        _currentStunCoroutine = StartCoroutine(Co_Stun(duration));
+    }
+
+    // [修正 3] 實作暈眩邏輯的協程 (IEnumerator)
+    private IEnumerator Co_Stun(float duration)
+    {
+        IsStunned = true;
+
+        // 使用 _navMeshAgent (與原本代碼變數名稱一致)
+        if (_navMeshAgent != null && _navMeshAgent.isActiveAndEnabled)
+        {
+            // 放棄當前路徑與速度，避免與推力對抗
+            _navMeshAgent.ResetPath();
+            _navMeshAgent.velocity = Vector3.zero;
+            _navMeshAgent.isStopped = true; 
+        }
+
+        // 等待指定時間 (這段時間 Portal 的 PushOut 可以自由運作)
+        yield return new WaitForSeconds(duration);
+
+        // 恢復狀態
+        IsStunned = false;
+        
+        if (_navMeshAgent != null && _navMeshAgent.isActiveAndEnabled)
+        {
+            _navMeshAgent.isStopped = false;
+        }
+
+        _currentStunCoroutine = null;
+    }
     private void CheckAndResolvePortalStuck()
     {
+        // 整合通用卡死檢測與傳送門卡死檢測
         if (!_isMoving || _navMeshAgent == null || !_navMeshAgent.isActiveAndEnabled)
         {
             _stuckTimer = 0f;
             return;
         }
 
-        // If moving fast enough, reset timer
-        if (_navMeshAgent.velocity.sqrMagnitude > STUCK_VELOCITY_THRESHOLD)
+        // 1. 通用卡死檢測 (General Stuck Detection)
+        // 如果代理人應該移動 (_isMoving) 但速度極低
+        if (_navMeshAgent.velocity.sqrMagnitude < STUCK_VELOCITY_THRESHOLD)
+        {
+            _stuckTimer += Time.deltaTime;
+        }
+        else
         {
             _stuckTimer = 0f;
-            return;
         }
-
-        // Accumulate stuck time
-        _stuckTimer += Time.deltaTime;
 
         if (_stuckTimer > STUCK_TIME_THRESHOLD)
         {
-            // Check for nearby portals
+            Debug.LogWarning($"[Agent {agentName}] Detected stuck (Velocity < {STUCK_VELOCITY_THRESHOLD}) for {_stuckTimer:F1}s. Attempting resolution.");
+
+            // 優先檢查是否在傳送門附近 (既有邏輯)
+            bool resolvedByPortal = false;
             Collider[] hits = Physics.OverlapSphere(transform.position, PORTAL_DETECTION_RADIUS);
             foreach (var hit in hits)
             {
                 PortalTrigger portalTrigger = hit.GetComponent<PortalTrigger>();
                 if (portalTrigger != null && portalTrigger.portal != null && portalTrigger.portal.TargetPortal != null)
                 {
-                    Debug.LogWarning($"[Agent {agentName}] Stuck near portal {portalTrigger.name} for {STUCK_TIME_THRESHOLD}s. Forcing teleport.");
+                    Debug.Log($"[Agent {agentName}] Stuck near portal {portalTrigger.name}. Teleporting to exit.");
                     
                     Transform exitTransform = portalTrigger.portal.TargetPortal.ExitTransform;
                     if (exitTransform != null)
                     {
-                        // [User Request] Push out at least 1.5 tiles (units)
-                        // Try to find a valid position in the forward direction of the exit
                         Vector3 pushDirection = exitTransform.forward; 
                         Vector3 targetPos = exitTransform.position + pushDirection * 1.5f;
 
-                        // Ensure valid NavMesh position (SamplePosition finds nearest valid point)
                         if (UnityEngine.AI.NavMesh.SamplePosition(targetPos, out UnityEngine.AI.NavMeshHit navHit, 2.0f, UnityEngine.AI.NavMesh.AllAreas))
+                        {
+                            targetPos = navHit.position;
+                        }
+                        else if (UnityEngine.AI.NavMesh.SamplePosition(exitTransform.position, out navHit, 2.0f, UnityEngine.AI.NavMesh.AllAreas))
                         {
                             targetPos = navHit.position;
                         }
                         else
                         {
-                            // Fallback: try sampling around the exit if forward push fails
-                             if (UnityEngine.AI.NavMesh.SamplePosition(exitTransform.position, out navHit, 2.0f, UnityEngine.AI.NavMesh.AllAreas))
-                             {
-                                 targetPos = navHit.position;
-                             }
-                             else
-                             {
-                                 targetPos = exitTransform.position;
-                             }
+                            targetPos = exitTransform.position;
                         }
 
                         _navMeshAgent.Warp(targetPos);
@@ -370,13 +419,25 @@ public class AgentController : MonoBehaviour
                         {
                             _navMeshAgent.SetDestination(_targetPosition);
                         }
-                        _stuckTimer = 0f;
-                        return;
+                        resolvedByPortal = true;
+                        break;
                     }
                 }
             }
-            // Reset if no portal found or after check
-             _stuckTimer = 0f;
+
+            // 如果不在傳送門附近，嘗試原地重算路徑 (General Unstuck)
+            if (!resolvedByPortal)
+            {
+                Debug.Log($"[Agent {agentName}] General stuck. Resetting path.");
+                _navMeshAgent.ResetPath();
+                if (_targetPosition != Vector3.zero)
+                {
+                    // 稍微偏移目標點，強迫重新計算路徑
+                    _navMeshAgent.SetDestination(_targetPosition);
+                }
+            }
+
+            _stuckTimer = 0f;
         }
     }
 
@@ -1042,6 +1103,7 @@ private void UpdateNameColor()
 
     public void OnTeleported(bool usedDoor, bool suppressEffects = false)
     {
+        Stun(0.5f);
         ForceImmediateVisualRefresh();
         if (!suppressEffects) _simulationClient?.ReportTeleport(agentName);
     }
