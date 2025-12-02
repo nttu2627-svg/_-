@@ -1,5 +1,6 @@
 // Scripts/World/PortalController.cs
 using UnityEngine;
+using System.Collections.Generic; // <--- 加入這一行來修復 List<> 錯誤
 
 [RequireComponent(typeof(Collider2D))]
 public class PortalController : MonoBehaviour
