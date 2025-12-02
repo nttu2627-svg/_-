@@ -147,17 +147,99 @@ LOCATION_ALIAS_MAP = {
 
 # --- 路由表：定義跨區域移動的中繼點 (CurrentZone, TargetZone) -> NextPortalOrZone ---
 LOCATION_ROUTING = {
-    # 從公寓二樓去地鐵：先走樓梯到一樓
-    ("Apartment_F2", "Subway"): "公寓二樓_室內", 
-    # 從公寓一樓去地鐵：先走大門到室外
+    # ==========================================
+    # 1. 從 [公寓二樓] (Apartment_F2) 出發
+    # ==========================================
+    # 去一樓：走樓梯下樓
+    ("Apartment_F2", "Apartment_F1"): "公寓二樓_室內",
+    # 去其他任何地方 (室外、地鐵、商店...)：必須先下樓到一樓
+    ("Apartment_F2", "Exterior"): "公寓二樓_室內",
+    ("Apartment_F2", "Subway"): "公寓二樓_室內",
+    ("Apartment_F2", "School"): "公寓二樓_室內",
+    ("Apartment_F2", "Rest"): "公寓二樓_室內",
+    ("Apartment_F2", "Gym"): "公寓二樓_室內",
+    ("Apartment_F2", "Super"): "公寓二樓_室內",
+
+    # ==========================================
+    # 2. 從 [公寓一樓] (Apartment_F1) 出發
+    # ==========================================
+    # 上樓：走室內樓梯
+    ("Apartment_F1", "Apartment_F2"): "公寓一樓_室內",
+    # 出門：走大門 (去室外或任何其他建築必須先出門)
+    ("Apartment_F1", "Exterior"): "公寓大門_室內",
     ("Apartment_F1", "Subway"): "公寓大門_室內",
-    # 從室外去地鐵：走地鐵入口
+    ("Apartment_F1", "School"): "公寓大門_室內",
+    ("Apartment_F1", "Rest"): "公寓大門_室內",
+    ("Apartment_F1", "Gym"): "公寓大門_室內",
+    ("Apartment_F1", "Super"): "公寓大門_室內",
+
+    # ==========================================
+    # 3. 從 [室外] (Exterior) 出發 (分發中心)
+    # ==========================================
+    # 回公寓 (預設到 F1)
+    ("Exterior", "Apartment_F1"): "公寓大門_室外",
+    # 去公寓二樓：先進大門 (到 F1)
+    ("Exterior", "Apartment_F2"): "公寓大門_室外",
+    
+    # 去地鐵：隨機選一個入口 (這裡指定左入口為主要路徑)
     ("Exterior", "Subway"): "地鐵左入口_室外",
     
-    # 反向：地鐵回公寓
-    ("Subway", "Apartment_F2"): "地鐵左樓梯_室內", # 先出地鐵
-    ("Exterior", "Apartment_F2"): "公寓大門_室外", # 進公寓大門
-    ("Apartment_F1", "Apartment_F2"): "公寓一樓_室內", # 上樓
+    # 去各個衛星建築
+    ("Exterior", "School"): "學校門口_室外",
+    ("Exterior", "Rest"): "餐廳_室外",
+    ("Exterior", "Gym"): "健身房_室外",
+    ("Exterior", "Super"): "超市右門_室外", # 根據 Alias 選擇右門作為主要入口
+
+    # ==========================================
+    # 4. 從 [地鐵] (Subway) 出發
+    # ==========================================
+    # 去任何地方都必須先回到地面 (Exterior)
+    ("Subway", "Exterior"): "地鐵左樓梯_室內",
+    ("Subway", "Apartment_F1"): "地鐵左樓梯_室內",
+    ("Subway", "Apartment_F2"): "地鐵左樓梯_室內",
+    ("Subway", "School"): "地鐵左樓梯_室內",
+    ("Subway", "Rest"): "地鐵左樓梯_室內",
+    ("Subway", "Gym"): "地鐵左樓梯_室內",
+    ("Subway", "Super"): "地鐵左樓梯_室內",
+
+    # ==========================================
+    # 5. 從 [衛星建築] 出發 (School, Rest, Gym, Super)
+    # ==========================================
+    # 邏輯：如果在這些單一出入口的室內，要去任何其他地方，唯一的路就是出門。
+    
+    # --- 從學校出發 ---
+    ("School", "Exterior"): "學校門口_室內",
+    ("School", "Apartment_F1"): "學校門口_室內",
+    ("School", "Apartment_F2"): "學校門口_室內",
+    ("School", "Subway"): "學校門口_室內",
+    ("School", "Rest"): "學校門口_室內",
+    ("School", "Gym"): "學校門口_室內",
+    ("School", "Super"): "學校門口_室內",
+
+    # --- 從餐廳出發 ---
+    ("Rest", "Exterior"): "餐廳_室內",
+    ("Rest", "Apartment_F1"): "餐廳_室內",
+    ("Rest", "Subway"): "餐廳_室內",
+    ("Rest", "School"): "餐廳_室內",
+    ("Rest", "Gym"): "餐廳_室內",
+    ("Rest", "Super"): "餐廳_室內",
+
+    # --- 從健身房出發 ---
+    ("Gym", "Exterior"): "健身房_室內",
+    ("Gym", "Apartment_F1"): "健身房_室內",
+    ("Gym", "Subway"): "健身房_室內",
+    ("Gym", "School"): "健身房_室內",
+    ("Gym", "Rest"): "健身房_室內",
+    ("Gym", "Super"): "健身房_室內",
+
+    # --- 從超市出發 ---
+    # 假設超市內部是連通的，選擇一個主要出口
+    ("Super", "Exterior"): "超市右門_室內",
+    ("Super", "Apartment_F1"): "超市右門_室內",
+    ("Super", "Subway"): "超市右門_室內",
+    ("Super", "School"): "超市右門_室內",
+    ("Super", "Rest"): "超市右門_室內",
+    ("Super", "Gym"): "超市右門_室內",
 }
 
 def normalize_location_name(location_name):
