@@ -547,7 +547,7 @@ class TownAgent:
 
     async def set_new_action(self, new_action, destination):
         resolved_destination = self.resolve_destination(new_action, destination)
-
+        print(f"[{self.name}] Action: {new_action}, Target: {destination} -> Resolved: {resolved_destination} (Home: {self.home})")
         if self.curr_action == new_action and self.target_place == resolved_destination:
             return
         self.interrupt_action()
