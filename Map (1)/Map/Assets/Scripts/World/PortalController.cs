@@ -202,6 +202,9 @@ public class PortalController : MonoBehaviour
             true);
     }
 
+    // [New] Capacity Limiting
+    private List<float> _usageTimestamps = new List<float>();
+
     public bool TryTeleport(
         Transform mover,
         Teleportable2D teleportable = null,
@@ -220,6 +223,28 @@ public class PortalController : MonoBehaviour
         if ((allowedLayers.value & (1 << mover.gameObject.layer)) == 0)
             return false;
 
+        // [New] Capacity Check
+        // Capacity = Floor(Width). Min 1.
+        // e.g. Width 1.0 -> 1 person. Width 2.5 -> 2 people.
+        var col = GetComponent<BoxCollider2D>();
+        int capacity = 1;
+        if (col != null)
+        {
+            capacity = Mathf.Max(1, Mathf.FloorToInt(col.size.x));
+        }
+
+        // Clean up old timestamps (window = reenterCooldown * 2 or fixed small window like 0.5s)
+        // Using reenterCooldown as the "busy" window for the slot
+        float now = Time.time;
+        float busyWindow = reenterCooldown > 0 ? reenterCooldown : 0.2f;
+        _usageTimestamps.RemoveAll(t => now - t > busyWindow);
+
+        if (_usageTimestamps.Count >= capacity)
+        {
+            // Portal is busy
+            return false;
+        }
+
         teleportable = teleportable == null ? mover.GetComponent<Teleportable2D>() : teleportable;
         rb = rb == null ? mover.GetComponent<Rigidbody2D>() : rb;
         movingCollider = movingCollider == null ? mover.GetComponent<Collider2D>() : movingCollider;
@@ -234,6 +259,9 @@ public class PortalController : MonoBehaviour
             if (teleportable.lastPortalId == _resolvedTarget.portalId)
                 return false;   // 避免來回
         }
+
+        // Record usage
+        _usageTimestamps.Add(now);
 
         var dst = _resolvedTarget;
         var dstExit = dst.exitPoint != null ? dst.exitPoint : dst.transform;
@@ -264,7 +292,36 @@ public class PortalController : MonoBehaviour
             newZ += delta;
         }
 
-        mover.position = newPos;
+        // [Fix] Use NavMesh.SamplePosition to ensure valid position for agents
+        if (agent != null)
+        {
+            UnityEngine.AI.NavMeshHit hit;
+            if (UnityEngine.AI.NavMesh.SamplePosition(newPos, out hit, 2.0f, UnityEngine.AI.NavMesh.AllAreas))
+            {
+                newPos = hit.position;
+            }
+            else
+            {
+                Debug.LogWarning($"[Portal] {name} target position is far from NavMesh!");
+            }
+            
+            var navAgent = mover.GetComponent<UnityEngine.AI.NavMeshAgent>();
+            if (navAgent != null)
+            {
+                navAgent.Warp(newPos);
+                navAgent.velocity = Vector3.zero;
+                navAgent.ResetPath();
+            }
+            else
+            {
+                mover.position = newPos;
+            }
+        }
+        else
+        {
+            mover.position = newPos;
+        }
+
         mover.rotation = Quaternion.Euler(0, 0, newZ);
         if (rb != null && preserveMomentum) rb.linearVelocity = newVel;
 
@@ -281,6 +338,37 @@ public class PortalController : MonoBehaviour
         }
 
         return true;
+    }
+
+    // [New] Helper method for explicit agent warping (as requested)
+    public void WarpAgent(UnityEngine.AI.NavMeshAgent agent)
+    {
+        if (exitPoint == null)
+        {
+            Debug.LogError($"[Portal] {name} 缺少 Exit Point！代理人可能會傳送到世界原點。");
+            return;
+        }
+
+        Vector3 targetPos = exitPoint.position;
+        UnityEngine.AI.NavMeshHit hit;
+
+        // 關鍵修正：在傳送前，先在目標點周圍 2.0f 範圍內尋找最近的有效 NavMesh 點
+        // 避免因錨點偏差導致傳送到牆壁內或地板下
+        if (UnityEngine.AI.NavMesh.SamplePosition(targetPos, out hit, 2.0f, UnityEngine.AI.NavMesh.AllAreas))
+        {
+            targetPos = hit.position;
+        }
+        else
+        {
+            Debug.LogWarning($"[Portal] {name} 的 Exit Point 距離 NavMesh 太遠，代理人可能會卡住！");
+        }
+
+        // 使用 Warp 進行物理瞬移，這會自動重置 Agent 的路徑計算
+        agent.Warp(targetPos);
+        
+        // 額外防護：重置速度與路徑，避免殘留慣性
+        agent.velocity = Vector3.zero;
+        agent.ResetPath();
     }
 
     private Vector3 FindSafeExitPosition(Transform dstExit, Vector3 desiredPosition, Collider2D movingCollider)

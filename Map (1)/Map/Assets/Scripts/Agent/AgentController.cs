@@ -21,6 +21,14 @@ public class AgentCommand
     public string ActionName;
     public bool UseTeleport;
 }
+
+[Serializable]
+public struct ReactionData
+{
+    public string action;
+    public string target;
+    public string anim;
+}
 [RequireComponent(typeof(NavMeshAgent))]
 public class AgentController : MonoBehaviour
 {
@@ -66,6 +74,7 @@ public class AgentController : MonoBehaviour
     private readonly HashSet<string> _manualLocationOverrides = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private const float CoordinateSnapThreshold = 8f;
     private string _lastInstructionDestination;
+    private Animator _animator; // [New] For direct animation control
     
     private static readonly HashSet<string> UnknownLocationAliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
@@ -159,6 +168,8 @@ public class AgentController : MonoBehaviour
             }
         }
         // ===============================================
+        
+        _animator = GetComponentInChildren<Animator>(); // [New] Initialize Animator
 
         _displayName = nameTextUGUI != null && !string.IsNullOrEmpty(nameTextUGUI.text)
             ? nameTextUGUI.text
@@ -1503,6 +1514,63 @@ private void UpdateNameColor()
         _navMeshAgent.ResetPath();
         _navMeshDriving = false;
     }
+
+
+    // [New] System 1 Fast Reaction Handler
+    public void OnFastReactionReceived(string jsonString)
+    {
+        try
+        {
+            ReactionData data = JsonUtility.FromJson<ReactionData>(jsonString);
+            
+            // 立即中斷當前行為 (System 1 優先權最高)
+            if (_navMeshAgent != null && _navMeshAgent.isActiveAndEnabled)
+            {
+                _navMeshAgent.isStopped = true;
+                _navMeshAgent.ResetPath();
+            }
+            StopAllCoroutines();
+            if (_cts != null) _cts.Cancel();
+            _cts = new CancellationTokenSource();
+            ProcessCommandBufferLoop(_cts.Token).Forget();
+
+            // 直接觸發動畫與行為
+            if (_animator != null && !string.IsNullOrEmpty(data.anim))
+            {
+                _animator.SetTrigger(data.anim);
+            }
+            else if (_visualController != null && !string.IsNullOrEmpty(data.anim))
+            {
+                // Fallback to visual controller if animator is not directly accessible or data.anim is an emote name
+                _visualController.PlayEmote(data.anim);
+            }
+            
+            if (data.action == "RUN" && !string.IsNullOrEmpty(data.target))
+            {
+                if (TryFindLocationTransform(data.target, out Transform targetTrans) && targetTrans != null)
+                {
+                    if (_navMeshAgent != null && _navMeshAgent.isActiveAndEnabled)
+                    {
+                        _navMeshAgent.isStopped = false;
+                        _navMeshAgent.speed = 6.0f; // 恐慌速度
+                        _navMeshAgent.SetDestination(targetTrans.position);
+                        _navMeshDriving = true;
+                        SetBehaviourState(AgentBehaviourState.Moving);
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"[Agent {agentName}] FastReaction RUN target '{data.target}' not found.");
+                }
+            }
+            // Add other actions if needed
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[Agent {agentName}] OnFastReactionReceived Error: {e}");
+        }
+    }
+
     private async UniTaskVoid ProcessCommandBufferLoop(CancellationToken token)
     {
         while (!token.IsCancellationRequested)

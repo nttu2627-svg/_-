@@ -145,6 +145,20 @@ LOCATION_ALIAS_MAP = {
     "park": "Exterior",
 }
 
+# --- 路由表：定義跨區域移動的中繼點 (CurrentZone, TargetZone) -> NextPortalOrZone ---
+LOCATION_ROUTING = {
+    # 從公寓二樓去地鐵：先走樓梯到一樓
+    ("Apartment_F2", "Subway"): "公寓二樓_室內", 
+    # 從公寓一樓去地鐵：先走大門到室外
+    ("Apartment_F1", "Subway"): "公寓大門_室內",
+    # 從室外去地鐵：走地鐵入口
+    ("Exterior", "Subway"): "地鐵左入口_室外",
+    
+    # 反向：地鐵回公寓
+    ("Subway", "Apartment_F2"): "地鐵左樓梯_室內", # 先出地鐵
+    ("Exterior", "Apartment_F2"): "公寓大門_室外", # 進公寓大門
+    ("Apartment_F1", "Apartment_F2"): "公寓一樓_室內", # 上樓
+}
 
 def normalize_location_name(location_name):
     if not location_name:
@@ -289,6 +303,11 @@ class TownAgent:
 
         destination_str = str(destination)
         destination_str = normalize_location_name(destination_str)
+        
+        # [New] Routing Logic
+        if (current_location, destination_str) in LOCATION_ROUTING:
+            return LOCATION_ROUTING[(current_location, destination_str)]
+
         if destination_str and destination_str.lower() == "subway":
             if self.curr_place == "Subway" or (self.curr_place and "地鐵" in self.curr_place):
                 return "Subway"
@@ -370,7 +389,8 @@ class TownAgent:
             chosen = random.choice(destination)
         else:
             chosen = destination
-
+        
+        # [Fix] Update previous place correctly
         self.previous_place = self.curr_place
 
         if chosen in SUBWAY_INTERIOR_PORTALS:
@@ -832,3 +852,46 @@ class TownAgent:
         log_msg = f"{self.name} 正在 {self.curr_action} (HP:{self.health})。"
         self.disaster_experience_log.append(log_msg)
         return log_msg
+
+def get_flash_reaction_prompt(agent_profile, sensory_input):
+    """
+    針對 DeepSeek/Ollama 優化的 System 1 極速反應 Prompt
+    """
+    
+    # 1. 定義極簡的 System Prompt，強調 "INSTINCT" (本能) 與 "JSON"
+    system_prompt = f"""
+You are {agent_profile['name']}, a {agent_profile['mbti']} personality ({agent_profile['traits']}).
+MODE: SURVIVAL INSTINCT (SYSTEM 1).
+NO THINKING. NO EXPLANATION. REACT IMMEDIATELY.
+
+You must output a SINGLE JSON object containing:
+- "action": One of.
+- "target": The closest logical object or vector.
+- "anim": A specific Unity animation trigger string.
+
+Example Response:
+{{"action": "DUCK", "target": "Table", "anim": "Duck_Cover_Idle"}}
+"""
+
+    # 2. 使用 Few-Shot Examples 建立"條件反射"
+    # 這裡直接教模型：看到什麼(Input) -> 做什麼(Output)
+    few_shot_examples = """
+Input: Event=EARTHQUAKE, Intensity=High, Nearby=Desk
+Response: {"action": "DUCK", "target": "Desk", "anim": "Duck_Under_Table"}
+
+Input: Event=FIRE, Intensity=Medium, Nearby=Exit_Door
+Response: {"action": "RUN", "target": "Exit_Door", "anim": "Run_Panic"}
+
+Input: Event=AFTERSHOCK, Intensity=Low, Nearby=Family_Member
+Response: {"action": "INTERACT", "target": "Family_Member", "anim": "Hug_Fear"}
+"""
+
+    # 3. 組合當前情境
+    user_prompt = f"""
+{few_shot_examples}
+
+Input: Event={sensory_input['event']}, Intensity={sensory_input['intensity']}, Nearby={sensory_input['nearby_objects']}
+Response: 
+"""
+    
+    return system_prompt, user_prompt
