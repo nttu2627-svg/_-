@@ -41,6 +41,7 @@ try:
     from simulation_logic.agent_actions import handle_social_interactions, generate_action_instructions
     from simulation_logic.disaster_logger import 災難記錄器
     from simulation_logic.report_generator import init_report_generator, get_report_generator
+    from simulation_logic.failure_analyzer import get_failure_analyzer
 
     print("✅ [SUCCESS] 所有核心模組已成功導入。")
     LLM_FUNCTIONS = {
@@ -311,7 +312,8 @@ async def initialize_and_simulate(params, step_sync_event: Optional[asyncio.Even
         else:
             for agent in agents:
                 pronunciatio = getattr(agent, "curr_action_pronunciatio", "...")
-                log_line = f"{agent.name} 當前活動: {agent.curr_action} ({pronunciatio}) --- 所在的地點({agent.curr_place})"
+                display_location = normalize_location_name(agent.curr_place)
+                log_line = f"{agent.name} 當前活動: {agent.curr_action} ({pronunciatio}) --- 所在的地點({display_location})"
                 if agent.curr_action != "聊天" and agent.current_thought:
                     log_line += f"\n  內心想法: 『{_truncate_str(agent.current_thought, LONG_TEXT_LIMIT)}』"
                 current_step_log.append(log_line)
@@ -356,6 +358,7 @@ async def initialize_and_simulate(params, step_sync_event: Optional[asyncio.Even
     # [FEATURE] 閒置時間追蹤器
     # 當所有代理人的 target == current 時，記錄開始時間
     idle_start_time: Optional[float] = None
+    failure_analyzer = get_failure_analyzer()
 
     while sim_state["time"] < sim_end_time_dt:
         current_time_dt = sim_state["time"]
@@ -422,7 +425,15 @@ async def initialize_and_simulate(params, step_sync_event: Optional[asyncio.Even
             # 社交互動：僅在 >1 人醒著 且 沒有被閒置強制推進 時執行
             if active_count > 1 and sim_state["phase"] in ["Normal", "PostQuakeDiscussion"] and not force_skip_by_idle:
                 await handle_social_interactions(active_agents, llm_context, LLM_FUNCTIONS)
-        
+
+            # ====== [FEATURE] 失敗案例分析 ======
+            failure_analyzer = get_failure_analyzer()
+            for agent in agents:
+                failure_analyzer.check_agent_behavior(
+                    agent=agent,
+                    sim_time=current_time_dt.strftime("%H:%M"),
+                    phase=sim_state["phase"]
+                )
         # ====== 產生行動指令 ======
         # 優化：如果判定為 fast_forward，直接給出空指令或簡單移動指令，避免呼叫 LLM
         if llm_context.get("skip_reasoning", False):
@@ -492,6 +503,8 @@ async def initialize_and_simulate(params, step_sync_event: Optional[asyncio.Even
     # 10. 模擬結束
     final_agent_states = {agent.name: {"hp": agent.health} for agent in agents}
     report = disaster_logger.生成報表(final_agent_states)
+    failure_report = failure_analyzer.generate_markdown_report()
+    print(failure_report)
     chart_path = params.get("chart_path", None)
     if chart_path and isinstance(chart_path, str) and os.path.exists(chart_path):
         report["chart"] = os.path.abspath(chart_path)

@@ -34,12 +34,26 @@ public class AgentFailSafeSystem : MonoBehaviour
     [Tooltip("區域檢測頻率 (秒)")]
     public float zoneCheckInterval = 0.2f;
 
+    [Header("群聚偵測設定")]
+    [Tooltip("群聚偵測頻率 (秒)")]
+    public float crowdingCheckInterval = 1.5f;
+    
+    [Tooltip("偵測週圍代理人的半徑")]
+    public float crowdingRadius = 2.0f;
+    
+    [Tooltip("周圍代理人數量超過此值視為群聚")]
+    public int crowdingThreshold = 2;
+    
+    [Tooltip("群聚狀態持續多久（秒）才觸發傳送")]
+    public float crowdingDuration = 4.0f;
+
     // 私有變數
     private NavMeshAgent _navAgent;
     private AgentController _agentController;
     private Vector3 _lastCheckPosition;
     private int _stuckCount = 0;
     private string _currentZone = "";
+    private float _crowdingStartTime = -1f; // 群聚開始時間
     
     // 區域 Collider 快取
     private static Dictionary<string, Collider2D> _zoneBoundsCache = new Dictionary<string, Collider2D>();
@@ -81,6 +95,7 @@ public class AgentFailSafeSystem : MonoBehaviour
         // 啟動協程
         StartCoroutine(StuckCheckRoutine());
         StartCoroutine(ZoneDetectionRoutine());
+        StartCoroutine(CrowdingDetectionRoutine()); // 新增：群聚偵測
     }
 
     /// <summary>
@@ -355,4 +370,136 @@ public class AgentFailSafeSystem : MonoBehaviour
     {
         StopAllCoroutines();
     }
+
+    // ====== 群聚偵測保底機制 ======
+
+    /// <summary>
+    /// 群聚偵測協程
+    /// 當代理人擠在一起且當前區域與目標區域不匹配時，自動傳送至目標位置
+    /// </summary>
+    IEnumerator CrowdingDetectionRoutine()
+    {
+        WaitForSeconds wait = new WaitForSeconds(crowdingCheckInterval);
+
+        while (true)
+        {
+            yield return wait;
+
+            // 跳過條件：未初始化、非活動
+            if (_navAgent == null || !_navAgent.isActiveAndEnabled) continue;
+            if (_agentController == null) continue;
+
+            // 取得目標位置
+            Vector3 targetPos = _navAgent.destination;
+            if (targetPos == Vector3.zero) continue;
+
+            // 計算與目標的距離
+            float distanceToTarget = Vector3.Distance(transform.position, targetPos);
+            if (distanceToTarget <= minDistanceToTeleport) 
+            {
+                // 已經到達目標，重置群聚計時器
+                _crowdingStartTime = -1f;
+                continue;
+            }
+
+            // 偵測周圍的代理人數量
+            int nearbyAgentCount = CountNearbyAgents();
+
+            // 判斷是否處於群聚狀態
+            bool isCrowded = nearbyAgentCount >= crowdingThreshold;
+
+            // 取得當前區域和目標區域
+            string currentZone = _currentZone;
+            string targetZone = GetTargetZoneName(targetPos);
+
+            // 區域不匹配檢查 (當前區域與目標區域不同)
+            bool zoneMismatch = !string.IsNullOrEmpty(currentZone) && 
+                               !string.IsNullOrEmpty(targetZone) && 
+                               currentZone != targetZone;
+
+            if (isCrowded && (zoneMismatch || distanceToTarget > 5.0f))
+            {
+                // 開始或繼續群聚計時
+                if (_crowdingStartTime < 0)
+                {
+                    _crowdingStartTime = Time.time;
+                    Debug.Log($"[FailSafe] {gameObject.name} 偵測到群聚 (周圍 {nearbyAgentCount} 人)" +
+                        $"，當前區域: {currentZone}，目標區域: {targetZone}，開始計時...");
+                }
+                else
+                {
+                    float elapsed = Time.time - _crowdingStartTime;
+                    if (elapsed >= crowdingDuration)
+                    {
+                        Debug.LogWarning($"[FailSafe] {gameObject.name} 群聚狀態超過 {crowdingDuration} 秒" +
+                            $"，區域不匹配 ({currentZone} → {targetZone})，觸發傳送！");
+                        
+                        PerformRescueTeleport(targetPos);
+                        _crowdingStartTime = -1f;
+                    }
+                }
+            }
+            else
+            {
+                // 不再群聚或已到達，重置計時器
+                if (_crowdingStartTime >= 0)
+                {
+                    _crowdingStartTime = -1f;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// 計算周圍代理人數量
+    /// </summary>
+    private int CountNearbyAgents()
+    {
+        int count = 0;
+        
+        // 使用 Physics2D.OverlapCircle 偵測周圍的代理人
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(
+            new Vector2(transform.position.x, transform.position.y), 
+            crowdingRadius
+        );
+
+        foreach (var col in colliders)
+        {
+            if (col.gameObject == gameObject) continue; // 排除自己
+            
+            // 檢查是否為代理人
+            if (col.GetComponent<AgentController>() != null || 
+                col.GetComponent<NavMeshAgent>() != null)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /// <summary>
+    /// 根據目標位置取得目標區域名稱
+    /// </summary>
+    private string GetTargetZoneName(Vector3 targetPosition)
+    {
+        Vector2 targetPos2D = new Vector2(targetPosition.x, targetPosition.y);
+
+        foreach (var kvp in _zoneBoundsCache)
+        {
+            if (kvp.Value == null) continue;
+
+            if (kvp.Value.bounds.Contains(targetPos2D))
+            {
+                return kvp.Key;
+            }
+        }
+
+        return "";
+    }
+
+    /// <summary>
+    /// 取得當前群聚偵測狀態 (用於除錯)
+    /// </summary>
+    public bool IsCrowded => _crowdingStartTime >= 0;
 }
