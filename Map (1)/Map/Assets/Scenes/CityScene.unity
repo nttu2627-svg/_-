@@ -84917,7 +84917,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -85070,7 +85070,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -85367,7 +85367,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -90104,7 +90104,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -92734,7 +92734,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -94501,7 +94501,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -94966,7 +94966,7 @@ Transform:
   m_GameObject: {fileID: 171539064}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -83.5, y: -50.6, z: 0}
+  m_LocalPosition: {x: -87.55, y: -54.73, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -97389,7 +97389,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -97730,7 +97730,7 @@ Transform:
   m_GameObject: {fileID: 292304850}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 166.7, y: -97.1, z: 0}
+  m_LocalPosition: {x: 188.27, y: -98.12, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -97927,7 +97927,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -103566,7 +103566,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -160575,7 +160575,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -160609,7 +160609,7 @@ MonoBehaviour:
   allowNavMeshWalkThrough: 1
   forceTeleport: 0
   cinematicTeleportDistance: 8
-  useFadeOnTeleport: 0
+  useFadeOnTeleport: 1
   onTransitionStarted:
     m_PersistentCalls:
       m_Calls: []
@@ -160847,7 +160847,7 @@ Transform:
   m_GameObject: {fileID: 522793805}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -98, y: 10.5, z: 0}
+  m_LocalPosition: {x: -97.09, y: 13.07, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -167606,7 +167606,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1337941227}
   m_HandleRect: {fileID: 1337941226}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -168061,7 +168061,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -253096,7 +253096,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -253756,7 +253756,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -262655,7 +262655,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1922061739}
   m_HandleRect: {fileID: 1922061738}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -283506,7 +283506,7 @@ Transform:
   m_GameObject: {fileID: 954769619}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -97.1, y: -30.24, z: 0}
+  m_LocalPosition: {x: -97.1, y: -6.1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -283822,7 +283822,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -284703,7 +284703,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -285693,7 +285693,7 @@ Transform:
   m_GameObject: {fileID: 1047446434}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -86.8, y: 42.9, z: 0}
+  m_LocalPosition: {x: -84.65, y: 49.62, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -287577,8 +287577,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1362950303}
   m_HandleRect: {fileID: 1362950302}
   m_Direction: 0
-  m_Value: 0
-  m_Size: 1
+  m_Value: 1
+  m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -299480,7 +299480,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -300159,7 +300159,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -300435,7 +300435,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -300914,7 +300914,7 @@ Transform:
   m_GameObject: {fileID: 1338728549}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -97.16, y: -5.16, z: 0}
+  m_LocalPosition: {x: -97.16, y: -30.1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -308265,7 +308265,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -308697,7 +308697,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -309452,7 +309452,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -311151,7 +311151,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -317792,7 +317792,7 @@ Transform:
   m_GameObject: {fileID: 1871402461}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1, y: -109.7, z: 0}
+  m_LocalPosition: {x: -10.85, y: -116.45, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -330770,7 +330770,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -356238,7 +356238,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -356514,7 +356514,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 0
@@ -356933,7 +356933,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   reenterCooldown: 0.15
-  exitNudge: 0.08
+  exitNudge: 0.1
   preserveMomentum: 1
   rotateMomentumWithPortal: 1
   matchExitRotation: 1

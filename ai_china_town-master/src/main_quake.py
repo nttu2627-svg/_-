@@ -400,7 +400,7 @@ class TownAgent:
         """Attempts to help nearby injured conscious agents."""
         if self.mental_state != "helping": return None
 
-        nearby_injured = [
+        nearby_injured = [agent for agent in other_agents if agent.is_injured and agent.mental_state != "unconscious"]
 
         log_prefix = f"  {self.name} ({self.MBTI}):"
         action_desc = ""

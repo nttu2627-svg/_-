@@ -280,6 +280,9 @@ void Update()
         // 5. 檢查是否卡在傳送門附近
         CheckAndResolvePortalStuck();
 
+        // 6. 動態更新避障優先級 (解決群體擁擠問題)
+        UpdateDynamicAvoidancePriority();
+
         if (!_isInitialized || !gameObject.activeSelf) return;
         if (_isPortalPaused) return;
 
@@ -651,10 +654,18 @@ void Update()
         _navMeshAgent.stoppingDistance = Mathf.Max(0.01f, _arrivalThreshold);
         _navMeshAgent.acceleration = Mathf.Max(1f, _movementSpeed * 2f);
         _navMeshAgent.autoBraking = true;
-        _navMeshAgent.acceleration = Mathf.Max(1f, _movementSpeed * 2f);
-        _navMeshAgent.autoBraking = true;
-        // [修改] 啟用高品質避障
-        _navMeshAgent.obstacleAvoidanceType = UnityEngine.AI.ObstacleAvoidanceType.NoObstacleAvoidance;
+
+        // [優化 1] 縮小代理人半徑以解決擁擠問題 (原本 0.5 → 0.25)
+        // 這允許代理人在樓梯等狹窄空間中更緊密地排列
+        _navMeshAgent.radius = 0.25f;
+
+        // [優化 2] 啟用高品質避障 (HighQualityObstacleAvoidance)
+        // 比 NoObstacleAvoidance 更好，在擁擠時仍能避讓
+        _navMeshAgent.obstacleAvoidanceType = UnityEngine.AI.ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+
+        // [優化 3] 設定較高的避障優先級 (數字越小優先級越高)
+        // 移動中的代理人會「推開」靜止的代理人
+        _navMeshAgent.avoidancePriority = 50; // 預設值，會在 Update 中動態調整
 
         if (_navMeshAgent.enabled)
         {
@@ -671,6 +682,33 @@ void Update()
                     _navMeshAgent.Warp(hit.position);
                 }
             }
+        }
+
+        // 自動添加 FailSafe 系統
+        if (GetComponent<AgentFailSafeSystem>() == null)
+        {
+            gameObject.AddComponent<AgentFailSafeSystem>();
+        }
+    }
+
+    /// <summary>
+    /// 動態更新避障優先級
+    /// 移動中的代理人優先級高 (10)，靜止的代理人優先級低 (80)
+    /// </summary>
+    private void UpdateDynamicAvoidancePriority()
+    {
+        if (_navMeshAgent == null || !_navMeshAgent.isActiveAndEnabled) return;
+
+        // 根據速度動態調整優先級
+        if (_navMeshAgent.velocity.sqrMagnitude > 0.1f)
+        {
+            // 正在移動 → 高優先級，可以「推開」別人
+            _navMeshAgent.avoidancePriority = 10;
+        }
+        else
+        {
+            // 靜止或緩慢 → 低優先級，會被別人推開
+            _navMeshAgent.avoidancePriority = 80;
         }
     }
 
