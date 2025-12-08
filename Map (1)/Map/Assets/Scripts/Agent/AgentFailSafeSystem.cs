@@ -273,16 +273,22 @@ public class AgentFailSafeSystem : MonoBehaviour
             safeTeleportPosition = hit.position;
         }
 
-        Debug.LogError($"[FailSafe] 強制傳送 {gameObject.name} 到 {safeTeleportPosition}");
+        Debug.LogWarning($"[FailSafe] 強制傳送 {gameObject.name} 到 {safeTeleportPosition}");
 
         // 關鍵：先停止 Agent，再 Warp，再恢復
         _navAgent.isStopped = true;
-        _navAgent.ResetPath();
+        
+        // [修復] 只有在代理人已經在 NavMesh 上時才呼叫 ResetPath
+        if (_navAgent.isOnNavMesh)
+        {
+            _navAgent.ResetPath();
+        }
+        
         _navAgent.Warp(safeTeleportPosition);
         _navAgent.isStopped = false;
 
-        // 重新設定路徑 (如果有目標)
-        if (targetPosition != Vector3.zero)
+        // 重新設定路徑 (如果有目標且在 NavMesh 上)
+        if (targetPosition != Vector3.zero && _navAgent.isOnNavMesh)
         {
             _navAgent.SetDestination(targetPosition);
         }

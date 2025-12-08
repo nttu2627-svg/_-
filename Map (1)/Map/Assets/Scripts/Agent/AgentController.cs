@@ -1123,14 +1123,38 @@ private void UpdateNameColor()
 
     public void TeleportTo(Vector3 position, bool suppressEffects, params string[] locationAliases)
     {
-        _transform.position = position;
-        _targetPosition = position;
+        // [修復] 先確保代理人在 NavMesh 上，再執行傳送
         if (_navMeshAgent != null)
         {
-            _navMeshAgent.ResetPath();
-            _navMeshAgent.nextPosition = new Vector3(position.x, position.y, _navMeshAgent.nextPosition.z);
+            // 先嘗試找到有效的 NavMesh 位置
+            Vector3 validPosition = position;
+            if (UnityEngine.AI.NavMesh.SamplePosition(position, out UnityEngine.AI.NavMeshHit hit, 5.0f, UnityEngine.AI.NavMesh.AllAreas))
+            {
+                validPosition = hit.position;
+            }
+
+            // 確保代理人啟用
+            if (!_navMeshAgent.enabled)
+            {
+                _navMeshAgent.enabled = true;
+            }
+
+            // 使用 Warp 將代理人移動到有效位置 (這會自動處理 NavMesh 放置)
+            _navMeshAgent.Warp(validPosition);
+
+            // 現在代理人應該在 NavMesh 上了，可以安全地呼叫 ResetPath
+            if (_navMeshAgent.isActiveAndEnabled && _navMeshAgent.isOnNavMesh)
+            {
+                _navMeshAgent.ResetPath();
+            }
+
             _navMeshDriving = false;
+            position = validPosition; // 使用校正後的位置
         }
+
+        _transform.position = position;
+        _targetPosition = position;
+        
         _movementController?.HandleTeleport(position);
         ResetNavMeshPosition(position);
         SetManualLocationOverrides(locationAliases);
