@@ -867,14 +867,23 @@ public class UIController : MonoBehaviour
         var positions = new Dictionary<string, string>();
         if (agents == null || agents.Count == 0) return positions;
 
+        // [診斷] 顯示 locationRoot 設定
+        Debug.Log($"[傳送診斷] locationRoot = {(locationRoot != null ? locationRoot.name : "NULL")}");
+
         Transform f1 = FindLocationMarker("Apartment_F1");
         Transform f2 = FindLocationMarker("Apartment_F2");
         Collider2D f1Bounds = FindBoundsCollider("Environment/PhysicsColliders/InteriorBounds/公寓_一樓Bounds");
         Collider2D f2Bounds = FindBoundsCollider("Environment/PhysicsColliders/InteriorBounds/公寓_二樓Bounds");
 
+        // [診斷] 顯示所有搜尋結果
+        Debug.Log($"[傳送診斷] Apartment_F1 Marker = {(f1 != null ? f1.name + " @ " + f1.position : "NULL")}");
+        Debug.Log($"[傳送診斷] Apartment_F2 Marker = {(f2 != null ? f2.name + " @ " + f2.position : "NULL")}");
+        Debug.Log($"[傳送診斷] F1 Bounds = {(f1Bounds != null ? f1Bounds.name : "NULL")}");
+        Debug.Log($"[傳送診斷] F2 Bounds = {(f2Bounds != null ? f2Bounds.name : "NULL")}");
+
         if (f1 == null && f1Bounds == null)
         {
-            Debug.LogError("[傳送失敗] 找不到名為 'Apartment_F1' 的地點標記或邊界！");
+            Debug.LogError("[傳送失敗] 找不到名為 'Apartment_F1' 的地點標記或邊界！請確認 locationRoot 下有 LocationMarkers/Apartment_F1");
             return positions;
         }
         if (f2 == null)

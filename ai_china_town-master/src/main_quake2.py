@@ -40,6 +40,8 @@ try:
     from simulation_logic.event_handler import check_and_handle_phase_transitions
     from simulation_logic.agent_actions import handle_social_interactions, generate_action_instructions
     from simulation_logic.disaster_logger import 災難記錄器
+    from simulation_logic.report_generator import init_report_generator, get_report_generator
+
     print("✅ [SUCCESS] 所有核心模組已成功導入。")
     LLM_FUNCTIONS = {
         'double_agents_chat': llm.double_agents_chat,
@@ -490,14 +492,40 @@ async def initialize_and_simulate(params, step_sync_event: Optional[asyncio.Even
     # 10. 模擬結束
     final_agent_states = {agent.name: {"hp": agent.health} for agent in agents}
     report = disaster_logger.生成報表(final_agent_states)
-    
     chart_path = params.get("chart_path", None)
     if chart_path and isinstance(chart_path, str) and os.path.exists(chart_path):
         report["chart"] = os.path.abspath(chart_path)
     elif report.get("chart") and os.path.exists(report["chart"]):
         report["chart"] = os.path.abspath(report["chart"])
-
     yield {"type": "evaluation", "data": report}
+    # ====== [FEATURE] LLM 報告生成 ======
+    try:
+        report_gen = get_report_generator()
+        if report_gen is None:
+            report_gen = init_report_generator(llm)
+        
+        reports_dir = os.path.join(project_root, "reports", datetime.now().strftime("%Y%m%d_%H%M%S"))
+        
+        print("📝 [報告生成] 開始生成模擬結束報告...")
+        llm_reports = await report_gen.generate_all_reports(
+            agents=agents,
+            disaster_logger=disaster_logger,
+            output_dir=reports_dir
+        )
+        
+        yield {
+            "type": "llm_reports",
+            "data": {
+                "storytelling": llm_reports.get("storytelling", {}),
+                "performance_analysis": llm_reports.get("performance_analysis", ""),
+                "files": llm_reports.get("files", {}),
+            }
+        }
+        print("✅ [報告生成] LLM 報告已生成完成")
+        
+    except Exception as e:
+        print(f"⚠️ [報告生成] 生成報告時發生錯誤: {e}")
+        traceback.print_exc()
     yield {"type": "end", "message": "模擬結束"}
 
 async def stream_simulation_to_client(websocket, params, send_lock: asyncio.Lock, buildings_ref: Dict[str, "Building"], step_sync_event: Optional[asyncio.Event] = None):

@@ -174,15 +174,37 @@ public class AgentFailSafeSystem : MonoBehaviour
         {
             yield return wait;
 
-            // 跳過條件：未初始化、非活動、無路徑
+            // 跳過條件：未初始化、非活動
             if (_navAgent == null || !_navAgent.isActiveAndEnabled) continue;
-            if (!_navAgent.hasPath && !_navAgent.pathPending) continue;
+            
+            // [修復] 不再限制必須有路徑才檢測
+            // 因為代理人卡在傳送門前時，路徑可能已到達終點但傳送門未觸發
 
             // 計算這段時間內的位移
             float distanceMoved = Vector3.Distance(transform.position, _lastCheckPosition);
             
-            // 取得當前目標位置
-            Vector3 targetPos = _navAgent.destination;
+            // [修復] 優先使用 AgentController 的目標位置（更準確）
+            Vector3 targetPos;
+            if (_agentController != null)
+            {
+                // 使用反射或公開屬性取得目標位置
+                targetPos = _agentController.transform.position; // 先獲取自身位置
+                
+                // 嘗試從 NavMeshAgent 取得目標
+                if (_navAgent.hasPath || _navAgent.pathPending)
+                {
+                    targetPos = _navAgent.destination;
+                }
+                else if (_navAgent.destination != Vector3.zero)
+                {
+                    targetPos = _navAgent.destination;
+                }
+            }
+            else
+            {
+                targetPos = _navAgent.destination;
+            }
+            
             float distanceToTarget = Vector3.Distance(transform.position, targetPos);
             
             // 關鍵判定邏輯：

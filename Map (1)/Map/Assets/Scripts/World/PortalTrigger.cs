@@ -10,30 +10,44 @@ public class PortalTrigger : MonoBehaviour
     public class BoolEvent : UnityEvent<bool> { }
 
     [Header("Portal Routing")]
-    [Tooltip("入口對應的 PortalController，用於決定出口與冷卻。")]
+    [Tooltip("入口對應的 PortalController，用於決定出口與冷卻。必須設定此欄位，否則傳送無法運作。")]
     public PortalController portal;
 
-    [Tooltip("允許以 NavMesh 直接通過而不啟動遠距離傳送。")]
+    [Tooltip("允許以 NavMesh 直接通過而不啟動遠距離傳送。適用於短距離的門檻或走廊連接。")]
     public bool allowNavMeshWalkThrough = true;
 
     [Tooltip("無論距離都強制使用傳送（門、遠距離或需要淡入淡出時啟用）。")]
     public bool forceTeleport = false;
 
-    [Tooltip("當入口與出口距離超過此閾值時，啟用戲劇化傳送而非滑動穿牆。")]
+    [Tooltip("當入口與出口距離超過此閾值時，啟用戲劇化傳送而非滑動穿牆。單位為 Unity 世界單位。")]
     public float cinematicTeleportDistance = 8f;
 
     [Header("Transitions & Fades")]
+    [Tooltip("啟用傳送時使用淡入淡出效果。適合用於門戶或遠距離傳送，提供更平滑的視覺過渡。")]
     public bool useFadeOnTeleport = false;
+
+    [Tooltip("當傳送流程開始時觸發的事件。可用於播放音效、禁用UI輸入等。")]
     public UnityEvent onTransitionStarted;
+
+    [Tooltip("請求開始淡出效果時觸發的事件。應連接到負責淡出畫面的腳本或動畫。")]
     public UnityEvent onFadeOutRequested;
+
+    [Tooltip("請求開始淡入效果時觸發的事件。應連接到負責淡入畫面的腳本或動畫。")]
     public UnityEvent onFadeInRequested;
+
+    [Tooltip("傳送流程完成時觸發的事件。可用於恢復UI輸入、播放音效等。")]
     public UnityEvent onTransitionCompleted;
+
+    [Tooltip("當代理人的室內/室外狀態改變時觸發。參數為 bool (true = 進入室內)。可用於切換環境音效或光照。")]
     public BoolEvent onInteriorStateChanged;
 
     [Header("Disaster Response")]
-    [Tooltip("此入口對應的 NavMeshLink (用於動態斷路)")]
+    [Tooltip("此入口對應的 NavMeshLink。災難發生時可動態禁用此 Link，強制 AI 重新尋路避開此門。")]
     public NavMeshLink navLink;
-    public Transform entryFocusPoint; // 門前的引導點 (解決穿牆)
+
+    [Tooltip("門前的引導點 Transform。代理人會先走到這個點再進行傳送，避免穿牆或卡住的問題。")]
+    public Transform entryFocusPoint;
+    
     private bool isBlocked = false;
 
     private void Awake()
